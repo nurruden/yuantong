@@ -1,0 +1,1080 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{% static 'css/icon-alignment-fix.css' %}">
+<link rel="stylesheet" href="{% static 'css/qc_report_buttons.css' %}">
+<link rel="stylesheet" href="{% static 'css/sticky_table_header.css' %}">
+<link rel="stylesheet" href="{% static 'css/wechat-pc-table-fix.css' %}">
+<link rel="stylesheet" href="{% static 'css/qc_button_layout.css' %}">
+<link rel="stylesheet" href="/static/libs/flatpickr/flatpickr.min.css">
+<script src="/static/libs/flatpickr/flatpickr.min.js"></script>
+<script src="/static/libs/flatpickr/zh.js"></script>
+<script src="/static/libs/jquery/jquery-3.6.0.min.js"></script>
+<script src="/static/libs/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="/static/js/production/qc_report_common.js"></script>
+<script src="/static/js/production/dongtai_report.js"></script>
+<script src="/static/js/wechat-pc-table-fix.js"></script>
+
+<!-- 调试信息已清理 -->
+<style>
+    .page-container {
+        padding: 20px;
+        width: 100%;
+        margin: 0 auto;
+    }
+    
+    /* PC端样式 - 充满整个屏幕 */
+    @media (min-width: 1024px) {
+        .page-container {
+            max-width: none;
+            padding: 20px 40px;
+        }
+        .filter-row {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        .table-container {
+            margin-left: 0;
+            margin-right: 0;
+        }
+        /* PC端表格优化 */
+        table {
+            min-width: 100%;
+            font-size: 15px;
+        }
+        th, td {
+            padding: 14px 18px;
+            font-size: 15px;
+        }
+        th {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        /* 让表格列宽更合理分布 */
+        th:nth-child(1), td:nth-child(1) { width: 6%; } /* 操作人 */
+        th:nth-child(2), td:nth-child(2) { width: 5%; } /* 日期 */
+        th:nth-child(3), td:nth-child(3) { width: 4%; } /* 时间 */
+        th:nth-child(7), td:nth-child(7) { width: 6%; } /* 产品型号 */
+        th:nth-child(29), td:nth-child(29) { width: 4%; } /* 水分(%) */
+        th:nth-child(30), td:nth-child(30) { width: 4%; } /* 袋数 */
+        th:nth-child(31), td:nth-child(31) { width: 5%; } /* 包装类型 */
+        th:nth-child(35), td:nth-child(35) { width: 4%; } /* 班组 */
+        th:nth-child(36), td:nth-child(36) { width: 6%; } /* 操作 */
+    }
+    
+    /* 平板端样式 */
+    @media (min-width: 769px) and (max-width: 1023px) {
+        .page-container {
+            max-width: 1200px;
+            padding: 20px 30px;
+        }
+    }
+    
+    .page-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .page-title h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .filter-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .filter-group {
+        margin-bottom: 15px;
+    }
+    
+    /* 只保留最基本的样式，删除所有可能冲突的CSS */
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .form-control:focus {
+        border-color: #4CAF50;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        min-height: 44px;
+        white-space: nowrap;
+    }
+    .btn-primary {
+        background: linear-gradient(90deg, #81d4fa 0%, #a5d6a7 100%);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+    }
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #4fc3f7 0%, #66bb6a 100%);
+        transform: translateY(-1px);
+    }
+    .btn-secondary {
+        background: #e3f2fd;
+        color: #1976d2;
+        box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+    }
+    .btn-secondary:hover {
+        background: #b3e5fc;
+        transform: translateY(-1px);
+    }
+    .material-icons {
+        vertical-align: middle;
+        font-size: 20px;
+        margin-right: 8px;
+    }
+    .table-container {
+        margin-top: 20px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 800px;
+    }
+    th, td {
+        padding: 12px 16px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+        white-space: nowrap;
+        font-size: 14px;
+    }
+    th {
+        background: #f5f5f5;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+    tr:hover {
+        background: #fafafa;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        gap: 10px;
+    }
+    .pagination button {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .pagination button:hover {
+        background: #f0f0f0;
+    }
+    .pagination button.current-page {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .action-buttons-cell {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-height: auto;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 20px 0 15px 0;
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 5px;
+    }
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -15px;
+    }
+    .form-group {
+        padding: 0 15px;
+        margin-bottom: 20px;
+    }
+    .col-md-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    .col-md-4 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+    }
+    .col-md-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    .clear-btn .material-icons {
+        font-size: 16px;
+        margin: 0;
+    }
+    .input-clear-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .input-clear-wrapper input.form-control {
+        padding-right: 28px;
+    }
+    .input-clear-btn {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 18px;
+        height: 18px;
+        border: none;
+        background: transparent;
+        color: #bbb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+        border-radius: 50%;
+        transition: background 0.2s, color 0.2s;
+    }
+    .input-clear-btn:hover {
+        background: #e0e0e0;
+        color: #333;
+    }
+    .input-clear-btn svg {
+        width: 14px;
+        height: 14px;
+        display: block;
+    }
+    @media (max-width: 768px) {
+        .col-md-6, .col-md-4 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-title">
+        <h1>东泰QC报表历史记录</h1>
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="window.location.href='{% url 'dongtai_report' %}'">
+                <span class="material-icons">arrow_back</span> 返回
+            </button>
+            <button class="btn btn-primary" onclick="exportToExcel()">
+                <span class="material-icons">file_download</span> 导出Excel
+            </button>
+        </div>
+    </div>
+
+    <div class="filter-container">
+        <form id="filterForm">
+            {% csrf_token %}
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="startDate">开始日期</label>
+                    <div class="input-clear-wrapper">
+                        <input type="text" id="startDate" name="start_date" class="form-control">
+                        <button type="button" class="input-clear-btn" onclick="clearInput('startDate')" title="清空">
+                            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5f5f5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#888" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label for="endDate">结束日期</label>
+                    <div class="input-clear-wrapper">
+                        <input type="text" id="endDate" name="end_date" class="form-control">
+                        <button type="button" class="input-clear-btn" onclick="clearInput('endDate')" title="清空">
+                            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5f5f5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#888" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label for="startTime">开始时间</label>
+                    <div class="input-clear-wrapper">
+                        <input type="text" id="startTime" name="start_time" class="form-control" placeholder="HH:MM">
+                        <button type="button" class="input-clear-btn" onclick="clearInput('startTime')" title="清空">
+                            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5f5f5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#888" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label for="endTime">结束时间</label>
+                    <div class="input-clear-wrapper">
+                        <input type="text" id="endTime" name="end_time" class="form-control" placeholder="HH:MM">
+                        <button type="button" class="input-clear-btn" onclick="clearInput('endTime')" title="清空">
+                            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5f5f5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#888" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="product_name">产品型号</label>
+                    <input type="text" id="product_name" name="product_name" class="form-control">
+                </div>
+                <div class="filter-group">
+                    <label for="packaging">包装类型</label>
+                    <input type="text" id="packaging" name="packaging" class="form-control" list="packaging_list">
+                    <datalist id="packaging_list"></datalist>
+                </div>
+                <div class="filter-group">
+                    <label for="squad">班组</label>
+                    <input type="text" id="squad" name="squad" class="form-control">
+                </div>
+            </div>
+            <div class="filter-group button-group" id="buttonGroup">
+                <button class="btn btn-primary" type="submit">
+                    <i class="material-icons">search</i>
+                    搜索
+                </button>
+                <button class="btn btn-secondary" type="button" onclick="resetFilters()">
+                    <i class="material-icons">refresh</i>
+                    重置
+                </button>
+                <button class="btn btn-secondary" type="button" onclick="exportToExcel()">
+                    <i class="material-icons">download</i>
+                    导出Excel
+                </button>
+                <button class="btn btn-secondary" type="button" onclick="calculateYesterdayProduction()">
+                    <i class="material-icons">analytics</i>
+                    统计昨日产量
+                </button>
+                <button class="btn btn-secondary" type="button" onclick="calculateTodayProduction()">
+                    <i class="material-icons">analytics</i>
+                    统计今日产量
+                </button>
+
+
+            </div>
+            
+
+            
+            <!-- 调试信息区域已清理 -->
+        </form>
+    </div>
+
+    <div class="sticky-table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>操作人</th>
+                    <th>日期</th>
+                    <th>时间</th>
+                    <th>干燥后原土水分(%)</th>
+                    <th>入窑前碱含量(%)</th>
+                    <th>助溶剂添加比例</th>
+                    <th>产品型号</th>
+                    <th>远通渗透率(Darcy)</th>
+                    <th>长富渗透率(Darcy)</th>
+                    <th>过滤时间(秒)</th>
+                    <th>水黏度(mPa.s)</th>
+                    <th>饼厚(mm)</th>
+                    <th>饼密度(g/cm3)</th>
+                    <th>远通饼密度(g/cm3)</th>
+                    <th>长富饼密度(g/cm3)</th>
+                    <th>振实密度(g/cm3)</th>
+                    <th>+14M</th>
+                    <th>+30M</th>
+                    <th>+40M</th>
+                    <th>+80M</th>
+                    <th>+100M</th>
+                    <th>+150M</th>
+                    <th>+200M</th>
+                    <th>+325M</th>
+                    <th>Fe离子</th>
+                    <th>Ca离子</th>
+                    <th>Al离子</th>
+                    <th>白度</th>
+                    <th>涡值(cm)</th>
+                    <th>气味</th>
+                    <th>电导值(ms/cm)</th>
+                    <th>pH</th>
+                    <th>吸油率(%)</th>
+                    <th>吸水率(%)</th>
+                    <th>水分(%)</th>
+                    <th>袋数</th>
+                    <th>包装类型</th>
+                    <th>吨数</th>
+                    <th>LOT批号</th>
+                    <th>备注</th>
+                    <th>班组</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="reportTableBody">
+                <!-- 数据将通过JavaScript动态加载 -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" id="pagination">
+        <!-- 分页控件将通过JavaScript动态加载 -->
+    </div>
+    
+
+</div>
+
+{% block scripts %}
+<script>
+function clearInput(id) {
+    const el = document.getElementById(id);
+    if (el && el._flatpickr) {
+        el._flatpickr.clear();
+    } else if (el) {
+        el.value = '';
+    }
+}
+// 独立js已自动初始化，无需initQCReport
+
+
+
+
+
+// 确保calculateYesterdayProduction函数总是可用的
+window.calculateYesterdayProduction = async function() {
+    try {
+                        // 正在统计昨日产量数据...
+        const response = await fetch('/api/dongtai-report/?action=yesterday_production', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (result.status === 'success') {
+                displayYesterdayProductionTable(result);
+            } else {
+                alert('统计失败：' + (result.message || '未知错误'));
+            }
+        } else {
+            alert('请求失败，状态码：' + response.status);
+        }
+    } catch (error) {
+        // 统计异常：error
+        alert('统计异常：' + error.message);
+    }
+};
+
+// 确保calculateTodayProduction函数总是可用的
+window.calculateTodayProduction = async function() {
+    try {
+                        // 正在统计今日产量数据...
+        const response = await fetch('/api/dongtai-report/?action=today_production', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (result.status === 'success') {
+                displayTodayProductionTable(result);
+            } else {
+                alert('统计失败：' + (result.message || '未知错误'));
+            }
+        } else {
+            alert('请求失败，状态码：' + response.status);
+        }
+    } catch (error) {
+        // 统计异常：error
+        alert('统计异常：' + error.message);
+    }
+};
+
+// 显示昨日产量统计表格
+function displayYesterdayProductionTable(result) {
+    const { data, date, total_groups } = result;
+
+    if (!data || data.length === 0) {
+        alert(`${date} 没有找到产量数据`);
+        return;
+    }
+
+    // 按班组分组数据
+    const groupedData = {};
+    data.forEach(item => {
+        const shift = item.shift || '未设置';
+        if (!groupedData[shift]) {
+            groupedData[shift] = [];
+        }
+        groupedData[shift].push(item);
+    });
+
+    // 创建表格HTML
+    let html = `
+        <div style="max-width: 1200px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-shrink: 0;">
+                <h2 style="color: #1976d2; margin: 0; font-size: 24px;">
+                    <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">analytics</span>
+                    ${date} 昨日产量统计
+                </h2>
+                <div>
+                    <button onclick="exportYesterdayProductionToExcel()" style="padding: 8px 16px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">download</span>
+                        导出Excel
+                    </button>
+                    <button onclick="closeProductionModal()" style="padding: 8px 16px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">close</span>
+                        关闭
+                    </button>
+                </div>
+            </div>
+
+            <p style="color: #666; margin-bottom: 20px; text-align: center; flex-shrink: 0;">
+                共找到 ${total_groups} 个班组产品组合
+            </p>
+
+            <div style="overflow: auto; flex: 1; min-height: 0;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-family: Arial, sans-serif;">
+                    <thead>
+                        <tr style="background: #1976d2; color: white; border: 1px solid #1565c0;">
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 80px; background: #1976d2;">班组</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 120px; background: #1976d2;">产品</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 100px; background: #1976d2;">包装</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 120px; background: #1976d2;">批号</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 120px; background: #1976d2;">备注</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 100px; background: #1976d2;">产量(吨)</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 100px; background: #1976d2;">班组产量(吨)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+
+    let totalTons = 0;
+    let rowCount = 0;
+
+    // 遍历每个班组
+    Object.keys(groupedData).forEach(shift => {
+        const shiftData = groupedData[shift];
+        let shiftTotal = 0;
+
+        // 计算班组总产量
+        shiftData.forEach(item => {
+            shiftTotal += parseFloat(item.total_tons) || 0;
+        });
+
+        // 为班组中的每个产品创建行
+        shiftData.forEach((item, index) => {
+            const tons = parseFloat(item.total_tons) || 0;
+            totalTons += tons;
+            rowCount++;
+
+            const isFirstRow = index === 0;
+            const rowStyle = rowCount % 2 === 0 ? 'background: #f8f9fa;' : 'background: white;';
+
+            if (isFirstRow) {
+                // 第一行：包含合并的班组和班组产量单元格
+                html += `
+                    <tr style="${rowStyle}">
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #1976d2; vertical-align: middle;" rowspan="${shiftData.length}">
+                            ${shift}
+                        </td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.product_name || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.packaging || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.batch_number || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.remarks && item.remarks !== '' ? item.remarks : '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #4caf50;">${tons.toFixed(3)}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #1976d2; background: #e3f2fd; vertical-align: middle;" rowspan="${shiftData.length}">
+                            ${shiftTotal.toFixed(3)}
+                        </td>
+                    </tr>
+                `;
+            } else {
+                // 后续行：不包含合并的单元格
+                html += `
+                    <tr style="${rowStyle}">
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.product_name || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.packaging || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.batch_number || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.remarks && item.remarks !== '' ? item.remarks : '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #4caf50;">${tons.toFixed(3)}</td>
+                    </tr>
+                `;
+            }
+        });
+    });
+
+    // 添加总计行
+    html += `
+                        <tr style="background: linear-gradient(135deg, #4caf50, #45a049); color: white; font-weight: 600;">
+                            <td colspan="5" style="padding: 12px; border: 1px solid #45a049; text-align: center;">总计</td>
+                            <td style="padding: 12px; border: 1px solid #45a049; text-align: center; font-size: 16px;">${totalTons.toFixed(3)}</td>
+                            <td style="padding: 12px; border: 1px solid #45a049; text-align: center; font-size: 16px;">${totalTons.toFixed(3)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+
+    // 创建模态框显示结果
+    const modal = document.createElement('div');
+    modal.id = 'productionModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        padding: 20px;
+        box-sizing: border-box;
+    `;
+    modal.innerHTML = html;
+
+    // 添加到页面
+    document.body.appendChild(modal);
+
+    // 保存数据用于导出
+    window.yesterdayProductionData = {
+        date: date,
+        data: data,
+        groupedData: groupedData,
+        totalTons: totalTons,
+        totalGroups: total_groups
+    };
+};
+
+// 导出昨日产量到Excel
+async function exportYesterdayProductionToExcel() {
+    try {
+        console.log('开始导出东泰昨日产量Excel...');
+        const exportUrl = '/dongtai_report/export_yesterday_production/';
+        
+        // 使用与今日产量相同的下载方式（已验证可以工作）
+        console.log('使用与今日产量相同的下载方式');
+        
+        const response = await fetch(exportUrl);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // 检查响应头
+        const contentType = response.headers.get('content-type');
+        console.log('响应Content-Type:', contentType);
+        
+        // 获取文件内容
+        const blob = await response.blob();
+        console.log('文件大小:', blob.size, '字节');
+        
+        // 检查文件类型
+        if (blob.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+            console.warn('文件MIME类型不匹配:', blob.type);
+        }
+        
+        // 创建下载链接
+        const downloadUrl = URL.createObjectURL(blob);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = downloadUrl;
+        downloadLink.download = '东泰昨日产量统计_' + new Date().toISOString().split('T')[0] + '.xlsx';
+        downloadLink.style.display = 'none';
+        
+        // 添加到页面并触发下载
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        
+        // 清理URL对象
+        setTimeout(() => {
+            URL.revokeObjectURL(downloadUrl);
+        }, 1000);
+        
+        console.log('Excel导出完成');
+        
+    } catch (error) {
+        console.error('导出昨日产量失败:', error);
+        alert('导出失败：' + error.message);
+    }
+}
+
+// 显示今日产量统计表格
+function displayTodayProductionTable(result) {
+    const { data, date, total_groups } = result;
+
+    if (!data || data.length === 0) {
+        alert(`${date} 没有找到产量数据`);
+        return;
+    }
+
+    // 按班组分组数据
+    const groupedData = {};
+    data.forEach(item => {
+        const shift = item.shift || '未设置';
+        if (!groupedData[shift]) {
+            groupedData[shift] = [];
+        }
+        groupedData[shift].push(item);
+    });
+
+    // 创建表格HTML
+    let html = `
+        <div style="max-width: 1200px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-shrink: 0;">
+                <h2 style="color: #1976d2; margin: 0; font-size: 24px;">
+                    <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">analytics</span>
+                    ${date} 今日产量统计
+                </h2>
+                <div>
+                    <button onclick="exportTodayProductionToExcel()" style="padding: 8px 16px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">download</span>
+                        导出Excel
+                    </button>
+                    <button onclick="closeProductionModal()" style="padding: 8px 16px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">close</span>
+                        关闭
+                    </button>
+                </div>
+            </div>
+
+            <p style="color: #666; margin-bottom: 20px; text-align: center; flex-shrink: 0;">
+                共找到 ${total_groups} 个班组产品组合
+            </p>
+
+            <div style="overflow: auto; flex: 1; min-height: 0;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-family: Arial, sans-serif;">
+                    <thead>
+                        <tr style="background: #1976d2; color: white; border: 1px solid #1565c0;">
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 80px; background: #1976d2;">班组</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 120px; background: #1976d2;">产品</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 100px; background: #1976d2;">包装</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 120px; background: #1976d2;">批号</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 120px; background: #1976d2;">备注</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 100px; background: #1976d2;">产量(吨)</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 100px; background: #1976d2;">班组产量(吨)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+
+    let totalTons = 0;
+    let rowCount = 0;
+
+    // 遍历每个班组
+    Object.keys(groupedData).forEach(shift => {
+        const shiftData = groupedData[shift];
+        let shiftTotal = 0;
+        shiftData.forEach(item => { shiftTotal += parseFloat(item.total_tons) || 0; });
+
+        shiftData.forEach((item, index) => {
+            const tons = parseFloat(item.total_tons) || 0;
+            const isFirstRow = index === 0;
+            const rowStyle = rowCount % 2 === 0 ? 'background: #f8f9fa;' : 'background: white;';
+
+            if (isFirstRow) {
+                html += `
+                    <tr style="${rowStyle}">
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #1976d2; vertical-align: middle;" rowspan="${shiftData.length}">
+                            ${shift}
+                        </td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.product_name || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.packaging || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.batch_number || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.remarks && item.remarks !== '' ? item.remarks : '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #4caf50;">${tons.toFixed(3)}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #1976d2; background: #e3f2fd; vertical-align: middle;" rowspan="${shiftData.length}">
+                            ${shiftTotal.toFixed(3)}
+                        </td>
+                    </tr>
+                `;
+            } else {
+                html += `
+                    <tr style="${rowStyle}">
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.product_name || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.packaging || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.batch_number || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.remarks && item.remarks !== '' ? item.remarks : '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #4caf50;">${tons.toFixed(3)}</td>
+                    </tr>
+                `;
+            }
+            totalTons += tons;
+            rowCount++;
+        });
+    });
+
+    // 添加总计行
+    html += `
+        <tr style="background: #4caf50; color: white; font-weight: bold;">
+            <td style="padding: 12px; border: 1px solid #ddd; text-align: center;" colspan="5">总计</td>
+            <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${totalTons.toFixed(3)}</td>
+            <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${totalTons.toFixed(3)}</td>
+        </tr>
+    `;
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+    </div>
+    `;
+
+    // 创建模态框并显示
+    const modal = document.createElement('div');
+    modal.id = 'productionModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow-y: auto;
+    `;
+    modal.innerHTML = html;
+    document.body.appendChild(modal);
+
+    // 保存数据供导出使用
+    window.todayProductionData = { date, groupedData, totalTons };
+};
+
+// 导出今日产量统计到Excel
+async function exportTodayProductionToExcel() {
+    try {
+        console.log('开始导出东泰今日产量Excel...');
+        const exportUrl = '/dongtai_report/export_today_production/';
+        
+        // 使用与测试页面相同的下载方式（已验证可以工作）
+        console.log('使用测试页面相同的下载方式');
+        
+        const response = await fetch(exportUrl);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // 检查响应头
+        const contentType = response.headers.get('content-type');
+        console.log('响应Content-Type:', contentType);
+        
+        // 获取文件内容
+        const blob = await response.blob();
+        console.log('文件大小:', blob.size, '字节');
+        
+        // 检查文件类型
+        if (blob.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+            console.warn('文件MIME类型不匹配:', blob.type);
+        }
+        
+        // 创建下载链接
+        const downloadUrl = URL.createObjectURL(blob);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = downloadUrl;
+        downloadLink.download = '东泰今日产量统计_' + new Date().toISOString().split('T')[0] + '.xlsx';
+        downloadLink.style.display = 'none';
+        
+        // 添加到页面并触发下载
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        
+        // 清理URL对象
+        setTimeout(() => {
+            URL.revokeObjectURL(downloadUrl);
+        }, 1000);
+        
+        console.log('Excel导出完成');
+        
+    } catch (error) {
+        console.error('导出今日产量失败:', error);
+        alert('导出失败：' + error.message);
+    }
+};
+
+// 显示移动端下载链接
+function showMobileDownloadLink(exportUrl) {
+    const modalHTML = `
+        <div id="downloadModal" style="position: fixed;top: 0;left: 0;width: 100%;height: 100%;background: rgba(0,0,0,0.5);display: flex;justify-content: center;align-items: center;z-index: 10000;">
+            <div style="background: white;padding: 20px;border-radius: 8px;max-width: 90%;width: 400px;text-align: center;box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <h3 style="margin-top: 0; color: #333;">Excel导出</h3>
+                <p style="color: #666; margin: 15px 0;">点击下方链接下载Excel文件：</p>
+                <a href="${exportUrl}" target="_blank" style="display: inline-block;background: #4CAF50;color: white;padding: 12px 24px;text-decoration: none;border-radius: 4px;margin: 10px 0;font-weight: bold;">📥 下载Excel文件</a>
+                <div style="margin-top: 15px;"><button onclick="closeMobileDownloadModal()" style="background: #f5f5f5;border: 1px solid #ddd;padding: 8px 16px;border-radius: 4px;cursor: pointer;">关闭</button></div>
+                <p style="font-size: 12px; color: #999; margin-top: 10px;">💡 提示：文件将下载到您的设备下载文件夹</p>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// 关闭移动端下载模态框
+function closeMobileDownloadModal() {
+    const modal = document.getElementById('downloadModal');
+    if (modal) modal.remove();
+}
+
+// 原有的导出方式（作为回退）
+function performLegacyExport(exportUrl) {
+    console.log('使用回退导出方式，URL:', exportUrl);
+    
+    // 检测是否为移动设备
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+        showMobileDownloadLink(exportUrl);
+    } else {
+        // 尝试使用增强版保存对话框
+        if (typeof window.enhancedExportWithSaveDialog === 'function') {
+            console.log('使用增强版保存对话框');
+            // 先获取文件内容，然后使用保存对话框
+            fetch(exportUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const fileName = '东泰QC报表_' + new Date().toISOString().split('T')[0] + '.xlsx';
+                    window.enhancedExportWithSaveDialog(blob, fileName);
+                })
+                .catch(error => {
+                    console.error('获取文件失败，使用传统方式:', error);
+                    // 回退到传统方法
+                    const link = document.createElement('a');
+                    link.href = exportUrl;
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    alert('Excel导出已开始，请稍候...');
+                });
+        } else {
+            // 使用传统方法
+            const link = document.createElement('a');
+            link.href = exportUrl;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            alert('Excel导出已开始，请稍候...');
+        }
+    }
+}
+
+// 关闭产量统计模态框
+function closeProductionModal() {
+    // 查找模态框并关闭
+    const modal = document.getElementById('productionModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// 加载SheetJS库
+function loadSheetJS() {
+    return new Promise((resolve, reject) => {
+        if (typeof XLSX !== 'undefined') {
+            resolve();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 测试JavaScript函数是否加载
+    // 页面脚本加载完成
+    if (typeof calculateYesterdayProduction === 'function') {
+        // calculateYesterdayProduction 函数已加载
+    } else {
+        // calculateYesterdayProduction 函数未加载
+    }
+
+    // 绑定筛选表单提交事件，筛选时加载第一页
+    bindFilterFormSubmit('filterForm', function(page) {
+        loadDongtaiHistoryData(page);
+    });
+    // 初始化第一页历史数据
+    loadDongtaiHistoryData(1);
+});
+
+
+
+
+</script>
+{% endblock %}
+{% endblock %}

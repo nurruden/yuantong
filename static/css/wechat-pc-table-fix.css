@@ -1,0 +1,76 @@
+/* 企业微信PC端表格选中行样式修复 */
+
+/* 检测企业微信PC端环境 */
+@media screen and (min-width: 768px) {
+    /* 企业微信PC端表格行悬停效果 - 更柔和的颜色 */
+    .sticky-table-container tbody tr:hover,
+    table tbody tr:hover,
+    tbody tr:hover {
+        background-color: #fbfbfb !important;
+        transition: background-color 0.2s ease !important;
+    }
+    
+    /* 确保所有表格容器都使用柔和的悬停颜色 */
+    .table-container tbody tr:hover,
+    .data-table tbody tr:hover,
+    .sticky-table-container tbody tr:hover {
+        background-color: #fbfbfb !important;
+        transition: background-color 0.2s ease !important;
+    }
+    
+    /* 针对QC报表历史记录页面的特殊处理 */
+    .page-container table tbody tr:hover,
+    .page-container .sticky-table-container tbody tr:hover {
+        background-color: #fbfbfb !important;
+        transition: background-color 0.2s ease !important;
+    }
+    
+    /* 确保选中状态更柔和 */
+    .page-container table tbody tr.selected,
+    .page-container table tbody tr:focus,
+    .sticky-table-container tbody tr.selected,
+    .sticky-table-container tbody tr:focus {
+        background-color: #f8f9fa !important;
+        outline: 1px solid #e9ecef !important;
+        outline-offset: -1px !important;
+    }
+    
+    /* 强制覆盖所有可能的表格行样式 */
+    tr:hover,
+    .table tr:hover,
+    .data-table tr:hover,
+    .sticky-table-container tr:hover {
+        background-color: #fbfbfb !important;
+    }
+}
+
+/* 深色模式下的企业微信PC端样式 */
+@media screen and (min-width: 768px) and (prefers-color-scheme: dark) {
+    .sticky-table-container tbody tr:hover,
+    table tbody tr:hover,
+    tbody tr:hover {
+        background-color: #6c757d !important;
+        transition: background-color 0.2s ease !important;
+    }
+    
+    .table-container tbody tr:hover,
+    .data-table tbody tr:hover,
+    .sticky-table-container tbody tr:hover {
+        background-color: #6c757d !important;
+        transition: background-color 0.2s ease !important;
+    }
+    
+    .page-container table tbody tr:hover,
+    .page-container .sticky-table-container tbody tr:hover {
+        background-color: #6c757d !important;
+        transition: background-color 0.2s ease !important;
+    }
+    
+    /* 强制覆盖所有可能的表格行样式 */
+    tr:hover,
+    .table tr:hover,
+    .data-table tr:hover,
+    .sticky-table-container tr:hover {
+        background-color: #6c757d !important;
+    }
+}

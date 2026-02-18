@@ -1,0 +1,22 @@
+<div id="materialModal" class="modal">
+    <div class="modal-content">
+        <h3 id="materialModalTitle">新增物料映射</h3>
+        <form id="materialForm">
+            <div class="modal-body">
+                <input type="hidden" id="materialId">
+                <div class="form-group">
+                    <label for="materialCode">物料编码:</label>
+                    <input type="text" id="materialCode" required>
+                </div>
+                <div class="form-group">
+                    <label for="materialName">物料名称:</label>
+                    <input type="text" id="materialName" required>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeMaterialModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>

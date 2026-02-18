@@ -1,0 +1,430 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box">
+        <h1>吉林远通内部系统</h1>
+        
+        <!-- 登录方式切换按钮 -->
+        <div class="login-tabs">
+            <button class="tab-btn active" onclick="switchTab('scan')">扫码登录</button>
+            <button class="tab-btn" onclick="switchTab('password')">用户名密码登录</button>
+        </div>
+        
+        <!-- 扫码登录界面 -->
+        <div id="scan-login" class="login-tab-content active">
+            <p class="login-tip">请使用吉林远通企业微信扫码登录</p>
+            <div class="scan-button">
+                <a href="{% url 'login' %}?scan=1{% if next %}&next={{ next }}{% endif %}" class="scan-btn">
+                    <img src="{% static 'images/wechat.svg' %}" alt="微信图标" class="wechat-icon">
+                    扫码登录
+                </a>
+            </div>
+            <div class="qr-tip">
+                <p>登录说明：</p>
+                <ol>
+                    <li>请确保您已安装企业微信</li>
+                    <li>请确保您是吉林远通的员工</li>
+                    <li>使用企业微信扫描二维码登录</li>
+                </ol>
+            </div>
+        </div>
+        
+        <!-- 用户名密码登录界面 -->
+        <div id="password-login" class="login-tab-content">
+            <p class="login-tip">请输入用户名和密码登录</p>
+            <form id="password-login-form" class="password-form">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" required placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" required placeholder="请输入密码">
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="login-btn">登录</button>
+                </div>
+                <div id="login-error" class="error-message" style="display: none;"></div>
+            </form>
+            <div class="password-tip">
+                <p>登录说明：</p>
+                <ol>
+                    <li>请输入在用户管理中设置的用户名和密码</li>
+                    <li>密码不能为空且必须正确</li>
+                    <li>登录后将显示您的企业微信名称</li>
+                    <li>密码传输采用加密保护，确保安全</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.login-box {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+}
+
+.login-box h1 {
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+/* 登录方式切换按钮 */
+.login-tabs {
+    display: flex;
+    margin-bottom: 30px;
+    border-radius: 10px;
+    background: #f5f5f5;
+    padding: 4px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    background: white;
+    color: #667eea;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 登录内容区域 */
+.login-tab-content {
+    display: none;
+}
+
+.login-tab-content.active {
+    display: block;
+}
+
+.login-tip {
+    color: #666;
+    margin-bottom: 25px;
+    font-size: 16px;
+}
+
+/* 扫码登录样式 */
+.scan-button {
+    margin-bottom: 30px;
+}
+
+.scan-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #07c160;
+    color: white;
+    text-decoration: none;
+    padding: 15px 30px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(7, 193, 96, 0.3);
+}
+
+.scan-btn:hover {
+    background: #06ad56;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(7, 193, 96, 0.4);
+}
+
+.wechat-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+}
+
+/* 用户名密码登录样式 */
+.password-form {
+    text-align: left;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.login-btn {
+    width: 100%;
+    padding: 14px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    background: #5a6fd8;
+    transform: translateY(-1px);
+}
+
+.login-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 错误消息 */
+.error-message {
+    background: #fee;
+    color: #c33;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 14px;
+    border: 1px solid #fcc;
+}
+
+/* 提示信息 */
+.qr-tip, .password-tip {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: left;
+    margin-top: 20px;
+}
+
+.qr-tip p, .password-tip p {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-weight: 500;
+}
+
+.qr-tip ol, .password-tip ol {
+    margin: 0;
+    padding-left: 20px;
+    color: #666;
+    line-height: 1.6;
+}
+
+.qr-tip li, .password-tip li {
+    margin-bottom: 5px;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+    .login-box {
+        margin: 20px;
+        padding: 30px 20px;
+    }
+    
+    .login-box h1 {
+        font-size: 24px;
+    }
+    
+    .tab-btn {
+        padding: 10px 15px;
+        font-size: 13px;
+    }
+}
+</style>
+
+<script>
+// 密码加密函数 - 使用SHA-256
+async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
+
+// 生成随机盐值
+function generateSalt() {
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+// 带盐值的密码加密 - 先哈希原始密码，再加盐
+async function hashPasswordWithSalt(password, salt) {
+    // 先对原始密码进行SHA-256哈希
+    const passwordHash = await hashPassword(password);
+    // 然后对哈希值加盐再次哈希
+    const saltedHash = await hashPassword(passwordHash + salt);
+    return saltedHash;
+}
+
+function switchTab(tabName) {
+    // 隐藏所有内容
+    document.querySelectorAll('.login-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // 移除所有按钮的active状态
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // 显示选中的内容
+    document.getElementById(tabName + '-login').classList.add('active');
+    
+    // 激活对应的按钮
+    event.target.classList.add('active');
+}
+
+// 用户名密码登录表单处理
+document.getElementById('password-login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('login-error');
+    const loginBtn = document.querySelector('.login-btn');
+    
+    // 清除之前的错误信息
+    errorDiv.style.display = 'none';
+    errorDiv.textContent = '';
+    
+    // 禁用登录按钮
+    loginBtn.disabled = true;
+    loginBtn.textContent = '登录中...';
+    
+    try {
+        // 生成随机盐值
+        const salt = generateSalt();
+        
+        // 加密密码
+        const hashedPassword = await hashPasswordWithSalt(password, salt);
+        
+        // 发送登录请求
+        const response = await fetch('/api/password-login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken') || ''
+            },
+            body: JSON.stringify({
+                username: username,
+                password: hashedPassword,
+                salt: salt
+            })
+        });
+        
+        // 检查响应状态
+        if (!response.ok) {
+            // 尝试解析错误响应
+            let errorMessage = '登录失败，请稍后重试';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.message || errorMessage;
+            } catch (e) {
+                // 如果不是 JSON 响应，使用状态码信息
+                if (response.status === 403) {
+                    errorMessage = '访问被拒绝，请刷新页面后重试';
+                } else if (response.status === 500) {
+                    errorMessage = '服务器错误，请联系管理员';
+                } else {
+                    errorMessage = `登录失败 (${response.status})`;
+                }
+            }
+            errorDiv.textContent = errorMessage;
+            errorDiv.style.display = 'block';
+            return;
+        }
+        
+        // 解析成功响应
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            errorDiv.textContent = '服务器响应格式错误，请稍后重试';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        
+        if (data.status === 'success') {
+            // 登录成功，重定向到首页或指定页面
+            const nextUrl = new URLSearchParams(window.location.search).get('next') || '/';
+            window.location.href = nextUrl;
+        } else {
+            // 显示错误信息
+            errorDiv.textContent = data.message || '登录失败，请检查用户名和密码';
+            errorDiv.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        errorDiv.textContent = '网络错误，请稍后重试';
+        errorDiv.style.display = 'block';
+    } finally {
+        // 恢复登录按钮
+        loginBtn.disabled = false;
+        loginBtn.textContent = '登录';
+    }
+});
+
+// 获取CSRF Token的函数
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="no-referrer">
+    {% csrf_token %}
+    {% load static %}
+    <title>吉林远通内部管理系统</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon.png' %}">
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}">
+    <!-- Material Icons - 使用Google Fonts CDN -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Material Icons 备用方案 - 本地字体 -->
+    <link href="{% static 'libs/material-icons/material-icons.css' %}" rel="stylesheet">
+    <!-- 字体预加载优化 -->
+    <link rel="preload" href="{% static 'libs/material-icons/MaterialIcons-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'libs/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- 基础样式 -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- 图标对齐修复 -->
+    <link rel="stylesheet" href="{% static 'css/icon-alignment-fix.css' %}">
+    <!-- 图标重复显示修复 -->
+    <link rel="stylesheet" href="{% static 'css/icon-duplicate-fix.css' %}">
+    <!-- 移动端图标修复 -->
+    <link rel="stylesheet" href="{% static 'css/mobile-icon-fix.css' %}">
+    <!-- iOS企业微信图标修复 -->
+    <link rel="stylesheet" href="{% static 'css/ios-wechat-icon-fix.css' %}">
+    <!-- 移动端响应式样式 -->
+    <link rel="stylesheet" href="{% static 'css/mobile-responsive.css' %}">
+    <!-- 布局修复样式 -->
+    <link rel="stylesheet" href="{% static 'css/layout-fix.css' %}">
+    <!-- 页面特定样式 -->
+    {% block extra_css %}{% endblock %}
+    <!-- jQuery -->
+    <script src="{% static 'libs/jquery/jquery-3.6.0.min.js' %}"></script>
+    <!-- Bootstrap JavaScript -->
+    <script src="{% static 'libs/bootstrap/bootstrap.bundle.min.js' %}"></script>
+    <!-- Material Icons 备用方案 -->
+    <script src="{% static 'js/material-icons-fallback.js' %}"></script>
+    <!-- 移动端工具函数 -->
+    <script src="{% static 'js/mobile-utils.js' %}"></script>
+    <!-- 移动端图标修复 -->
+    <script src="{% static 'js/mobile-icon-fix.js' %}"></script>
+    <!-- iOS企业微信图标修复 -->
+    <script src="{% static 'js/ios-wechat-icon-fix.js' %}"></script>
+    <!-- 企业微信兼容性修复 -->
+    <script src="{% static 'js/wechat-fix.js' %}"></script>
+    <script>
+    // 移动端菜单控制
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sideMenu = document.getElementById('sideMenu');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const menuCloseBtn = document.getElementById('menuCloseBtn');
+        
+        if (mobileMenuBtn && sideMenu) {
+            // 打开菜单
+            mobileMenuBtn.addEventListener('click', function() {
+                sideMenu.classList.add('expanded');
+                if (mobileOverlay) {
+                    mobileOverlay.classList.add('active');
+                }
+                document.body.style.overflow = 'hidden';
+            });
+            
+            // 关闭菜单
+            if (menuCloseBtn) {
+                menuCloseBtn.addEventListener('click', function() {
+                    sideMenu.classList.remove('expanded');
+                    if (mobileOverlay) {
+                        mobileOverlay.classList.remove('active');
+                    }
+                    document.body.style.overflow = '';
+                });
+            }
+            
+            // 点击遮罩关闭菜单
+            if (mobileOverlay) {
+                mobileOverlay.addEventListener('click', function() {
+                    sideMenu.classList.remove('expanded');
+                    mobileOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                });
+            }
+            
+            console.log('移动端菜单控制已初始化');
+        }
+    });
+    </script>
+    <!-- 统一使用head_extra块 -->
+    {% block head_extra %}{% endblock %}
+    <style>
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.3s, color 0.3s;
+}
+.btn-primary {
+    background: linear-gradient(90deg, #81d4fa 0%, #a5d6a7 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+}
+.btn-primary:hover {
+    background: linear-gradient(90deg, #4fc3f7 0%, #66bb6a 100%);
+    color: #fff;
+}
+.btn-secondary {
+    background: #e3f2fd;
+    color: #1976d2;
+    box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+}
+.btn-secondary:hover {
+    background: #b3e5fc;
+    color: #1565c0;
+}
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+.btn-success:hover {
+    background: #218838;
+    color: white;
+}
+.material-icons {
+    vertical-align: text-bottom;
+    color: #4fc3f7;
+    font-size: 20px;
+    margin-right: 4px;
+    line-height: 1;
+    display: inline-block;
+}
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+.text-center {
+    text-align: center;
+}
+.mt-3 {
+    margin-top: 1rem;
+}
+.text-muted {
+    color: #6c757d;
+}
+/* 移动端优化 */
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+    }
+    .btn-lg {
+        padding: 12px 24px;
+        font-size: 16px;
+    }
+    
+    /* 移动端菜单按钮强制显示 */
+    .mobile-menu-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .mobile-menu-btn .material-icons {
+        font-size: 20px;
+        color: #333;
+    }
+    
+    /* 移动端侧边栏 */
+    .side-menu {
+        position: fixed !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 280px !important;
+        height: 100vh !important;
+        background: rgba(255, 255, 255, 0.98) !important;
+        backdrop-filter: blur(20px) !important;
+        z-index: 1001 !important;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .side-menu.expanded {
+        left: 0 !important;
+    }
+    
+    /* 移动端遮罩层 */
+    .mobile-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        z-index: 1000 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .mobile-overlay.active {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* 移动端主内容区域 */
+    .main-content {
+        margin-left: 0 !important;
+        padding: 12px !important;
+        min-height: calc(100vh - 56px) !important;
+    }
+    
+    /* 移动端头部 */
+    .header {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 1000 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        padding: 8px 12px !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+        height: 56px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+    
+    /* 移动端主容器 */
+    .main-container {
+        margin-top: 56px !important;
+    }
+}
+
+/* 确保模态框正常工作 */
+.modal {
+    z-index: 1055 !important;
+}
+.modal-backdrop {
+    z-index: 1050 !important;
+}
+.modal-dialog {
+    z-index: 1055 !important;
+}
+
+/* 修复transform属性问题 */
+.material-icons {
+    transform: none !important;
+}
+</style>
+</head>
+<body class="{% if is_mobile %}mobile{% else %}desktop{% endif %}">
+    {% block content %}
+    {% endblock %}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

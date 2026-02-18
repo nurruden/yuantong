@@ -1,0 +1,632 @@
+{% extends "layouts/main_layout.html" %}
+{% load static %}
+
+{% block title %}QC报表定时发送配置{% endblock %}
+
+{% block extra_css %}
+<style>
+    .schedule-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .schedule-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .schedule-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .schedule-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .status-enabled {
+        background: #e8f5e8;
+        color: #2e7d32;
+    }
+    
+    .status-disabled {
+        background: #ffebee;
+        color: #c62828;
+    }
+    
+    .schedule-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .info-label {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 4px;
+    }
+    
+    .info-value {
+        font-size: 14px;
+        color: #333;
+        font-weight: 500;
+    }
+    
+    .schedule-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary {
+        background: #1976d2;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #1565c0;
+    }
+    
+    .btn-secondary {
+        background: #757575;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #616161;
+    }
+    
+    .btn-success {
+        background: #4caf50;
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background: #45a049;
+    }
+    
+    .btn-danger {
+        background: #f44336;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #da190b;
+    }
+    
+    .btn-warning {
+        background: #ff9800;
+        color: white;
+    }
+    
+    .btn-warning:hover {
+        background: #f57c00;
+    }
+    
+    .btn-info {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .btn-info:hover {
+        background: #138496;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
+    .close:hover {
+        color: #000;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #1976d2;
+        box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    
+    .form-check {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .form-check-input {
+        margin-right: 8px;
+    }
+    
+    .alert {
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    .alert-success {
+        background: #e8f5e8;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+    }
+    
+    .alert-error {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+    }
+    
+    .empty-state-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>QC报表定时发送配置</h2>
+                <button class="btn btn-primary" onclick="openModal()">
+                    <i class="fas fa-plus"></i> 添加配置
+                </button>
+            </div>
+            
+            <div id="alert-container"></div>
+            
+            <div class="row">
+                {% for schedule in schedules %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="schedule-card" data-schedule-id="{{ schedule.id }}" data-schedule-data='{"id": {{ schedule.id }}, "report_type": "{{ schedule.report_type }}", "send_hour": {{ schedule.send_hour }}, "send_minute": {{ schedule.send_minute }}, "recipient_name": "{{ schedule.recipient_name }}", "recipient_userid": "{{ schedule.recipient_userid }}", "send_excel": {{ schedule.send_excel|yesno:"true,false" }}, "send_text": {{ schedule.send_text|yesno:"true,false" }}, "text_template": "{{ schedule.text_template|escapejs }}", "is_enabled": {{ schedule.is_enabled|yesno:"true,false" }}}'>
+                        <div class="schedule-header">
+                            <div class="schedule-title">{{ schedule.get_report_type_display }}</div>
+                            <div class="schedule-status {% if schedule.is_enabled %}status-enabled{% else %}status-disabled{% endif %}">
+                                {% if schedule.is_enabled %}已启用{% else %}已禁用{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="schedule-info">
+                            <div class="info-item">
+                                <div class="info-label">接收人</div>
+                                <div class="info-value">{{ schedule.recipient_name }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">发送时间</div>
+                                <div class="info-value">{{ schedule.send_hour|stringformat:"02d" }}:{{ schedule.send_minute|stringformat:"02d" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">发送内容</div>
+                                <div class="info-value">
+                                    {% if schedule.send_excel %}Excel{% endif %}
+                                    {% if schedule.send_excel and schedule.send_text %} + {% endif %}
+                                    {% if schedule.send_text %}文本{% endif %}
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">UserID</div>
+                                <div class="info-value">{{ schedule.recipient_userid }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="schedule-actions">
+                            <button class="btn btn-secondary" onclick="editSchedule({{ schedule.id }})">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="btn btn-info" onclick="testSchedule({{ schedule.id }})">
+                                <i class="fas fa-play"></i> 立即测试
+                            </button>
+                            <button class="btn {% if schedule.is_enabled %}btn-warning{% else %}btn-success{% endif %}" 
+                                    onclick="toggleSchedule({{ schedule.id }})">
+                                {% if schedule.is_enabled %}<i class="fas fa-pause"></i> 禁用{% else %}<i class="fas fa-play"></i> 启用{% endif %}
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteSchedule({{ schedule.id }})">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📅</div>
+                        <h4>暂无配置</h4>
+                        <p>点击"添加配置"按钮创建第一个QC报表定时发送配置</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑/添加配置模态框 -->
+<div id="scheduleModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle">添加配置</h3>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        
+        <form id="scheduleForm">
+            <input type="hidden" id="scheduleId" name="id">
+            
+            <div class="form-group">
+                <label class="form-label" for="reportType">报表类型 *</label>
+                <select class="form-control" id="reportType" name="report_type" required>
+                    <option value="">请选择报表类型</option>
+                    {% for value, label in report_types %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="sendHour">发送小时 *</label>
+                    <input type="number" class="form-control" id="sendHour" name="send_hour" 
+                           min="0" max="23" value="8" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="sendMinute">发送分钟 *</label>
+                    <input type="number" class="form-control" id="sendMinute" name="send_minute" 
+                           min="0" max="59" value="0" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="recipientName">接收人姓名 *</label>
+                <input type="text" class="form-control" id="recipientName" name="recipient_name" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="recipientUserid">接收人UserID *</label>
+                <input type="text" class="form-control" id="recipientUserid" name="recipient_userid" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">发送内容</label>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="sendExcel" name="send_excel" checked>
+                    <label class="form-check-label" for="sendExcel">发送Excel文件</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="sendText" name="send_text" checked>
+                    <label class="form-check-label" for="sendText">发送文本消息</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="textTemplate">文本消息模板</label>
+                <textarea class="form-control" id="textTemplate" name="text_template" rows="3" 
+                          placeholder="留空使用默认模板"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="isEnabled" name="is_enabled" checked>
+                    <label class="form-check-label" for="isEnabled">启用此配置</label>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let currentScheduleId = null;
+
+// 显示提示消息
+function showAlert(message, type = 'success') {
+    const alertContainer = document.getElementById('alert-container');
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+    
+    alertContainer.innerHTML = `
+        <div class="alert ${alertClass}">
+            ${message}
+        </div>
+    `;
+    
+    setTimeout(() => {
+        alertContainer.innerHTML = '';
+    }, 5000);
+}
+
+// 打开模态框
+function openModal(scheduleId = null) {
+    currentScheduleId = scheduleId;
+    const modal = document.getElementById('scheduleModal');
+    const title = document.getElementById('modalTitle');
+    const form = document.getElementById('scheduleForm');
+    
+    if (scheduleId) {
+        title.textContent = '编辑配置';
+        // 这里应该加载现有数据，简化处理
+        form.reset();
+    } else {
+        title.textContent = '添加配置';
+        form.reset();
+    }
+    
+    modal.style.display = 'block';
+}
+
+// 关闭模态框
+function closeModal() {
+    document.getElementById('scheduleModal').style.display = 'none';
+    currentScheduleId = null;
+}
+
+// 编辑配置
+function editSchedule(scheduleId) {
+    // 从页面数据中获取配置信息
+    const scheduleCard = document.querySelector(`[data-schedule-id="${scheduleId}"]`);
+    if (!scheduleCard) {
+        showAlert('未找到配置信息', 'error');
+        return;
+    }
+    
+    // 获取配置数据
+    const scheduleData = JSON.parse(scheduleCard.dataset.scheduleData);
+    
+    // 打开模态框
+    openModal(scheduleId);
+    
+    // 填充表单数据
+    document.getElementById('reportType').value = scheduleData.report_type;
+    document.getElementById('sendHour').value = scheduleData.send_hour;
+    document.getElementById('sendMinute').value = scheduleData.send_minute;
+    document.getElementById('recipientName').value = scheduleData.recipient_name;
+    document.getElementById('recipientUserid').value = scheduleData.recipient_userid;
+    document.getElementById('sendExcel').checked = scheduleData.send_excel;
+    document.getElementById('sendText').checked = scheduleData.send_text;
+    document.getElementById('textTemplate').value = scheduleData.text_template || '';
+    document.getElementById('isEnabled').checked = scheduleData.is_enabled;
+}
+
+// 立即测试配置
+function testSchedule(scheduleId) {
+    if (confirm('确定要立即测试执行此配置吗？这将立即发送报表给配置的接收人。')) {
+        fetch('/tasks/api/qc-schedule/test/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ id: scheduleId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert(data.message);
+                // 显示详细结果
+                if (data.result) {
+                    showAlert(`执行结果: ${data.result}`, 'success');
+                }
+            } else {
+                showAlert(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showAlert('测试执行失败: ' + error.message, 'error');
+        });
+    }
+}
+
+// 切换配置状态
+function toggleSchedule(scheduleId) {
+    if (confirm('确定要切换此配置的启用状态吗？')) {
+        fetch('/tasks/api/qc-schedule/toggle/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ id: scheduleId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert(data.message);
+                location.reload();
+            } else {
+                showAlert(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showAlert('操作失败: ' + error.message, 'error');
+        });
+    }
+}
+
+// 删除配置
+function deleteSchedule(scheduleId) {
+    if (confirm('确定要删除此配置吗？此操作不可恢复！')) {
+        fetch('/tasks/api/qc-schedule/delete/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ id: scheduleId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert(data.message);
+                location.reload();
+            } else {
+                showAlert(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showAlert('删除失败: ' + error.message, 'error');
+        });
+    }
+}
+
+// 表单提交
+document.getElementById('scheduleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+    
+    // 处理复选框
+    data.is_enabled = document.getElementById('isEnabled').checked;
+    data.send_excel = document.getElementById('sendExcel').checked;
+    data.send_text = document.getElementById('sendText').checked;
+    
+    if (currentScheduleId) {
+        data.id = currentScheduleId;
+    }
+    
+    fetch('/tasks/api/qc-schedule/update/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert(data.message);
+            closeModal();
+            location.reload();
+        } else {
+            showAlert(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showAlert('保存失败: ' + error.message, 'error');
+    });
+});
+
+// 获取CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// 点击模态框外部关闭
+window.onclick = function(event) {
+    const modal = document.getElementById('scheduleModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}
+</script>
+{% endblock %}

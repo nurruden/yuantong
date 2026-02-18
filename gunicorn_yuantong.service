@@ -1,0 +1,36 @@
+[Unit]
+Description=Gunicorn daemon for Yuantong Django application
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+RuntimeDirectory=gunicorn
+WorkingDirectory=/var/www/yuantong
+ExecStart=/var/www/yuantong/venv/bin/gunicorn \
+    --user www-data \
+    --group www-data \
+    --bind unix:/run/gunicorn/yuantong.sock \
+    --workers 4 \
+    --worker-class sync \
+    --worker-connections 1000 \
+    --max-requests 1000 \
+    --max-requests-jitter 100 \
+    --timeout 30 \
+    --keep-alive 2 \
+    --preload \
+    --access-logfile /var/www/yuantong/logs/gunicorn_access.log \
+    --error-logfile /var/www/yuantong/logs/gunicorn_error.log \
+    --log-level info \
+    --capture-output \
+    yuantong.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Environment="PATH=/var/www/yuantong/venv/bin"
+EnvironmentFile=/var/www/yuantong/.env.production
+
+[Install]
+WantedBy=multi-user.target 

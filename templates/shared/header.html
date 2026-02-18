@@ -1,0 +1,332 @@
+{% load static %}
+<!-- 顶部栏 -->
+<style>
+    .header-bar {
+        height: 64px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+    }
+    
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .mobile-menu-btn {
+        display: none;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 8px;
+        padding: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-menu-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+    }
+    
+    .mobile-menu-btn .material-icons {
+        color: white;
+        font-size: 24px;
+    }
+    
+    .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .logo-icon {
+        width: 32px;
+        height: 32px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .logo-icon .material-icons {
+        color: white;
+        font-size: 20px;
+    }
+    
+    .logo-text {
+        font-size: 20px;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .header-center {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .page-title {
+        font-size: 18px;
+        font-weight: 500;
+        color: white;
+        opacity: 0.9;
+    }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .action-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+    }
+    
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    .action-btn .material-icons {
+        font-size: 18px;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .user-info:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
+    
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    
+    .user-details {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .user-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: white;
+        line-height: 1.2;
+    }
+    
+    .user-role {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.2;
+    }
+    
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+        .header-bar {
+            padding: 0 16px;
+        }
+        
+        .mobile-menu-btn {
+            display: flex;
+        }
+        
+        .logo-text {
+            font-size: 18px;
+        }
+        
+        .page-title {
+            font-size: 16px;
+        }
+        
+        .header-actions {
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+        
+        .user-details {
+            display: none;
+        }
+        
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            font-size: 12px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .header-bar {
+            padding: 0 12px;
+        }
+        
+        .logo-text {
+            display: none;
+        }
+        
+        .page-title {
+            font-size: 14px;
+        }
+        
+        .action-btn span:not(.material-icons) {
+            display: none;
+        }
+    }
+</style>
+
+<div class="header-bar">
+    <div class="header-left">
+        <!-- 移动端菜单按钮 -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+            <span class="material-icons">menu</span>
+        </button>
+        
+        <!-- Logo区域 -->
+        <div class="logo-section">
+            <div class="logo-icon">
+                <span class="material-icons">business</span>
+            </div>
+            <div class="logo-text">吉林远通</div>
+        </div>
+    </div>
+    
+    <div class="header-center">
+        <div class="page-title" id="pageTitle">系统管理</div>
+    </div>
+    
+    <div class="header-right">
+        <!-- 操作按钮 -->
+        <div class="header-actions">
+            <button class="action-btn" onclick="showNotifications()">
+                <span class="material-icons">notifications</span>
+                <span>通知</span>
+            </button>
+            
+            <button class="action-btn" onclick="showHelp()">
+                <span class="material-icons">help</span>
+                <span>帮助</span>
+            </button>
+        </div>
+        
+        <!-- 用户信息 -->
+        <div class="user-info" onclick="showUserMenu()">
+            <div class="user-avatar">
+                {{ user.username|first|upper }}
+            </div>
+            <div class="user-details">
+                <div class="user-name">{{ user.username }}</div>
+                <div class="user-role">
+                    {% if user.is_superuser %}
+                        超级管理员
+                    {% elif user.is_staff %}
+                        管理员
+                    {% else %}
+                        普通用户
+                    {% endif %}
+                </div>
+            </div>
+            <span class="material-icons" style="font-size: 16px;">keyboard_arrow_down</span>
+        </div>
+    </div>
+</div>
+
+<!-- 移动端遮罩层 -->
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
+<script>
+// 顶部栏功能
+function showNotifications() {
+    // 显示通知面板
+    console.log('显示通知');
+    // 这里可以添加通知面板的显示逻辑
+}
+
+function showHelp() {
+    // 显示帮助信息
+    console.log('显示帮助');
+    // 这里可以添加帮助面板的显示逻辑
+}
+
+function showUserMenu() {
+    // 显示用户菜单
+    console.log('显示用户菜单');
+    // 这里可以添加用户菜单的显示逻辑
+}
+
+// 设置页面标题
+function setPageTitle(title) {
+    const pageTitleElement = document.getElementById('pageTitle');
+    if (pageTitleElement) {
+        pageTitleElement.textContent = title;
+    }
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 根据当前页面设置标题
+    const currentPath = window.location.pathname;
+    let pageTitle = '系统管理';
+    
+    if (currentPath.includes('/system/user-permissions/')) {
+        pageTitle = '用户权限管理';
+    } else if (currentPath.includes('/system/user-management/')) {
+        pageTitle = '用户管理';
+    } else if (currentPath.includes('/system/rbac-management/')) {
+        pageTitle = '权限管理';
+    } else if (currentPath.includes('/qc_report/')) {
+        pageTitle = 'QC报表';
+    } else if (currentPath.includes('/production/')) {
+        pageTitle = '生产管理';
+    }
+    
+    setPageTitle(pageTitle);
+});
+</script>

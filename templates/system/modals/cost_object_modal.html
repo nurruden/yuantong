@@ -1,0 +1,22 @@
+<div id="costObjectModal" class="modal">
+    <div class="modal-content">
+        <h3 id="costObjectModalTitle">新增成本对象映射</h3>
+        <form id="costObjectForm">
+            <div class="modal-body">
+                <input type="hidden" id="costObjectId">
+                <div class="form-group">
+                    <label for="costObjectCode">成本对象编码:</label>
+                    <input type="text" id="costObjectCode" required>
+                </div>
+                <div class="form-group">
+                    <label for="costObjectName">成本对象名称:</label>
+                    <input type="text" id="costObjectName" required>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeCostObjectModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>

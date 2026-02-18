@@ -1,0 +1,716 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_extra %}
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .page-container {
+        padding: 12px;
+        max-width: 100%;
+        margin: 0;
+        min-height: 100vh;
+        box-sizing: border-box;
+    }
+    
+    /* 移动端标题区域优化 */
+    .page-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .page-title {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .welcome-text {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1976d2;
+        margin: 0;
+    }
+    
+    /* 移动端按钮优化 */
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    @media (max-width: 480px) {
+        .action-buttons {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        min-height: 44px; /* 符合触摸友好标准 */
+        box-sizing: border-box;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.9);
+        color: #1976d2;
+        border: 1px solid rgba(25, 118, 210, 0.2);
+        backdrop-filter: blur(10px);
+    }
+    
+    .btn-secondary:hover, .btn-secondary:active {
+        background: rgba(255, 255, 255, 1);
+        transform: translateY(-1px);
+    }
+    
+    .material-icons {
+        font-size: 18px;
+        margin-right: 6px;
+    }
+    
+    /* 表单容器移动端优化 */
+    .form-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+    }
+    
+    /* 表单组件移动端优化 */
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+        font-size: 15px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e3f2fd;
+        border-radius: 12px;
+        font-size: 16px; /* 防止iOS缩放 */
+        background: rgba(255, 255, 255, 0.9);
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        -webkit-appearance: none;
+    }
+    
+    .form-control:focus {
+        border-color: #2196f3;
+        background: white;
+        outline: none;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15);
+    }
+    
+    /* 下拉选择器移动端优化 */
+    select.form-control {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232196f3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 20px;
+        padding-right: 40px;
+        cursor: pointer;
+    }
+    
+    /* 文本区域移动端优化 */
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+        font-family: inherit;
+    }
+    
+    /* 提交按钮移动端优化 */
+    .submit-btn {
+        width: 100%;
+        margin-top: 24px;
+        padding: 16px;
+        font-size: 16px;
+        font-weight: 600;
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        min-height: 52px;
+    }
+    
+    .submit-btn:hover, .submit-btn:active {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+    }
+    
+    /* 收藏按钮特殊样式 */
+    #favoriteBtn {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    #favoriteBtn.favorited {
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        color: #333;
+    }
+    
+    /* 消息提示样式 */
+    .message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        max-width: 300px;
+        word-wrap: break-word;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: slideInRight 0.3s ease-out;
+    }
+
+    .message-success {
+        background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+    }
+
+    .message-error {
+        background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+    }
+
+    .message-info {
+        background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* 移动端优化样式 - 页面特定样式 */
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .mobile-menu-btn {
+        display: none !important;
+        background: none;
+        border: none;
+        padding: 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .mobile-menu-btn:hover {
+        background-color: #f0f2f5;
+    }
+
+    .mobile-menu-btn .material-icons {
+        font-size: 24px;
+        color: #666;
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <div class="header">
+        <div class="header-left">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <span class="material-icons" data-icon="menu">menu</span>
+            </button>
+            <div class="user-info">
+                <span class="material-icons" data-icon="person">person</span>
+                <span class="username">{{ user.name }}</span>
+            </div>
+        </div>
+        <a href="{% url 'logout' %}" class="logout-btn">
+            <span class="material-icons" data-icon="logout">logout</span>
+            <span class="logout-text">退出登录</span>
+        </a>
+    </div>
+    <div class="main-container">
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+        <div id="sideMenu" class="side-menu">
+            {% include 'shared/sidebar.html' %}
+        </div>
+        <div class="main-content" id="mainContentArea">
+            <div class="page-container">
+                <div class="page-header">
+                    <div class="page-title">
+                        <h1 class="welcome-text">原土入库管理</h1>
+                        <div class="action-buttons">
+                            <a href="{% url 'production_history' %}" class="btn btn-secondary">
+                                <span class="material-icons">history</span> 查看历史
+                            </a>
+                            <button class="btn btn-secondary" id="favoriteBtn" onclick="toggleFavorite();">
+                                <span class="material-icons" data-icon="star">star</span> 收藏页面
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 表单容器 -->
+                <div class="form-container">
+                    <form id="rawSoilForm">
+                        {% csrf_token %}
+                        
+                        <!-- 基本信息 -->
+                        <div class="form-group">
+                            <label for="bizDate">业务日期</label>
+                            <input type="date" id="bizDate" name="bizDate" class="form-control" value="{{ current_date|date:'Y-m-d' }}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="materialName">物料名称</label>
+                            <select id="materialName" name="materialName" class="form-control" required>
+                                <option value="">请选择物料</option>
+                                {% for material in materials %}
+                                    <option value="{{ material.code }}" {% if material.name == '一级自制原土' %}selected{% endif %}>{{ material.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="quantity">入库数量</label>
+                            <input type="number" id="quantity" name="quantity" class="form-control" placeholder="请输入入库数量" step="0.01" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lot">批次号</label>
+                            <input type="text" id="lot" name="lot" class="form-control" placeholder="请输入批次号">
+                        </div>
+                        
+                        <!-- 只读信息展示 -->
+                        {% if operation_object %}
+                        <div class="form-group">
+                            <label>库存组织</label>
+                            <input type="text" class="form-control" value="{{ operation_object.inventory_org.name }}" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>仓库名称</label>
+                            <input type="text" class="form-control" value="{{ operation_object.warehouse.name }}" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>成本中心</label>
+                            <input type="text" class="form-control" value="{{ operation_object.cost_center.name }}" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>成本对象</label>
+                            <input type="text" class="form-control" value="{{ operation_object.cost_object.name }}" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>扣水率</label>
+                            <input type="text" class="form-control" value="{{ operation_object.rate }}%" readonly>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="form-group">
+                            <label for="remark">备注</label>
+                            <textarea id="remark" name="remark" class="form-control" placeholder="输入数量后自动生成计算公式，也可手动输入备注信息"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn submit-btn">
+                            <span class="material-icons">save</span> 提交入库
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/utils.js' %}"></script>
+<script>
+
+
+// 收藏页面函数
+async function toggleFavorite() {
+    try {
+        const favoriteBtn = document.getElementById('favoriteBtn');
+        const currentPage = '/production/raw-soil-storage/';
+        
+        // 先检查当前收藏状态
+        const checkResponse = await fetch(`/api/user-favorite/?page=raw_soil_storage`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        const checkResult = await checkResponse.json();
+        console.log('收藏状态检查结果:', checkResult);
+        
+        if (checkResult.status === 'success' && checkResult.favorite) {
+            // 当前已收藏,执行取消收藏
+            const response = await fetch(`/api/user-favorite/?page=raw_soil_storage`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            
+            const result = await response.json();
+            console.log('取消收藏结果:', result);
+            
+            if (result.status === 'success') {
+                favoriteBtn.classList.remove('favorited');
+                favoriteBtn.innerHTML = '<span class="material-icons" data-icon="star">star</span> 收藏页面';
+                showMessage('已取消收藏', 'info');
+            } else {
+                showMessage(result.message || '取消收藏失败', 'error');
+            }
+        } else {
+            // 当前未收藏,执行添加收藏
+            const response = await fetch('/api/user-favorite/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    page: 'raw_soil_storage'
+                })
+            });
+            
+            const result = await response.json();
+            console.log('添加收藏结果:', result);
+            
+            if (result.status === 'success') {
+                favoriteBtn.classList.add('favorited');
+                favoriteBtn.innerHTML = '<span class="material-icons" data-icon="star">star</span> 已收藏';
+                showMessage('页面已收藏', 'success');
+            } else {
+                showMessage(result.message || '收藏失败', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('收藏操作出错:', error);
+        showMessage('收藏操作失败', 'error');
+    }
+}
+
+// 表单提交处理函数
+async function handleFormSubmit(event) {
+    event.preventDefault(); // 阻止默认表单提交
+    
+    const form = document.getElementById('rawSoilForm');
+    const submitBtn = form.querySelector('.submit-btn');
+    const originalText = submitBtn.innerHTML;
+    
+    // 获取表单数据
+    const formData = new FormData(form);
+    const data = {
+        bizDate: formData.get('bizDate'),
+        materialName: formData.get('materialName'),
+        quantity: parseFloat(formData.get('quantity')) || 0,
+        lot: formData.get('lot') || '',
+        remark: formData.get('remark') || ''
+    };
+    
+    // 表单验证
+    if (!data.bizDate) {
+        showMessage('请选择业务日期', 'error');
+        return;
+    }
+    
+    if (!data.materialName) {
+        showMessage('请选择物料名称', 'error');
+        return;
+    }
+    
+    if (data.quantity <= 0) {
+        showMessage('请输入有效的入库数量', 'error');
+        return;
+    }
+    
+    try {
+        // 禁用提交按钮，显示加载状态
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> 提交中...';
+        
+        // 调试信息：显示前端发送的数据
+        console.log('前端发送的数据:', data);
+        
+        // 发送POST请求到当前页面的URL
+        const response = await fetch(window.location.pathname, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        // 调试信息：显示后端返回的响应
+        console.log('后端返回的响应:', result);
+        
+        if (result.success !== false) {
+            showMessage('原土入库提交成功！', 'success');
+            // 清空表单
+            form.reset();
+            // 恢复默认日期
+            document.getElementById('bizDate').value = '{{ current_date|date:"Y-m-d" }}';
+            // 恢复默认物料选择
+            setDefaultMaterial();
+            // 清空备注
+            document.getElementById('remark').value = '';
+        } else {
+            showMessage(result.message || '提交失败，请重试', 'error');
+        }
+        
+    } catch (error) {
+        console.error('提交出错:', error);
+        showMessage('网络错误，请重试', 'error');
+    } finally {
+        // 恢复提交按钮
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 添加移动端调试信息
+    console.log('=== 原土入库页面加载调试 ===');
+    console.log('当前路径:', window.location.pathname);
+    console.log('User-Agent:', navigator.userAgent);
+    console.log('屏幕宽度:', window.innerWidth);
+    console.log('是否移动端:', window.innerWidth <= 768);
+    console.log('页面标题:', document.title);
+    console.log('当前URL:', window.location.href);
+    console.log('Referrer:', document.referrer);
+    
+    // 检查是否有重定向
+    if (window.location.pathname !== '/production/raw-soil-storage/') {
+        console.warn('⚠️ 页面路径不匹配，可能发生了重定向');
+        console.log('期望路径: /production/raw-soil-storage/');
+        console.log('实际路径:', window.location.pathname);
+        
+        // 如果是首页，记录重定向信息
+        if (window.location.pathname === '/' || window.location.pathname === '/home/') {
+            console.error('❌ 页面被重定向到首页，可能是权限问题');
+        }
+    }
+    
+    // 检查页面内容
+    const pageContent = document.body.innerHTML;
+    if (pageContent.includes('403') || pageContent.includes('无权限')) {
+        console.error('❌ 页面包含403错误信息');
+    }
+    
+    if (pageContent.includes('原土入库')) {
+        console.log('✅ 页面包含原土入库内容');
+    }
+    
+    // 检查是否有JavaScript错误
+    window.addEventListener('error', function(e) {
+        console.error('JavaScript错误:', e.error);
+        console.error('错误文件:', e.filename);
+        console.error('错误行号:', e.lineno);
+    });
+    
+    // 检查是否有未捕获的Promise错误
+    window.addEventListener('unhandledrejection', function(e) {
+        console.error('未处理的Promise错误:', e.reason);
+    });
+    
+    // 初始化图标替换
+    if (typeof initIconReplacement === 'function') {
+        initIconReplacement();
+    }
+    
+    // 绑定表单提交事件
+    const form = document.getElementById('rawSoilForm');
+    if (form) {
+        form.addEventListener('submit', handleFormSubmit);
+    }
+    
+    // 移动端菜单功能
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sideMenu = document.getElementById('sideMenu');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+
+    if (mobileMenuBtn && sideMenu) {
+        mobileMenuBtn.addEventListener('click', function() {
+            sideMenu.classList.add('expanded');
+            if (mobileOverlay) {
+                mobileOverlay.style.display = 'block';
+            }
+        });
+
+        if (mobileOverlay) {
+            mobileOverlay.addEventListener('click', function() {
+                sideMenu.classList.remove('expanded');
+                mobileOverlay.style.display = 'none';
+            });
+        }
+    }
+    
+    // 数量输入框验证和自动计算备注
+    const quantityInput = document.getElementById('quantity');
+    if (quantityInput) {
+        quantityInput.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (value < 0) {
+                this.value = 0;
+            }
+            
+            // 自动计算并填写备注
+            updateRemarkWithCalculation(value);
+        });
+        
+        // 页面加载时如果已有数量值，也触发计算
+        const initialValue = parseFloat(quantityInput.value);
+        if (initialValue > 0) {
+            updateRemarkWithCalculation(initialValue);
+        }
+    }
+    
+    // 设置默认物料选择
+    setDefaultMaterial();
+    
+    // 检查页面收藏状态
+    checkFavoriteStatus();
+});
+
+// 设置默认物料选择
+function setDefaultMaterial() {
+    const materialSelect = document.getElementById('materialName');
+    if (materialSelect) {
+        // 查找"一级自制原土"选项
+        const options = materialSelect.options;
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].text === '一级自制原土') {
+                materialSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+}
+
+// 自动计算并更新备注
+function updateRemarkWithCalculation(quantity) {
+    const remarkTextarea = document.getElementById('remark');
+    if (!remarkTextarea) return;
+    
+    // 获取扣水率
+    const rateInput = document.querySelector('input[readonly][value*="%"]');
+    let rate = 0;
+    
+    if (rateInput) {
+        const rateText = rateInput.value;
+        const rateMatch = rateText.match(/(\d+\.?\d*)%/);
+        if (rateMatch) {
+            rate = parseFloat(rateMatch[1]);
+        }
+    }
+    
+    if (quantity > 0 && !isNaN(quantity)) {
+        // 计算真实入库数量
+        const rateDecimal = rate / 100;
+        const actualQuantity = quantity * (1 - rateDecimal);
+        
+        // 生成备注内容
+        const remarkContent = `真实入库数量=${quantity} × (1-${rate}%) = ${actualQuantity.toFixed(2)}`;
+        
+        // 检查当前备注是否为空或者是之前的计算结果
+        const currentRemark = remarkTextarea.value.trim();
+        const isAutoGenerated = currentRemark === '' || currentRemark.startsWith('真实入库数量=');
+        
+        // 只在备注为空或为自动生成内容时更新
+        if (isAutoGenerated) {
+            remarkTextarea.value = remarkContent;
+        }
+    } else if (quantity === 0 || isNaN(quantity)) {
+        // 只有当前备注是自动生成的才清空
+        const currentRemark = remarkTextarea.value.trim();
+        if (currentRemark.startsWith('真实入库数量=')) {
+            remarkTextarea.value = '';
+        }
+    }
+}
+
+// 检查页面收藏状态
+async function checkFavoriteStatus() {
+    try {
+        const response = await fetch('/api/user-favorite/?page=raw_soil_storage', {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        const result = await response.json();
+        console.log('初始收藏状态检查:', result);
+        
+        const favoriteBtn = document.getElementById('favoriteBtn');
+        
+        if (result.status === 'success' && result.favorite) {
+            favoriteBtn.classList.add('favorited');
+            favoriteBtn.innerHTML = '<span class="material-icons" data-icon="star">star</span> 已收藏';
+            console.log('页面已收藏，更新按钮状态');
+        } else {
+            favoriteBtn.classList.remove('favorited');
+            favoriteBtn.innerHTML = '<span class="material-icons" data-icon="star">star</span> 收藏页面';
+            console.log('页面未收藏，保持默认状态');
+        }
+    } catch (error) {
+        console.log('获取收藏状态失败:', error);
+    }
+}
+</script>
+{% endblock %}

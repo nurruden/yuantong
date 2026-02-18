@@ -1,0 +1,22 @@
+<div id="warehouseModal" class="modal">
+    <div class="modal-content">
+        <h3 id="warehouseModalTitle">新增仓库映射</h3>
+        <form id="warehouseForm">
+            <div class="modal-body">
+                <input type="hidden" id="warehouseId">
+                <div class="form-group">
+                    <label for="warehouseCode">仓库编码:</label>
+                    <input type="text" id="warehouseCode" required>
+                </div>
+                <div class="form-group">
+                    <label for="warehouseName">仓库名称:</label>
+                    <input type="text" id="warehouseName" required>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeWarehouseModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>

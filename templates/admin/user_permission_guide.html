@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}用户权限管理使用指南{% endblock %}
+
+{% block extra_css %}
+<style>
+    .guide-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .guide-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .guide-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+    
+    .guide-subtitle {
+        color: #7f8c8d;
+        font-size: 16px;
+    }
+    
+    .guide-section {
+        margin: 30px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+    }
+    
+    .guide-section h3 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-size: 20px;
+    }
+    
+    .guide-section h4 {
+        color: #495057;
+        margin: 20px 0 10px 0;
+        font-size: 16px;
+    }
+    
+    .step-list {
+        counter-reset: step-counter;
+        list-style: none;
+        padding: 0;
+    }
+    
+    .step-list li {
+        counter-increment: step-counter;
+        margin: 15px 0;
+        padding: 15px;
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+        position: relative;
+        padding-left: 60px;
+    }
+    
+    .step-list li::before {
+        content: counter(step-counter);
+        position: absolute;
+        left: 15px;
+        top: 15px;
+        background: #007bff;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    
+    .code-block {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        padding: 15px;
+        font-family: monospace;
+        font-size: 14px;
+        margin: 10px 0;
+        overflow-x: auto;
+    }
+    
+    .highlight {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 4px;
+        padding: 10px;
+        margin: 10px 0;
+    }
+    
+    .success-box {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 4px;
+        padding: 15px;
+        margin: 15px 0;
+        color: #155724;
+    }
+    
+    .warning-box {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 4px;
+        padding: 15px;
+        margin: 15px 0;
+        color: #856404;
+    }
+    
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        margin: 5px;
+        transition: background 0.3s ease;
+    }
+    
+    .btn:hover {
+        background: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-success {
+        background: #28a745;
+    }
+    
+    .btn-success:hover {
+        background: #1e7e34;
+    }
+    
+    .permission-example {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+    
+    .permission-example h5 {
+        margin: 0 0 10px 0;
+        color: #495057;
+    }
+    
+    .permission-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin: 10px 0;
+    }
+    
+    .permission-item {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        padding: 10px;
+        text-align: center;
+        font-size: 12px;
+    }
+    
+    .permission-item.enabled {
+        background: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+    
+    .permission-item.disabled {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="guide-container">
+    <div class="guide-header">
+        <h1 class="guide-title">用户权限管理使用指南</h1>
+        <p class="guide-subtitle">如何在页面上管理QC报表的用户权限</p>
+    </div>
+    
+    <div class="guide-section">
+        <h3>📋 页面访问地址</h3>
+        <div class="highlight">
+            <strong>简化版用户权限管理页面：</strong><br>
+            <a href="/admin/simple-user-permissions/" class="btn btn-success" target="_blank">打开简化版权限管理页面</a>
+        </div>
+        
+        <div class="warning-box">
+            <strong>注意：</strong>只有管理员用户才能访问此页面。如果无法访问，请联系系统管理员。
+        </div>
+    </div>
+    
+    <div class="guide-section">
+        <h3>🎯 如何为yyz用户设置跨用户编辑权限</h3>
+        
+        <ol class="step-list">
+            <li>
+                <strong>打开权限管理页面</strong><br>
+                点击上方的"打开简化版权限管理页面"按钮，或直接访问：<br>
+                <code>https://jilinyuantong.top/admin/simple-user-permissions/</code>
+            </li>
+            
+            <li>
+                <strong>找到yyz用户</strong><br>
+                在页面中找到用户名为"yyz"的用户卡片
+            </li>
+            
+            <li>
+                <strong>选择要设置的模块</strong><br>
+                比如要设置"东泰QC报表"的权限，找到"东泰QC报表"模块区域
+            </li>
+            
+            <li>
+                <strong>启用跨用户编辑权限</strong><br>
+                在"跨用户编辑"权限项上点击，将开关切换到"启用"状态（绿色）
+            </li>
+            
+            <li>
+                <strong>保存权限设置</strong><br>
+                点击"保存东泰QC报表权限"按钮
+            </li>
+            
+            <li>
+                <strong>验证设置成功</strong><br>
+                页面会显示"保存成功"的提示信息
+            </li>
+        </ol>
+    </div>
+    
+    <div class="guide-section">
+        <h3>🔧 权限类型说明</h3>
+        
+        <div class="permission-example">
+            <h5>查看权限</h5>
+            <p>用户可以查看该模块的QC报表数据</p>
+        </div>
+        
+        <div class="permission-example">
+            <h5>编辑权限</h5>
+            <p>用户可以创建和编辑自己录入的QC报表数据</p>
+        </div>
+        
+        <div class="permission-example">
+            <h5>跨用户编辑</h5>
+            <p><strong>重要：</strong>用户可以编辑其他用户录入的QC报表数据</p>
+        </div>
+        
+        <div class="permission-example">
+            <h5>删除权限</h5>
+            <p>用户可以删除QC报表数据</p>
+        </div>
+        
+        <div class="permission-example">
+            <h5>管理权限</h5>
+            <p>用户拥有该模块的完整管理权限</p>
+        </div>
+    </div>
+    
+    <div class="guide-section">
+        <h3>⚡ 快速设置功能</h3>
+        
+        <h4>跨用户编辑快速设置</h4>
+        <p>在页面顶部有跨用户编辑的快速设置区域：</p>
+        
+        <div class="permission-grid">
+            <div class="permission-item enabled">
+                <strong>✅ 启用跨用户编辑</strong><br>
+                为所有模块启用跨用户编辑功能
+            </div>
+            <div class="permission-item disabled">
+                <strong>❌ 禁用跨用户编辑</strong><br>
+                关闭所有模块的跨用户编辑功能
+            </div>
+            <div class="permission-item">
+                <strong>🔍 检查状态</strong><br>
+                查看当前跨用户编辑功能状态
+            </div>
+        </div>
+    </div>
+    
+    <div class="guide-section">
+        <h3>📝 具体操作示例</h3>
+        
+        <h4>示例：让yyz用户可以在东泰QC报表中编辑其他用户的数据</h4>
+        
+        <ol class="step-list">
+            <li>
+                <strong>打开页面</strong><br>
+                访问简化版权限管理页面
+            </li>
+            
+            <li>
+                <strong>找到yyz用户</strong><br>
+                滚动页面找到用户"yyz"的卡片
+            </li>
+            
+            <li>
+                <strong>找到东泰QC报表模块</strong><br>
+                在yyz用户卡片中找到"东泰QC报表"模块区域
+            </li>
+            
+            <li>
+                <strong>设置权限</strong><br>
+                确保以下权限已启用：
+                <div class="permission-grid">
+                    <div class="permission-item enabled">查看权限 ✅</div>
+                    <div class="permission-item enabled">编辑权限 ✅</div>
+                    <div class="permission-item enabled">跨用户编辑 ✅</div>
+                    <div class="permission-item">删除权限</div>
+                    <div class="permission-item">管理权限</div>
+                </div>
+            </li>
+            
+            <li>
+                <strong>保存设置</strong><br>
+                点击"保存东泰QC报表权限"按钮
+            </li>
+        </ol>
+        
+        <div class="success-box">
+            <strong>✅ 设置完成！</strong><br>
+            现在yyz用户可以在东泰QC报表中编辑其他用户录入的数据了。
+        </div>
+    </div>
+    
+    <div class="guide-section">
+        <h3>🔍 验证权限设置</h3>
+        
+        <p>设置完成后，可以通过以下方式验证：</p>
+        
+        <ol class="step-list">
+            <li>
+                <strong>登录yyz用户账号</strong><br>
+                使用yyz用户的账号登录系统
+            </li>
+            
+            <li>
+                <strong>访问东泰QC报表</strong><br>
+                进入东泰QC报表页面
+            </li>
+            
+            <li>
+                <strong>尝试编辑其他用户的数据</strong><br>
+                找到其他用户录入的报表数据，尝试编辑
+            </li>
+            
+            <li>
+                <strong>确认可以编辑</strong><br>
+                如果能够成功编辑，说明权限设置正确
+            </li>
+        </ol>
+    </div>
+    
+    <div class="guide-section">
+        <h3>❓ 常见问题</h3>
+        
+        <h4>Q: 为什么设置了权限但还是不能编辑？</h4>
+        <p>A: 请检查以下几点：</p>
+        <ul>
+            <li>确保"跨用户编辑"权限已启用（开关显示为绿色）</li>
+            <li>确保已点击"保存权限"按钮</li>
+            <li>确保全局跨用户编辑功能已启用</li>
+            <li>尝试刷新页面或重新登录</li>
+        </ul>
+        
+        <h4>Q: 如何为多个用户批量设置权限？</h4>
+        <p>A: 目前需要逐个用户设置。可以：</p>
+        <ul>
+            <li>为每个用户分别设置权限</li>
+            <li>使用页面顶部的"启用跨用户编辑"按钮为所有模块启用跨用户编辑</li>
+        </ul>
+        
+        <h4>Q: 权限设置后多久生效？</h4>
+        <p>A: 权限设置立即生效，无需重启服务。</p>
+    </div>
+    
+    <div class="guide-section">
+        <h3>📞 技术支持</h3>
+        <p>如果在使用过程中遇到问题，请：</p>
+        <ul>
+            <li>检查浏览器控制台是否有错误信息</li>
+            <li>确认用户账号有管理员权限</li>
+            <li>联系系统管理员获取帮助</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

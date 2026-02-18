@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% load static %}
+{% load permission_tags %}
+
+{% block title %}调试用户权限管理{% endblock %}
+
+{% block extra_css %}
+<style>
+    .debug-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .debug-section {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .permission-item {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        user-select: none;
+        margin: 10px;
+        display: inline-block;
+        width: 200px;
+    }
+    
+    .permission-item.enabled {
+        background: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+    
+    .permission-item.disabled {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+    
+    .permission-toggle {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+        margin-bottom: 10px;
+    }
+    
+    .permission-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .permission-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 30px;
+    }
+    
+    .permission-slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    .permission-toggle input:checked + .permission-slider {
+        background-color: #28a745;
+    }
+    
+    .permission-toggle input:checked + .permission-slider:before {
+        transform: translateX(30px);
+    }
+    
+    .btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 10px 5px;
+    }
+    
+    .btn:hover {
+        background: #0056b3;
+    }
+    
+    .log {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 15px;
+        margin-top: 20px;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="debug-container">
+    <h1>调试用户权限管理</h1>
+    
+    <div class="debug-section">
+        <h3>测试权限项</h3>
+        <p>点击权限项应该能够切换状态</p>
+        
+        <div class="permission-item" id="view-testuser-dongtai_qc_report">
+            <div class="permission-toggle">
+                <input type="checkbox" id="view-check-testuser-dongtai_qc_report">
+                <span class="permission-slider"></span>
+            </div>
+            <div class="permission-label">查看权限</div>
+            <div class="permission-description">可以查看东泰QC报表数据</div>
+        </div>
+        
+        <div class="permission-item" id="edit-testuser-dongtai_qc_report">
+            <div class="permission-toggle">
+                <input type="checkbox" id="edit-check-testuser-dongtai_qc_report">
+                <span class="permission-slider"></span>
+            </div>
+            <div class="permission-label">编辑权限</div>
+            <div class="permission-description">可以创建和编辑自己的数据</div>
+        </div>
+        
+        <div class="permission-item" id="edit-others-testuser-dongtai_qc_report">
+            <div class="permission-toggle">
+                <input type="checkbox" id="edit-others-check-testuser-dongtai_qc_report">
+                <span class="permission-slider"></span>
+            </div>
+            <div class="permission-label">跨用户编辑</div>
+            <div class="permission-description">可以编辑他人录入的数据</div>
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>测试按钮</h3>
+        <button class="btn" onclick="testSavePermissions()">测试保存权限</button>
+        <button class="btn" onclick="testCheckAll()">全选</button>
+        <button class="btn" onclick="testUncheckAll()">全不选</button>
+        <button class="btn" onclick="clearLog()">清除日志</button>
+    </div>
+    
+    <div class="log" id="log">
+        <div>日志输出：</div>
+    </div>
+</div>
+
+<script>
+// 权限类型定义
+const PERMISSION_TYPES = ['view', 'edit', 'edit-others'];
+
+function log(message) {
+    const logDiv = document.getElementById('log');
+    const timestamp = new Date().toLocaleTimeString();
+    logDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+function testSavePermissions() {
+    log('开始测试保存权限...');
+    
+    const username = 'testuser';
+    const moduleCode = 'dongtai_qc_report';
+    const permissions = {};
+    
+    PERMISSION_TYPES.forEach(type => {
+        const checkbox = document.getElementById(`${type}-check-${username}-${moduleCode}`);
+        if (checkbox) {
+            permissions[type] = checkbox.checked;
+            log(`权限 ${type}: ${checkbox.checked ? '已选中' : '未选中'}`);
+        } else {
+            log(`❌ 找不到复选框: ${type}-check-${username}-${moduleCode}`);
+            permissions[type] = false;
+        }
+    });
+    
+    log(`收集到的权限: ${JSON.stringify(permissions)}`);
+    log('✅ 保存权限测试完成');
+}
+
+function testCheckAll() {
+    log('全选所有权限...');
+    const username = 'testuser';
+    const moduleCode = 'dongtai_qc_report';
+    
+    PERMISSION_TYPES.forEach(type => {
+        const checkbox = document.getElementById(`${type}-check-${username}-${moduleCode}`);
+        if (checkbox) {
+            checkbox.checked = true;
+            checkbox.dispatchEvent(new Event('change'));
+            log(`已选中: ${type}`);
+        } else {
+            log(`❌ 找不到复选框: ${type}-check-${username}-${moduleCode}`);
+        }
+    });
+}
+
+function testUncheckAll() {
+    log('取消选择所有权限...');
+    const username = 'testuser';
+    const moduleCode = 'dongtai_qc_report';
+    
+    PERMISSION_TYPES.forEach(type => {
+        const checkbox = document.getElementById(`${type}-check-${username}-${moduleCode}`);
+        if (checkbox) {
+            checkbox.checked = false;
+            checkbox.dispatchEvent(new Event('change'));
+            log(`已取消选择: ${type}`);
+        } else {
+            log(`❌ 找不到复选框: ${type}-check-${username}-${moduleCode}`);
+        }
+    });
+}
+
+function clearLog() {
+    document.getElementById('log').innerHTML = '<div>日志输出：</div>';
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    log('页面加载完成，开始初始化...');
+    
+    const username = 'testuser';
+    const moduleCode = 'dongtai_qc_report';
+    
+    PERMISSION_TYPES.forEach(type => {
+        const checkbox = document.getElementById(`${type}-check-${username}-${moduleCode}`);
+        const item = document.getElementById(`${type}-${username}-${moduleCode}`);
+        
+        if (checkbox && item) {
+            // 设置初始状态
+            item.classList.add('disabled');
+            
+            // 添加复选框变化事件
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    item.classList.remove('disabled');
+                    item.classList.add('enabled');
+                } else {
+                    item.classList.remove('enabled');
+                    item.classList.add('disabled');
+                }
+            });
+            
+            // 为整个权限项添加点击事件
+            item.addEventListener('click', function(e) {
+                if (e.target !== checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change'));
+                }
+            });
+            
+            log(`✅ 初始化完成: ${type}`);
+        } else {
+            log(`❌ 初始化失败: ${type} - checkbox: ${checkbox ? '存在' : '不存在'}, item: ${item ? '存在' : '不存在'}`);
+        }
+    });
+    
+    log('初始化完成！');
+});
+</script>
+{% endblock %}

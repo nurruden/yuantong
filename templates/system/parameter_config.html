@@ -1,0 +1,534 @@
+{% extends 'base.html' %}
+
+{% block head_extra %}
+{% load static %}
+<link href="{% static 'libs/material-icons/material-icons.css' %}" rel="stylesheet">
+<script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/admin.js' %}" defer></script>
+<script src="{% static 'js/system/parameter_config.js' %}"></script>
+<script src="{% static 'js/system/water_deduction_rate.js' %}"></script>
+<script src="{% static 'js/system/object_operation.js' %}"></script>
+<!-- <script src="{% static 'js/system/cost_center.js' %}"></script> -->
+{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <div class="header">
+        <div class="user-info">
+            <span class="material-icons">person</span>
+            <span class="username">{{ user.first_name }}</span>
+            {% if user.last_name %}
+                <span class="department">({{ user.last_name }})</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'logout' %}" class="logout-btn">
+            <span class="material-icons">logout</span>
+            退出登录
+        </a>
+    </div>
+    <div class="main-container">
+        <div id="sideMenu" class="side-menu">
+            {% include 'shared/sidebar.html' %}
+        </div>
+        <div class="main-content" id="mainContentArea">
+            <div class="admin-panel-container">
+                <!-- 库存组织管理 -->
+                <div class="admin-panel" style="margin-bottom: 20px;">
+                    <div class="panel-header">
+                        <h2>库存组织管理</h2>
+                        <div class="action-bar">
+                            <button id="addOrgBtn" class="btn btn-primary">新增库存组织</button>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>组织名称</th>
+                                <th>组织编码</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orgTable"></tbody>
+                    </table>
+                    <div class="panel-header">
+                        <h2>物料映射管理</h2>
+                        <div class="action-bar">
+                            <button id="addMaterialBtn" class="btn btn-primary">新增物料映射</button>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>物料编码</th>
+                                <th>物料名称</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="materialTable"></tbody>
+                    </table>
+                    <div class="panel-header">
+                        <h2>仓库映射管理</h2>
+                        <div class="action-bar">
+                            <button id="addWarehouseBtn" class="btn btn-primary">新增仓库映射</button>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>仓库编码</th>
+                                <th>仓库名称</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="warehouseTable"></tbody>
+                    </table>
+                </div>
+                <!-- 成本中心映射管理 -->
+                <div class="admin-panel">
+                    <div class="panel-header">
+                        <h2>成本中心映射管理</h2>
+                        <button id="addCostCenterBtn" class="btn btn-primary">新增成本中心 </button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>成本中心编码</th>
+                                <th>成本中心名称</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="costCenterTable"></tbody>
+                    </table>
+                </div>
+                <!-- 扣水率管理 -->
+                <div class="admin-panel">
+                    <div class="panel-header">
+                        <h2>扣水率管理</h2>
+                        <div class="action-bar">
+                            <button id="addRateBtn" class="btn btn-primary" onclick="openRateModal()">新增扣水率</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>库存组织</th>
+                                    <th>扣水率 (%)</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rateTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- 成本对象映射管理 -->
+                <div class="admin-panel">
+                    <div class="panel-header">
+                        <h2>成本对象映射管理</h2>
+                        <button id="addCostObjectBtn" class="btn btn-primary">新增成本对象</button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>成本对象编码</th>
+                                <th>成本对象名称</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="costObjectTable"></tbody>
+                    </table>
+                </div>
+                <!-- 操作对象管理 -->
+                <div class="admin-panel">
+                    <div class="panel-header">
+                        <h2>操作对象管理</h2>
+                        <div class="action-bar">
+                            <button id="addObjectBtn" class="btn btn-primary" onclick="openObjectModal(false)">新增操作对象</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>用户ID</th>
+                                    <th>库存组织</th>
+                                    <th>仓库</th>
+                                    <th>成本中心</th>
+                                    <th>成本对象</th>
+                                    <th>扣水率 (%)</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="objectTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- 报表参数管理 -->
+                <div class="admin-panel">
+                    <div class="panel-header">
+                        <h2>报表参数管理</h2>
+                        <div class="action-bar">
+                            <button id="addParameterBtn" class="btn btn-primary">新增参数</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>参数名称</th>
+                                    <th>参数值</th>
+                                    <th>描述</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="parameterTable">
+                                <tr>
+                                    <td>report_edit_limit</td>
+                                    <td>报表编辑期限（天）</td>
+                                    <td>
+                                        <input type="number" class="form-control" id="report_edit_limit" min="1" max="365" value="">
+                                    </td>
+                                    <td>设置报表可编辑的天数限制，超过此天数的报表将不能编辑和删除</td>
+                                    <td>
+                                        <button class="btn btn-primary" onclick="saveParameter('report_edit_limit')">
+                                            <span class="material-icons">save</span> 保存
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 渗透率系数管理 -->
+                <div class="admin-panel">
+                    <div class="panel-header">
+                        <h2>渗透率系数管理</h2>
+                        <div class="action-bar">
+                            <span class="hint">设置渗透率计算公式中的系数参数</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>参数ID</th>
+                                    <th>参数名称</th>
+                                    <th>参数值</th>
+                                    <th>公式说明</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="permeabilityTable">
+                                <tr>
+                                    <td>yuantong_permeability_coefficient</td>
+                                    <td>远通渗透率系数</td>
+                                    <td>
+                                        <input type="number" class="form-control" id="yuantong_permeability_coefficient" 
+                                               min="0.1" max="100" step="0.1" value="" placeholder="6.4">
+                                    </td>
+                                    <td>远通渗透率 = 系数 × 饼厚 × 水粘度 ÷ 过滤时间</td>
+                                    <td>
+                                        <button class="btn btn-primary" onclick="saveParameter('yuantong_permeability_coefficient')">
+                                            <span class="material-icons">save</span> 保存
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>dongtai_permeability_coefficient</td>
+                                    <td>东泰渗透率系数</td>
+                                    <td>
+                                        <input type="number" class="form-control" id="dongtai_permeability_coefficient" 
+                                               min="0.1" max="100" step="0.1" value="" placeholder="6.4">
+                                    </td>
+                                    <td>东泰渗透率 = 系数 × 饼厚 × 水粘度 ÷ 过滤时间</td>
+                                    <td>
+                                        <button class="btn btn-primary" onclick="saveParameter('dongtai_permeability_coefficient')">
+                                            <span class="material-icons">save</span> 保存
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>yuantong_sample_weight</td>
+                                    <td>远通样品重量</td>
+                                    <td>
+                                        <input type="number" class="form-control" id="yuantong_sample_weight" 
+                                               min="0.1" max="1000" step="0.1" value="" placeholder="10.0">
+                                    </td>
+                                    <td>远通样品重量参数，用于相关计算</td>
+                                    <td>
+                                        <button class="btn btn-primary" onclick="saveParameter('yuantong_sample_weight')">
+                                            <span class="material-icons">save</span> 保存
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>dongtai_sample_weight</td>
+                                    <td>东泰样品重量</td>
+                                    <td>
+                                        <input type="number" class="form-control" id="dongtai_sample_weight" 
+                                               min="0.1" max="1000" step="0.1" value="" placeholder="10.0">
+                                    </td>
+                                    <td>东泰样品重量参数，用于相关计算</td>
+                                    <td>
+                                        <button class="btn btn-primary" onclick="saveParameter('dongtai_sample_weight')">
+                                            <span class="material-icons">save</span> 保存
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>yuantong_filter_area</td>
+                                    <td>远通过滤面积</td>
+                                    <td>
+                                        <input type="number" class="form-control" id="yuantong_filter_area" 
+                                               min="0.1" max="1000" step="0.1" value="" placeholder="28.3">
+                                    </td>
+                                    <td>远通过滤面积参数，用于相关计算</td>
+                                    <td>
+                                        <button class="btn btn-primary" onclick="saveParameter('yuantong_filter_area')">
+                                            <span class="material-icons">save</span> 保存
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>dongtai_filter_area</td>
+                                    <td>东泰过滤面积</td>
+                                    <td>
+                                        <input type="number" class="form-control" id="dongtai_filter_area" 
+                                               min="0.1" max="1000" step="0.1" value="" placeholder="28.3">
+                                    </td>
+                                    <td>东泰过滤面积参数，用于相关计算</td>
+                                    <td>
+                                        <button class="btn btn-primary" onclick="saveParameter('dongtai_filter_area')">
+                                            <span class="material-icons">save</span> 保存
+                                        </button>
+                                    </td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 所有模态框放在block content内部 -->
+            <!-- 库存组织模态框 -->
+            <div id="orgModal" class="modal" style="display: none;" onclick="if(event.target === this) closeOrgModal();">
+                <div class="modal-content" onclick="event.stopPropagation();">
+                    <h3 id="modalTitle">新增库存组织</h3>
+                    <form id="orgForm" onclick="event.stopPropagation();">
+                        <div class="modal-body" onclick="event.stopPropagation();">
+                            <input type="hidden" id="orgId">
+                            <div class="form-group" onclick="event.stopPropagation();">
+                                <label for="orgName">组织名称:</label>
+                                <input type="text" id="orgName" name="orgName" required onclick="event.stopPropagation();">
+                            </div>
+                            <div class="form-group" onclick="event.stopPropagation();">
+                                <label for="orgCode">组织编码:</label>
+                                <input type="text" id="orgCode" name="orgCode" required onclick="event.stopPropagation();">
+                            </div>
+                        </div>
+                        <div class="form-actions" onclick="event.stopPropagation();">
+                            <button type="button" class="btn btn-secondary" onclick="event.stopPropagation(); closeOrgModal();">取消</button>
+                            <button type="submit" class="btn btn-primary" onclick="event.stopPropagation();">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- 物料映射模态框 -->
+            <div id="materialModal" class="modal" style="display: none;" onclick="if(event.target === this) closeMaterialModal();">
+                <div class="modal-content" onclick="event.stopPropagation();">
+                    <h3 id="materialModalTitle">新增物料映射</h3>
+                    <form id="materialForm" onclick="event.stopPropagation();">
+                        <div class="modal-body" onclick="event.stopPropagation();">
+                            <input type="hidden" id="materialId">
+                            <div class="form-group" onclick="event.stopPropagation();">
+                                <label for="materialCode">物料编码:</label>
+                                <input type="text" id="materialCode" name="materialCode" required onclick="event.stopPropagation();">
+                            </div>
+                            <div class="form-group" onclick="event.stopPropagation();">
+                                <label for="materialName">物料名称:</label>
+                                <input type="text" id="materialName" name="materialName" required onclick="event.stopPropagation();">
+                            </div>
+                        </div>
+                        <div class="form-actions" onclick="event.stopPropagation();">
+                            <button type="button" class="btn btn-secondary" onclick="event.stopPropagation(); closeMaterialModal();">取消</button>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- 仓库映射模态框 -->
+            <div id="warehouseModal" class="modal" style="display: none;" onclick="if(event.target === this) closeWarehouseModal();">
+                <div class="modal-content" onclick="event.stopPropagation();">
+                    <h3 id="warehouseModalTitle">新增仓库映射</h3>
+                    <form id="warehouseForm" onclick="event.stopPropagation();">
+                        <div class="modal-body" onclick="event.stopPropagation();">
+                            <input type="hidden" id="warehouseId">
+                            <div class="form-group" onclick="event.stopPropagation();">
+                                <label for="warehouseCode">仓库编码:</label>
+                                <input type="text" id="warehouseCode" name="warehouseCode" required onclick="event.stopPropagation();">
+                            </div>
+                            <div class="form-group" onclick="event.stopPropagation();">
+                                <label for="warehouseName">仓库名称:</label>
+                                <input type="text" id="warehouseName" name="warehouseName" required onclick="event.stopPropagation();">
+                            </div>
+                        </div>
+                        <div class="form-actions" onclick="event.stopPropagation();">
+                            <button type="button" class="btn btn-secondary" onclick="event.stopPropagation(); closeWarehouseModal();">取消</button>
+                            <button type="submit" class="btn btn-primary" onclick="event.stopPropagation();">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- 成本中心映射模态框 -->
+            <div id="costCenterModal" class="modal" style="display: none;" onclick="if(event.target === this) closeCostCenterModal();">
+                <div class="modal-content" onclick="event.stopPropagation();">
+                    <h3 id="costCenterModalTitle">新增成本中心映射</h3>
+                    <form id="costCenterForm" onclick="event.stopPropagation();">
+                        <div class="modal-body" onclick="event.stopPropagation();">
+                            <input type="hidden" id="costCenterId">
+                            <div class="form-group" onclick="event.stopPropagation();">
+                                <label for="costCenterCode">成本中心编码:</label>
+                                <input type="text" id="costCenterCode" name="costCenterCode" required onclick="event.stopPropagation();">
+                            </div>
+                            <div class="form-group" onclick="event.stopPropagation();">
+                                <label for="costCenterName">成本中心名称:</label>
+                                <input type="text" id="costCenterName" name="costCenterName" required onclick="event.stopPropagation();">
+                            </div>
+                        </div>
+                        <div class="form-actions" onclick="event.stopPropagation();">
+                            <button type="button" class="btn btn-secondary" onclick="event.stopPropagation(); closeCostCenterModal();">取消</button>
+                            <button type="submit" class="btn btn-primary" onclick="event.stopPropagation();">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- 成本对象模态框 -->
+            <div id="costObjectModal" class="modal" style="display: none;" onclick="if(event.target === this) closeCostObjectModal();">
+                <div class="modal-content" onclick="event.stopPropagation();">
+                    <h3 id="costObjectModalTitle">新增成本对象</h3>
+                    <form id="costObjectForm" onclick="event.stopPropagation();">
+                        <div class="modal-body" onclick="event.stopPropagation();">
+                            <input type="hidden" id="costObjectId">
+                            <div class="form-group" onclick="event.stopPropagation();">
+                                <label for="costObjectCode">成本对象编码:</label>
+                                <input type="text" id="costObjectCode" name="costObjectCode" required onclick="event.stopPropagation();">
+                            </div>
+                            <div class="form-group" onclick="event.stopPropagation();">
+                                <label for="costObjectName">成本对象名称:</label>
+                                <input type="text" id="costObjectName" name="costObjectName" required onclick="event.stopPropagation();">
+                            </div>
+                        </div>
+                        <div class="form-actions" onclick="event.stopPropagation();">
+                            <button type="button" class="btn btn-secondary" onclick="event.stopPropagation(); closeCostObjectModal();">取消</button>
+                            <button type="submit" class="btn btn-primary" onclick="event.stopPropagation();">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- 扣水率模态框 -->
+            <div id="rateModal" class="modal" style="display: none;">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="rateModalTitle">新增扣水率</h5>
+                            <button type="button" class="close" onclick="closeRateModal()">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <form id="rateForm" onsubmit="submitRateForm(event);">
+                            {% csrf_token %}
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="inventory_org_id">库存组织</label>
+                                    <select class="form-control" id="inventory_org_id" name="inventory_org_id" required>
+                                        <option value="">请选择库存组织</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="rate">扣水率 (%)</label>
+                                    <input type="number" class="form-control" id="rate" name="rate" required min="0" max="100" step="0.01" placeholder="请输入0-100之间的数字">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" onclick="closeRateModal()">取消</button>
+                                <button type="submit" class="btn btn-primary">保存</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- 操作对象模态框 -->
+            <div id="objectModal" class="modal" style="display: none;">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="objectModalTitle">新增操作对象</h5>
+                            <button type="button" class="close" onclick="closeObjectModal()">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <form id="objectForm" onsubmit="submitObjectForm(event);">
+                            {% csrf_token %}
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="user_id">用户ID</label>
+                                    <input type="text" class="form-control" id="user_id" name="user_id" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inventory_org_id">库存组织</label>
+                                    <select class="form-control" id="inventory_org_id" name="inventory_org_id" required>
+                                        <option value="">请选择库存组织</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="warehouse_id">仓库</label>
+                                    <select class="form-control" id="warehouse_id" name="warehouse_id" required>
+                                        <option value="">请选择仓库</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cost_center_id">成本中心</label>
+                                    <select class="form-control" id="cost_center_id" name="cost_center_id" required>
+                                        <option value="">请选择成本中心</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cost_object_id">成本对象</label>
+                                    <select class="form-control" id="cost_object_id" name="cost_object_id" required>
+                                        <option value="">请选择成本对象</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="rate">扣水率 (%)</label>
+                                    <input type="number" class="form-control" id="rate" name="rate" required min="0" max="100" step="0.01" placeholder="请输入0-100之间的数字">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" onclick="closeObjectModal()">取消</button>
+                                <button type="submit" class="btn btn-primary">保存</button>
+                            </div>  
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

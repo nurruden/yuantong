@@ -1,0 +1,520 @@
+{% extends 'base.html' %}
+
+{% block head_extra %}
+{% load static %}
+<link href="{% static 'libs/material-icons/material-icons.css' %}" rel="stylesheet">
+<script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/user_management.js' %}" defer></script>
+<!-- 确保不加载admin.js，避免冲突 -->
+{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <div class="header">
+        <div class="user-info">
+            <span class="material-icons" data-icon="person">person</span>
+            <span class="username">{{ user.first_name }}</span>
+            {% if user.last_name %}
+                <span class="department">({{ user.last_name }})</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'logout' %}" class="logout-btn">
+            <span class="material-icons" data-icon="logout">logout</span>
+            退出登录
+        </a>
+    </div>
+    <div class="main-container">
+        <div id="sideMenu" class="side-menu">
+            {% include 'shared/sidebar.html' %}
+        </div>
+        <div class="main-content" id="mainContentArea">
+            <div class="admin-panel-container">
+                <!-- 用户管理 -->
+                <div class="admin-panel">
+                    <div class="panel-header">
+                        <h2>
+                            <i class="material-icons" data-icon="people">people</i>
+                            用户管理
+                        </h2>
+                        <div class="action-bar">
+                            <button class="btn btn-primary" onclick="openAddUserModal()">
+                                <i class="material-icons" data-icon="add">add</i>
+                                添加用户
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 搜索区域 -->
+                    <div class="search-container">
+                        <form id="searchForm" class="search-form">
+                            <div class="search-row">
+                                <div class="search-group">
+                                    <label class="form-label">用户名</label>
+                                    <input type="text" id="searchUsername" class="form-control" placeholder="输入用户名">
+                                </div>
+                                <div class="search-group">
+                                    <label class="form-label">姓名</label>
+                                    <input type="text" id="searchName" class="form-control" placeholder="输入姓名">
+                                </div>
+                                <div class="search-group">
+                                    <label class="form-label">邮箱</label>
+                                    <input type="email" id="searchEmail" class="form-control" placeholder="输入邮箱">
+                                </div>
+                                <div class="search-group">
+                                    <label class="form-label">状态</label>
+                                    <select id="searchStatus" class="form-control">
+                                        <option value="">全部</option>
+                                        <option value="true">启用</option>
+                                        <option value="false">禁用</option>
+                                    </select>
+                                </div>
+                                <div class="search-group">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="material-icons" data-icon="search">search</i>
+                                        搜索
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="clearSearch()">
+                                        <i class="material-icons" data-icon="clear">clear</i>
+                                        清除
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>用户ID</th>
+                                    <th>用户名</th>
+                                    <th>姓名</th>
+                                    <th>员工编号</th>
+                                    <th>所属部门</th>
+                                    <th>职位</th>
+                                    <th>邮箱</th>
+                                    <th>电话</th>
+                                    <th>企业微信ID</th>
+                                    <th>状态</th>
+                                    <th>注册时间</th>
+                                    <th>最后登录</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTableBody">
+                                <!-- 用户数据将通过JavaScript动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页控件 -->
+                    <div id="pagination-container" class="pagination-container" style="display: none;">
+                        <div class="pagination-info">
+                            <span id="pagination-info"></span>
+                        </div>
+                        <div class="pagination-controls">
+                            <button id="prev-page" class="btn btn-outline-primary" onclick="changePage(-1)">
+                                <i class="material-icons" data-icon="chevron_left">chevron_left</i>
+                                上一页
+                            </button>
+                            <div id="page-numbers" class="page-numbers"></div>
+                            <button id="next-page" class="btn btn-outline-primary" onclick="changePage(1)">
+                                下一页
+                                <i class="material-icons" data-icon="chevron_right">chevron_right</i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑用户模态框 -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalLabel">添加用户</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <input type="hidden" id="userId" name="userId">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="username" class="form-label">用户名 *</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="password" class="form-label">密码 *</label>
+                                <div class="password-field">
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                    <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                        <i class="material-icons" data-icon="visibility">visibility</i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="first_name" class="form-label">姓名</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="employee_id" class="form-label">员工编号</label>
+                                <input type="text" class="form-control" id="employee_id" name="employee_id">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="department" class="form-label">所属部门 *</label>
+                                <select class="form-control" id="department" name="department" required>
+                                    <option value="">请选择部门</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="position" class="form-label">职位 *</label>
+                                <select class="form-control" id="position" name="position" required>
+                                    <option value="">请选择职位</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="email" class="form-label">邮箱</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="phone" class="form-label">电话</label>
+                                <input type="tel" class="form-control" id="phone" name="phone">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="wechat_id" class="form-label">企业微信ID</label>
+                                <input type="text" class="form-control" id="wechat_id" name="wechat_id">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="is_active" class="form-label">状态</label>
+                                <select class="form-control" id="is_active" name="is_active">
+                                    <option value="true">启用</option>
+                                    <option value="false">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveUser()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 密码重置模态框 -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="passwordModalLabel">重置密码</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="passwordForm">
+                    <input type="hidden" id="resetUserId" name="resetUserId">
+                    <div class="form-group">
+                        <label for="newPassword" class="form-label">新密码 *</label>
+                        <div class="password-field">
+                            <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('newPassword')">
+                                <i class="material-icons" data-icon="visibility">visibility</i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword" class="form-label">确认密码 *</label>
+                        <div class="password-field">
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                                <i class="material-icons" data-icon="visibility">visibility</i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-warning" onclick="resetPassword()">重置密码</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 防止admin.js冲突的全局变量
+window.USER_MANAGEMENT_PAGE = true;
+
+// 确保页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('用户管理页面初始化开始...');
+    
+    // 检查必要的元素是否存在
+    const userTableBody = document.getElementById('userTableBody');
+    if (!userTableBody) {
+        console.error('用户表格元素未找到');
+        return;
+    }
+    
+    // 初始化用户管理功能
+    if (typeof loadUsers === 'function') {
+        loadUsers();
+    } else {
+        console.error('loadUsers函数未定义');
+    }
+    
+    if (typeof loadDepartments === 'function') {
+        loadDepartments();
+    }
+    
+    if (typeof loadPositions === 'function') {
+        loadPositions();
+    }
+    
+    console.log('用户管理页面初始化完成');
+});
+
+// 错误处理函数
+window.addEventListener('error', function(e) {
+    console.error('JavaScript错误:', e.error);
+    console.error('错误位置:', e.filename, e.lineno, e.colno);
+});
+
+// 未捕获的Promise错误处理
+window.addEventListener('unhandledrejection', function(e) {
+    console.error('未处理的Promise错误:', e.reason);
+});
+</script>
+
+<style>
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.password-field {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+}
+
+.password-toggle:hover {
+    color: #495057;
+}
+
+/* 修复transform属性问题 */
+.material-icons {
+    transform: none !important;
+}
+
+/* 确保模态框正常工作 */
+.modal {
+    z-index: 1055 !important;
+}
+
+.modal-backdrop {
+    z-index: 1050 !important;
+}
+
+.modal-dialog {
+    z-index: 1055 !important;
+}
+
+/* 搜索和分页样式 */
+.search-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.search-form {
+    width: 100%;
+}
+
+.search-row {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.search-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-group .form-label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.search-group .form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.search-group .form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.search-group .btn {
+    white-space: nowrap;
+    margin-right: 10px;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    gap: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pagination-info {
+    color: #666;
+    font-size: 14px;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 5px;
+}
+
+.page-btn {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.page-btn:hover {
+    background-color: #f8f9fa;
+}
+
+.page-btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .search-row {
+        flex-direction: column;
+    }
+    
+    .search-group {
+        min-width: 100%;
+    }
+    
+    .pagination-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .pagination-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %} 

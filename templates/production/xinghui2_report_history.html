@@ -1,0 +1,1339 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{% static 'css/icon-alignment-fix.css' %}">
+<link rel="stylesheet" href="{% static 'css/qc_report_buttons.css' %}">
+<link rel="stylesheet" href="{% static 'css/sticky_table_header.css' %}">
+<link rel="stylesheet" href="{% static 'css/wechat-pc-table-fix.css' %}">
+<link rel="stylesheet" href="/static/libs/flatpickr/flatpickr.min.css">
+<script src="/static/libs/flatpickr/flatpickr.min.js"></script>
+<script src="/static/libs/flatpickr/zh.js"></script>
+<script src="/static/libs/jquery/jquery-3.6.0.min.js"></script>
+<script src="/static/libs/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="/static/js/production/qc_report_common.js"></script>
+<script src="/static/js/production/xinghui2_report.js"></script>
+<script src="/static/js/wechat-pc-table-fix.js"></script>
+<style>
+    .page-container {
+        padding: 20px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    /* PC端样式 - 充满整个屏幕 */
+    @media (min-width: 1024px) {
+        .page-container {
+            max-width: none;
+            padding: 20px 40px;
+        }
+        .filter-row {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        .table-container {
+            margin-left: 0;
+            margin-right: 0;
+        }
+        /* PC端表格优化 */
+        table {
+            min-width: 100%;
+            font-size: 15px;
+        }
+        th, td {
+            padding: 14px 18px;
+            font-size: 15px;
+        }
+        th {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        /* 让表格列宽更合理分布 */
+        th:nth-child(1), td:nth-child(1) { width: 6%; } /* 操作人 */
+        th:nth-child(2), td:nth-child(2) { width: 5%; } /* 日期 */
+        th:nth-child(3), td:nth-child(3) { width: 4%; } /* 时间 */
+        th:nth-child(7), td:nth-child(7) { width: 6%; } /* 产品型号 */
+        th:nth-child(29), td:nth-child(29) { width: 4%; } /* 水分(%) */
+        th:nth-child(30), td:nth-child(30) { width: 4%; } /* 袋数 */
+        th:nth-child(31), td:nth-child(31) { width: 5%; } /* 包装类型 */
+        th:nth-child(35), td:nth-child(35) { width: 4%; } /* 班组 */
+        th:nth-child(36), td:nth-child(36) { width: 6%; } /* 操作 */
+    }
+
+    /* 平板端样式 */
+    @media (min-width: 769px) and (max-width: 1023px) {
+        .page-container {
+            max-width: 1200px;
+            padding: 20px 30px;
+        }
+    }
+
+    .page-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .page-title h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .filter-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .filter-group {
+        margin-bottom: 15px;
+    }
+    
+    /* 按钮组样式 - 让所有按钮在同一行显示 */
+    .filter-container .filter-group.button-group,
+    .filter-group.button-group {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        flex-direction: row !important;
+        /* 添加更多强制属性确保稳定性 */
+        flex: 0 1 auto !important;
+        min-height: auto !important;
+        height: auto !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+    
+    /* 按钮组中的按钮样式 */
+    .filter-group.button-group .btn {
+        margin: 0 !important;
+        flex-shrink: 0 !important;
+        display: inline-flex !important;
+        float: none !important;
+        clear: none !important;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+    }
+    
+    /* 响应式按钮组样式 */
+    @media (max-width: 768px) {
+        .filter-group.button-group {
+            flex-direction: column !important;
+            align-items: stretch !important;
+        }
+        .filter-group.button-group .btn {
+            width: 100% !important;
+            margin-bottom: 8px !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .filter-group.button-group {
+            gap: 8px !important;
+        }
+        .filter-group.button-group .btn {
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+        }
+    }
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .form-control:focus {
+        border-color: #4CAF50;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        min-height: 44px;
+        white-space: nowrap;
+    }
+    .btn-primary {
+        background: linear-gradient(90deg, #81d4fa 0%, #a5d6a7 100%);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+    }
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #4fc3f7 0%, #66bb6a 100%);
+        transform: translateY(-1px);
+    }
+    .btn-secondary {
+        background: #e3f2fd;
+        color: #1976d2;
+        box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+    }
+    .btn-secondary:hover {
+        background: #b3e5fc;
+        transform: translateY(-1px);
+    }
+    .material-icons {
+        vertical-align: middle;
+        font-size: 20px;
+        margin-right: 8px;
+    }
+    .table-container {
+        margin-top: 20px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .sticky-table-container {
+        margin-top: 20px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 800px;
+    }
+    th, td {
+        padding: 12px 16px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+        white-space: nowrap;
+        font-size: 14px;
+    }
+    th {
+        background: #f5f5f5;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+    tr:hover {
+        background: #fafafa;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        gap: 10px;
+    }
+    .pagination button {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .pagination button:hover {
+        background: #f0f0f0;
+    }
+    .pagination button.current-page {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .action-buttons-cell {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-height: auto;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 20px 0 15px 0;
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 5px;
+    }
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -15px;
+    }
+    .form-group {
+        padding: 0 15px;
+        margin-bottom: 20px;
+    }
+    .col-md-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    .col-md-4 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+    }
+    .col-md-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    @media (max-width: 768px) {
+        .col-md-6, .col-md-4 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+    .input-clear-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .input-clear-wrapper input.form-control {
+        padding-right: 28px;
+    }
+    .input-clear-btn {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 18px;
+        height: 18px;
+        border: none;
+        background: transparent;
+        color: #bbb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+        border-radius: 50%;
+        transition: background 0.2s, color 0.2s;
+    }
+    .input-clear-btn:hover {
+        background: #e0e0e0;
+        color: #333;
+    }
+    .input-clear-btn svg {
+        width: 14px;
+        height: 14px;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-title">
+        <h1>兴辉二线QC报表历史记录</h1>
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="window.location.href='{% url 'xinghui2_report' %}'">
+                <span class="material-icons">arrow_back</span> 返回
+            </button>
+            <button class="btn btn-primary" onclick="debugAndExport()">
+                <span class="material-icons">file_download</span> 导出Excel
+            </button>
+        </div>
+    </div>
+
+    <div class="filter-container">
+        <form id="filterForm">
+            {% csrf_token %}
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="startDate">开始日期</label>
+                    <div class="input-clear-wrapper">
+                        <input type="text" id="startDate" name="start_date" class="form-control">
+                        <button type="button" class="input-clear-btn" onclick="clearInput('startDate')" title="清空">
+                            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5f5f5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#888" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label for="endDate">结束日期</label>
+                    <div class="input-clear-wrapper">
+                        <input type="text" id="endDate" name="end_date" class="form-control">
+                        <button type="button" class="input-clear-btn" onclick="clearInput('endDate')" title="清空">
+                            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5f5f5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#888" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label for="startTime">开始时间</label>
+                    <div class="input-clear-wrapper">
+                        <input type="text" id="startTime" name="start_time" class="form-control" placeholder="HH:MM">
+                        <button type="button" class="input-clear-btn" onclick="clearInput('startTime')" title="清空">
+                            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5f5f5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#888" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label for="endTime">结束时间</label>
+                    <div class="input-clear-wrapper">
+                        <input type="text" id="endTime" name="end_time" class="form-control" placeholder="HH:MM">
+                        <button type="button" class="input-clear-btn" onclick="clearInput('endTime')" title="清空">
+                            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5f5f5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#888" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="product_name">产品型号</label>
+                    <input type="text" id="product_name" name="product_name" class="form-control">
+                </div>
+                <div class="filter-group">
+                    <label for="packaging">包装类型</label>
+                    <input type="text" id="packaging" name="packaging" class="form-control" list="packaging_list">
+                    <datalist id="packaging_list"></datalist>
+                </div>
+                <div class="filter-group">
+                    <label for="squad">班组</label>
+                    <input type="text" id="squad" name="squad" class="form-control">
+                </div>
+            </div>
+            <div class="filter-group button-group">
+                <button class="btn btn-primary" type="submit">
+                    <i class="material-icons">search</i>
+                    搜索
+                </button>
+                <button class="btn btn-secondary" type="button" onclick="resetFilters()">
+                    <i class="material-icons">refresh</i>
+                    重置
+                </button>
+                <button class="btn btn-secondary" type="button" onclick="debugAndExport()">
+                    <i class="material-icons">download</i>
+                    导出Excel
+                </button>
+                <button class="btn btn-secondary" type="button" onclick="calculateYesterdayProduction()">
+                    <i class="material-icons">analytics</i>
+                    统计昨日产量
+                </button>
+                <button class="btn btn-secondary" type="button" onclick="calculateTodayProduction()">
+                    <i class="material-icons">analytics</i>
+                    统计今日产量
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="sticky-table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>操作人</th>
+                    <th>日期</th>
+                    <th>时间</th>
+                    <th>干燥后原土水分(%)</th>
+                    <th>入窑前碱含量(%)</th>
+                    <th>助溶剂添加比例</th>
+                    <th>产品型号</th>
+                    <th>远通渗透率(Darcy)</th>
+                    <th>长富渗透率(Darcy)</th>
+                    <th>兴辉渗透率(Darcy)</th>
+                    <th>饼密度(g/cm3)</th>
+                    <th>振实密度(g/cm3)</th>
+                    <th>+14M</th>
+                    <th>+30M</th>
+                    <th>+40M</th>
+                    <th>+80M</th>
+                    <th>+100M</th>
+                    <th>+150M</th>
+                    <th>+200M</th>
+                    <th>+325M</th>
+                    <th>Fe离子</th>
+                    <th>Ca离子</th>
+                    <th>Al离子</th>
+                    <th>白度</th>
+                    <th>涡值(cm)</th>
+                    <th>气味</th>
+                    <th>电导值(ms/cm)</th>
+                    <th>pH</th>
+                    <th>吸油率(%)</th>
+                    <th>吸水率(%)</th>
+                    <th>水分(%)</th>
+                    <th>袋数</th>
+                    <th>包装类型</th>
+                    <th>吨数</th>
+                    <th>LOT批号</th>
+                    <th>备注</th>
+                    <th>班组</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="reportTableBody">
+                <!-- 数据将通过JavaScript动态加载 -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" id="pagination">
+        <!-- 分页控件将通过JavaScript动态加载 -->
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function clearInput(id) {
+    const el = document.getElementById(id);
+    if (el && el._flatpickr) {
+        el._flatpickr.clear();
+    } else if (el) {
+        el.value = '';
+    }
+}
+
+// 确保calculateYesterdayProduction函数总是可用的
+window.calculateYesterdayProduction = async function() {
+    try {
+        console.log('正在统计昨日产量数据...');
+        const response = await fetch('/api/xinghui2-report/?action=yesterday_production', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (result.status === 'success') {
+                displayYesterdayProductionTable(result);
+            } else {
+                alert('统计失败：' + (result.message || '未知错误'));
+            }
+        } else {
+            alert('请求失败，状态码：' + response.status);
+        }
+    } catch (error) {
+        console.error('统计异常：', error);
+        alert('统计异常：' + error.message);
+    }
+};
+
+// 确保calculateTodayProduction函数总是可用的
+window.calculateTodayProduction = async function() {
+    try {
+        console.log('正在统计今日产量数据...');
+        const response = await fetch('/api/xinghui2-report/?action=today_production', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (result.status === 'success') {
+                displayTodayProductionTable(result);
+            } else {
+                alert('统计失败：' + (result.message || '未知错误'));
+            }
+        } else {
+            alert('请求失败，状态码：' + response.status);
+        }
+    } catch (error) {
+        console.error('统计异常：', error);
+        alert('统计异常：' + error.message);
+    }
+};
+
+// 显示昨日产量统计表格
+function displayYesterdayProductionTable(result) {
+    const { data, date, total_groups } = result;
+
+    if (!data || data.length === 0) {
+        alert(`${date} 没有找到产量数据`);
+        return;
+    }
+
+    // 按班组分组数据
+    const groupedData = {};
+    data.forEach(item => {
+        const shift = item.shift || '未设置';
+        if (!groupedData[shift]) {
+            groupedData[shift] = [];
+        }
+        groupedData[shift].push(item);
+    });
+
+    // 创建表格HTML
+    let html = `
+        <div style="max-width: 1200px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: #1976d2; margin: 0; font-size: 24px;">
+                    <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">analytics</span>
+                    ${date} 昨日产量统计
+                </h2>
+                <div>
+                    <button onclick="exportYesterdayProductionToExcel()" style="padding: 8px 16px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">download</span>
+                        导出Excel
+                    </button>
+                    <button onclick="closeProductionModal()" style="padding: 8px 16px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">close</span>
+                        关闭
+                    </button>
+                </div>
+            </div>
+
+            <p style="color: #666; margin-bottom: 20px; text-align: center;">
+                共找到 ${total_groups} 个班组产品组合
+            </p>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-family: Arial, sans-serif;">
+                    <thead>
+                        <tr style="background: #1976d2; color: white; border: 1px solid #1565c0;">
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 80px; background: #1976d2;">班组</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 120px; background: #1976d2;">产品</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 100px; background: #1976d2;">包装</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 120px; background: #1976d2;">批号</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 100px; background: #1976d2;">产量(吨)</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 100px; background: #1976d2;">班组产量(吨)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+
+    let totalTons = 0;
+    let rowCount = 0;
+
+    // 遍历每个班组
+    Object.keys(groupedData).forEach(shift => {
+        const shiftData = groupedData[shift];
+        let shiftTotal = 0;
+
+        // 计算班组总产量
+        shiftData.forEach(item => {
+            shiftTotal += parseFloat(item.total_tons) || 0;
+        });
+
+        // 为班组中的每个产品创建行
+        shiftData.forEach((item, index) => {
+            const tons = parseFloat(item.total_tons) || 0;
+            totalTons += tons;
+            rowCount++;
+
+            const isFirstRow = index === 0;
+            const rowStyle = rowCount % 2 === 0 ? 'background: #f8f9fa;' : 'background: white;';
+
+            if (isFirstRow) {
+                // 第一行：包含合并的班组和班组产量单元格
+                html += `
+                    <tr style="${rowStyle}">
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #1976d2; vertical-align: middle;" rowspan="${shiftData.length}">
+                            ${shift}
+                        </td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.product_name || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.packaging || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.batch_number || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #4caf50;">${tons.toFixed(2)}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #1976d2; background: #e3f2fd; vertical-align: middle;" rowspan="${shiftData.length}">
+                            ${shiftTotal.toFixed(2)}
+                        </td>
+                    </tr>
+                `;
+            } else {
+                // 后续行：不包含合并的单元格
+                html += `
+                    <tr style="${rowStyle}">
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.product_name || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.packaging || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.batch_number || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #4caf50;">${tons.toFixed(2)}</td>
+                    </tr>
+                `;
+            }
+        });
+    });
+
+    // 添加总计行
+    html += `
+                        <tr style="background: linear-gradient(135deg, #4caf50, #45a049); color: white; font-weight: 600;">
+                            <td colspan="4" style="padding: 12px; border: 1px solid #45a049; text-align: center;">总计</td>
+                            <td style="padding: 12px; border: 1px solid #45a049; text-align: center; font-size: 16px;">${totalTons.toFixed(2)}</td>
+                            <td style="padding: 12px; border: 1px solid #45a049; text-align: center; font-size: 16px;">${totalTons.toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+
+    // 创建模态框显示结果
+    const modal = document.createElement('div');
+    modal.id = 'productionModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        padding: 20px;
+        box-sizing: border-box;
+    `;
+    modal.innerHTML = html;
+
+    // 添加到页面
+    document.body.appendChild(modal);
+
+    // 保存数据用于导出
+    window.yesterdayProductionData = {
+        date: date,
+        data: data,
+        groupedData: groupedData,
+        totalTons: totalTons,
+        totalGroups: total_groups
+    };
+};
+
+// 导出昨日产量统计到Excel - 使用增强版导出功能
+function exportYesterdayProductionToExcel() {
+    if (!window.yesterdayProductionData) {
+        alert('没有可导出的数据');
+        return;
+    }
+
+    // 使用增强版导出功能，支持用户选择保存路径
+    const exportUrl = '/xinghui2_report/export_yesterday_production/';
+    
+    if (typeof window.exportToExcel === 'function') {
+        console.log('使用增强版导出功能');
+        // 调用qc_report_common.js中的增强导出函数
+        window.exportToExcel(exportUrl, 'filterForm', 'yesterday', '兴辉二线昨日产量统计');
+    } else {
+        console.log('增强版导出功能不可用，使用回退方式');
+        // 回退到原有方式
+        performLegacyExportYesterday();
+    }
+}
+
+// 回退导出方式（保持原有功能）
+function performLegacyExportYesterday() {
+    const { date, groupedData, totalTons } = window.yesterdayProductionData;
+
+    // 检查是否加载了SheetJS库
+    if (typeof XLSX === 'undefined') {
+        alert('正在加载Excel导出库，请稍候...');
+        loadSheetJS().then(() => {
+            performLegacyExportYesterday();
+        });
+        return;
+    }
+
+    // 创建工作簿
+    const wb = XLSX.utils.book_new();
+
+    // 准备数据
+    const data = [];
+
+    // 添加表头
+    data.push(['班组', '产品', '包装', '批号', '产量(吨)', '班组产量(吨)']);
+
+    // 添加数据行
+    Object.keys(groupedData).forEach(shift => {
+        const shiftData = groupedData[shift];
+        let shiftTotal = 0;
+
+        // 计算班组总产量
+        shiftData.forEach(item => {
+            shiftTotal += parseFloat(item.total_tons) || 0;
+        });
+
+        // 为班组中的每个产品创建行
+        shiftData.forEach((item, index) => {
+            const tons = parseFloat(item.total_tons) || 0;
+            const isFirstRow = index === 0;
+
+            const row = [
+                shift,  // 班组列：所有行都显示，但会被合并单元格
+                item.product_name || '未设置',
+                item.packaging || '未设置',
+                item.batch_number || '未设置',
+                tons.toFixed(2),
+                shiftTotal.toFixed(2)  // 班组产量列：所有行都显示，但会被合并单元格
+            ];
+            data.push(row);
+        });
+    });
+
+    // 添加总计行
+    data.push(['总计', '', '', '', totalTons.toFixed(2), totalTons.toFixed(2)]);
+
+    // 创建工作表
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // 设置列宽
+    ws['!cols'] = [
+        { width: 12 },  // 班组
+        { width: 15 },  // 产品
+        { width: 12 },  // 包装
+        { width: 15 },  // 批号
+        { width: 12 },  // 产量
+        { width: 15 }   // 班组产量
+    ];
+
+    // 设置合并单元格
+    ws['!merges'] = [];
+
+    // 计算每个班组的行数并设置合并单元格
+    let currentRow = 1; // 从第2行开始（第1行是表头）
+    Object.keys(groupedData).forEach(shift => {
+        const shiftData = groupedData[shift];
+        const rowCount = shiftData.length;
+
+        if (rowCount > 1) {
+            // 合并班组列
+            ws['!merges'].push({
+                s: { r: currentRow, c: 0 }, // 开始位置
+                e: { r: currentRow + rowCount - 1, c: 0 } // 结束位置
+            });
+
+            // 合并班组产量列
+            ws['!merges'].push({
+                s: { r: currentRow, c: 5 }, // 开始位置
+                e: { r: currentRow + rowCount - 1, c: 5 } // 结束位置
+            });
+        }
+
+        currentRow += rowCount;
+    });
+
+    // 设置样式
+    const range = XLSX.utils.decode_range(ws['!ref']);
+
+    // 设置表头样式
+    for (let col = 0; col <= 5; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!ws[cellRef]) ws[cellRef] = {};
+        ws[cellRef].s = {
+            fill: { fgColor: { rgb: "1976D2" } },
+            font: { color: { rgb: "FFFFFF" }, bold: true },
+            alignment: { horizontal: "center", vertical: "center" }
+        };
+    }
+
+    // 设置数据行样式
+    for (let row = 1; row <= range.e.r; row++) {
+        for (let col = 0; col <= 5; col++) {
+            const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+            if (!ws[cellRef]) continue;
+
+            // 设置边框
+            ws[cellRef].s = {
+                border: {
+                    top: { style: "thin" },
+                    bottom: { style: "thin" },
+                    left: { style: "thin" },
+                    right: { style: "thin" }
+                },
+                alignment: { horizontal: "center", vertical: "center" }
+            };
+
+            // 设置产量列的颜色
+            if (col === 4) {
+                ws[cellRef].s.font = { color: { rgb: "4CAF50" }, bold: true };
+            }
+
+            // 设置班组产量列的背景色
+            if (col === 5 && ws[cellRef].v !== '') {
+                ws[cellRef].s.fill = { fgColor: { rgb: "E3F2FD" } };
+                ws[cellRef].s.font = { color: { rgb: "1976D2" }, bold: true };
+            }
+        }
+    }
+
+    // 设置总计行样式
+    const totalRow = range.e.r;
+    for (let col = 0; col <= 5; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: totalRow, c: col });
+        if (!ws[cellRef]) continue;
+        ws[cellRef].s = {
+            fill: { fgColor: { rgb: "4CAF50" } },
+            font: { color: { rgb: "FFFFFF" }, bold: true },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: {
+                top: { style: "thin" },
+                bottom: { style: "thin" },
+                left: { style: "thin" },
+                right: { style: "thin" }
+            }
+        };
+    }
+
+    // 添加工作表到工作簿
+    XLSX.utils.book_append_sheet(wb, ws, '昨日产量统计');
+
+    // 导出文件
+    XLSX.writeFile(wb, `${date}_昨日产量统计.xlsx`);
+
+    alert('Excel文件导出成功！\n\n文件包含完整的表格样式和合并单元格效果。');
+};
+
+// 显示今日产量统计表格
+function displayTodayProductionTable(result) {
+    const { data, date, total_groups } = result;
+
+    if (!data || data.length === 0) {
+        alert(`${date} 没有找到产量数据`);
+        return;
+    }
+
+    // 按班组分组数据
+    const groupedData = {};
+    data.forEach(item => {
+        const shift = item.shift || '未设置';
+        if (!groupedData[shift]) {
+            groupedData[shift] = [];
+        }
+        groupedData[shift].push(item);
+    });
+
+    // 创建表格HTML
+    let html = `
+        <div style="max-width: 1200px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: #1976d2; margin: 0; font-size: 24px;">
+                    <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">analytics</span>
+                    ${date} 今日产量统计
+                </h2>
+                <div>
+                    <button onclick="exportTodayProductionToExcel()" style="padding: 8px 16px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">download</span>
+                        导出Excel
+                    </button>
+                    <button onclick="closeProductionModal()" style="padding: 8px 16px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">close</span>
+                        关闭
+                    </button>
+                </div>
+            </div>
+
+            <p style="color: #666; margin-bottom: 20px; text-align: center;">
+                共找到 ${total_groups} 个班组产品组合
+            </p>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-family: Arial, sans-serif;">
+                    <thead>
+                        <tr style="background: #1976d2; color: white; border: 1px solid #1565c0;">
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 80px; background: #1976d2;">班组</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 120px; background: #1976d2;">产品</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 100px; background: #1976d2;">包装</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 120px; background: #1976d2;">批号</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 100px; background: #1976d2;">产量(吨)</th>
+                            <th style="padding: 12px; border: 1px solid #1565c0; text-align: center; font-weight: 600; min-width: 100px; background: #1976d2;">班组产量(吨)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+
+    let totalTons = 0;
+    let rowCount = 0;
+
+    // 遍历每个班组
+    Object.keys(groupedData).forEach(shift => {
+        const shiftData = groupedData[shift];
+        let shiftTotal = 0;
+        shiftData.forEach(item => { shiftTotal += parseFloat(item.total_tons) || 0; });
+
+        shiftData.forEach((item, index) => {
+            const tons = parseFloat(item.total_tons) || 0;
+            const isFirstRow = index === 0;
+            const rowStyle = rowCount % 2 === 0 ? 'background: #f8f9fa;' : 'background: white;';
+
+            if (isFirstRow) {
+                html += `
+                    <tr style="${rowStyle}">
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #1976d2; vertical-align: middle;" rowspan="${shiftData.length}">
+                            ${shift}
+                        </td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.product_name || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.packaging || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.batch_number || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #4caf50;">${tons.toFixed(2)}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #1976d2; background: #e3f2fd; vertical-align: middle;" rowspan="${shiftData.length}">
+                            ${shiftTotal.toFixed(2)}
+                        </td>
+                    </tr>
+                `;
+            } else {
+                html += `
+                    <tr style="${rowStyle}">
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.product_name || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.packaging || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.batch_number || '未设置'}</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600; color: #4caf50;">${tons.toFixed(2)}</td>
+                    </tr>
+                `;
+            }
+            totalTons += tons;
+            rowCount++;
+        });
+    });
+
+    // 添加总计行
+    html += `
+        <tr style="background: #4caf50; color: white; font-weight: bold;">
+            <td style="padding: 12px; border: 1px solid #ddd; text-align: center;" colspan="4">总计</td>
+            <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${totalTons.toFixed(2)}</td>
+            <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${totalTons.toFixed(2)}</td>
+        </tr>
+    `;
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+    </div>
+    `;
+
+    // 创建模态框并显示
+    const modal = document.createElement('div');
+    modal.id = 'productionModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow-y: auto;
+    `;
+    modal.innerHTML = html;
+    document.body.appendChild(modal);
+
+    // 保存数据供导出使用
+    window.todayProductionData = { date, groupedData, totalTons };
+};
+
+// 导出今日产量统计到Excel - 使用增强版导出功能
+function exportTodayProductionToExcel() {
+    if (!window.todayProductionData) {
+        alert('没有可导出的数据');
+        return;
+    }
+
+    // 使用增强版导出功能，支持用户选择保存路径
+    const exportUrl = '/xinghui2_report/export_today_production/';
+    
+    if (typeof window.exportToExcel === 'function') {
+        console.log('使用增强版导出功能');
+        // 调用qc_report_common.js中的增强导出函数
+        window.exportToExcel(exportUrl, 'filterForm', 'today', '兴辉二线今日产量统计');
+    } else {
+        console.log('增强版导出功能不可用，使用回退方式');
+        // 回退到原有方式
+        performLegacyExportToday();
+    }
+}
+
+// 回退导出方式（保持原有功能）
+function performLegacyExportToday() {
+    const { date, groupedData, totalTons } = window.todayProductionData;
+
+    // 检查是否加载了SheetJS库
+    if (typeof XLSX === 'undefined') {
+        alert('正在加载Excel导出库，请稍候...');
+        loadSheetJS().then(() => {
+            performLegacyExportToday();
+        });
+        return;
+    }
+
+    // 创建工作簿
+    const wb = XLSX.utils.book_new();
+
+    // 准备数据
+    const data = [];
+
+    // 添加表头
+    data.push(['班组', '产品', '包装', '批号', '产量(吨)', '班组产量(吨)']);
+
+    // 添加数据行
+    Object.keys(groupedData).forEach(shift => {
+        const shiftData = groupedData[shift];
+        let shiftTotal = 0;
+
+        // 计算班组总产量
+        shiftData.forEach(item => {
+            shiftTotal += parseFloat(item.total_tons) || 0;
+        });
+
+        // 为班组中的每个产品创建行
+        shiftData.forEach((item, index) => {
+            const tons = parseFloat(item.total_tons) || 0;
+            const isFirstRow = index === 0;
+
+            const row = [
+                shift,  // 班组列：所有行都显示，但会被合并单元格
+                item.product_name || '未设置',
+                item.packaging || '未设置',
+                item.batch_number || '未设置',
+                tons.toFixed(2),
+                shiftTotal.toFixed(2)  // 班组产量列：所有行都显示，但会被合并单元格
+            ];
+            data.push(row);
+        });
+    });
+
+    // 添加总计行
+    data.push(['总计', '', '', '', totalTons.toFixed(2), totalTons.toFixed(2)]);
+
+    // 创建工作表
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // 设置列宽
+    ws['!cols'] = [
+        { width: 12 },  // 班组
+        { width: 15 },  // 产品
+        { width: 12 },  // 包装
+        { width: 15 },  // 批号
+        { width: 12 },  // 产量
+        { width: 15 }   // 班组产量
+    ];
+
+    // 设置合并单元格
+    ws['!merges'] = [];
+
+    // 计算每个班组的行数并设置合并单元格
+    let currentRow = 1; // 从第2行开始（第1行是表头）
+    Object.keys(groupedData).forEach(shift => {
+        const shiftData = groupedData[shift];
+        const rowCount = shiftData.length;
+
+        if (rowCount > 1) {
+            // 合并班组列
+            ws['!merges'].push({
+                s: { r: currentRow, c: 0 }, // 开始位置
+                e: { r: currentRow + rowCount - 1, c: 0 } // 结束位置
+            });
+
+            // 合并班组产量列
+            ws['!merges'].push({
+                s: { r: currentRow, c: 5 }, // 开始位置
+                e: { r: currentRow + rowCount - 1, c: 5 } // 结束位置
+            });
+        }
+
+        currentRow += rowCount;
+    });
+
+    // 设置样式
+    const range = XLSX.utils.decode_range(ws['!ref']);
+
+    // 设置表头样式
+    for (let col = 0; col <= 5; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!ws[cellRef]) ws[cellRef] = {};
+        ws[cellRef].s = {
+            fill: { fgColor: { rgb: "1976D2" } },
+            font: { color: { rgb: "FFFFFF" }, bold: true },
+            alignment: { horizontal: "center", vertical: "center" }
+        };
+    }
+
+    // 设置数据行样式
+    for (let row = 1; row <= range.e.r; row++) {
+        for (let col = 0; col <= 5; col++) {
+            const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+            if (!ws[cellRef]) continue;
+
+            // 设置边框
+            ws[cellRef].s = {
+                border: {
+                    top: { style: "thin" },
+                    bottom: { style: "thin" },
+                    left: { style: "thin" },
+                    right: { style: "thin" }
+                },
+                alignment: { horizontal: "center", vertical: "center" }
+            };
+
+            // 设置产量列的颜色
+            if (col === 4) {
+                ws[cellRef].s.font = { color: { rgb: "4CAF50" }, bold: true };
+            }
+
+            // 设置班组产量列的背景色
+            if (col === 5 && ws[cellRef].v !== '') {
+                ws[cellRef].s.fill = { fgColor: { rgb: "E3F2FD" } };
+                ws[cellRef].s.font = { color: { rgb: "1976D2" }, bold: true };
+            }
+        }
+    }
+
+    // 设置总计行样式
+    const totalRow = range.e.r;
+    for (let col = 0; col <= 5; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: totalRow, c: col });
+        if (!ws[cellRef]) continue;
+        ws[cellRef].s = {
+            fill: { fgColor: { rgb: "4CAF50" } },
+            font: { color: { rgb: "FFFFFF" }, bold: true },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: {
+                top: { style: "thin" },
+                bottom: { style: "thin" },
+                left: { style: "thin" },
+                right: { style: "thin" }
+            }
+        };
+    }
+
+    // 添加工作表到工作簿
+    XLSX.utils.book_append_sheet(wb, ws, '今日产量统计');
+
+    // 导出文件
+    XLSX.writeFile(wb, `${date}_今日产量统计.xlsx`);
+
+    alert('Excel文件导出成功！\n\n文件包含完整的表格样式和合并单元格效果。');
+};
+
+// 关闭产量统计模态框
+function closeProductionModal() {
+    // 查找模态框并关闭
+    const modal = document.getElementById('productionModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// 加载SheetJS库
+function loadSheetJS() {
+    return new Promise((resolve, reject) => {
+        if (typeof XLSX !== 'undefined') {
+            resolve();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+// 导出函数 - 与兴辉报告保持一致
+function debugAndExport() {
+    console.log('=== 导出兴辉二线QC报表 ===');
+
+    // 检查通用导出函数是否存在
+    if (typeof exportToExcel === 'function') {
+        console.log('使用通用导出函数...');
+        exportToExcel('/xinghui2_report/export_excel/', 'filterForm');
+    } else {
+        console.log('通用导出函数不存在，使用简单导出');
+        // 获取筛选表单数据
+        const filterForm = document.getElementById('filterForm');
+        if (filterForm) {
+            const formData = new FormData(filterForm);
+            const params = new URLSearchParams();
+
+            for (const [key, value] of formData.entries()) {
+                if (key !== 'csrfmiddlewaretoken') {
+                    if (['start_date','end_date','start_time','end_time'].includes(key)) {
+                        if (value.trim() !== '') {
+                            params.append(key, value);
+                        }
+                    } else {
+                        params.append(key, value);
+                    }
+                }
+            }
+
+            const url = `/xinghui2_report/export_excel/?${params.toString()}`;
+            console.log('导出URL:', url);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            console.log('找不到筛选表单');
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 测试JavaScript函数是否加载
+    console.log('页面脚本加载完成');
+    if (typeof calculateYesterdayProduction === 'function') {
+        console.log('calculateYesterdayProduction 函数已加载');
+    } else {
+        console.log('calculateYesterdayProduction 函数未加载');
+    }
+
+    // 绑定筛选表单提交事件，筛选时加载第一页
+    bindFilterFormSubmit('filterForm', function(page) {
+        loadXinghui2HistoryData(page);
+    });
+    // 初始化第一页历史数据
+    loadXinghui2HistoryData(1);
+});
+</script>
+{% endblock %}
