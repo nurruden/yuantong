@@ -1,0 +1,22 @@
+<div id="costCenterModal" class="modal">
+    <div class="modal-content">
+        <h3 id="costCenterModalTitle">新增成本中心映射</h3>
+        <form id="costCenterForm">
+            <div class="modal-body">
+                <input type="hidden" id="costCenterId">
+                <div class="form-group">
+                    <label for="costCenterCode">成本中心编码:</label>
+                    <input type="text" id="costCenterCode" required>
+                </div>
+                <div class="form-group">
+                    <label for="costCenterName">成本中心名称:</label>
+                    <input type="text" id="costCenterName" required>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeCostCenterModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>

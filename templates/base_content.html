@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="no-referrer">
+    {% load static %}
+    <title>远通内部管理系统</title>
+    <!-- 基础样式 -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- jQuery -->
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+    <!-- 全局脚本 -->
+    <script src="{% static 'js/admin.js' %}" defer></script>
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="{% if is_mobile %}mobile{% else %}desktop{% endif %}">
+    {% csrf_token %}
+    {% block content %}{% endblock %}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

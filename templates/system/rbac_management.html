@@ -1,0 +1,2662 @@
+{% extends 'base.html' %}
+
+{% block head_extra %}
+{% load static %}
+<link href="{% static 'libs/material-icons/material-icons.css' %}" rel="stylesheet">
+<script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/admin.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <div class="header">
+        <div class="user-info">
+            <span class="material-icons" data-icon="person">person</span>
+            <span class="username">{{ user.first_name }}</span>
+            {% if user.last_name %}
+                <span class="department">({{ user.last_name }})</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'logout' %}" class="logout-btn">
+            <span class="material-icons" data-icon="logout">logout</span>
+            退出登录
+        </a>
+    </div>
+    <div class="main-container">
+        <div id="sideMenu" class="side-menu">
+            {% include 'shared/sidebar.html' %}
+        </div>
+        <div class="main-content" id="mainContentArea">
+            <div class="rbac-container">
+                <!-- 页面标题 -->
+                <div class="page-header">
+                    <h2>
+                        <i class="material-icons" data-icon="security">security</i>
+                        RBAC权限管理
+                    </h2>
+                    <p class="page-description">基于角色的访问控制，管理用户权限和角色分配</p>
+                </div>
+
+                <!-- 选项卡导航 -->
+                <ul class="nav nav-tabs" id="rbacTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="roles-tab" data-bs-toggle="tab" data-bs-target="#roles" type="button" role="tab">
+                            <i class="material-icons" data-icon="group">group</i>
+                            角色管理
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="permissions-tab" data-bs-toggle="tab" data-bs-target="#permissions" type="button" role="tab">
+                            <i class="material-icons" data-icon="lock">lock</i>
+                            权限管理
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="assignments-tab" data-bs-toggle="tab" data-bs-target="#assignments" type="button" role="tab">
+                            <i class="material-icons" data-icon="assignment">assignment</i>
+                            用户角色分配
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- 选项卡内容 -->
+                <div class="tab-content" id="rbacTabContent">
+                    <!-- 角色管理选项卡 -->
+                    <div class="tab-pane fade show active" id="roles" role="tabpanel">
+                        <div class="tab-header">
+                            <h3>角色管理</h3>
+                            <button class="btn btn-primary" onclick="openRoleModal()">
+                                <i class="material-icons" data-icon="add">add</i>
+                                添加角色
+                            </button>
+                        </div>
+                        
+                        <!-- 角色搜索区域 -->
+                        <div class="search-container">
+                            <form id="roleSearchForm" class="search-form">
+                                <div class="search-row">
+                                    <div class="search-group">
+                                        <label class="form-label">角色名称</label>
+                                        <input type="text" id="searchRoleName" class="form-control" placeholder="输入角色名称">
+                                    </div>
+                                    <div class="search-group">
+                                        <label class="form-label">描述</label>
+                                        <input type="text" id="searchRoleDescription" class="form-control" placeholder="输入描述关键词">
+                                    </div>
+                                    <div class="search-group">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="material-icons" data-icon="search">search</i>
+                                            搜索
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" onclick="clearRoleSearch()">
+                                            <i class="material-icons" data-icon="clear">clear</i>
+                                            清除
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>角色ID</th>
+                                        <th>角色名称</th>
+                                        <th>描述</th>
+                                        <th>用户数量</th>
+                                        <th>权限数量</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="roleTableBody">
+                                    <!-- 角色数据将通过JavaScript动态加载 -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- 角色分页控件 -->
+                        <div id="role-pagination-container" class="pagination-container" style="display: none;">
+                            <div class="pagination-info">
+                                <span id="role-pagination-info"></span>
+                            </div>
+                            <div class="pagination-controls">
+                                <button id="role-prev-page" class="btn btn-outline-primary" onclick="changeRolePage(-1)">
+                                    <i class="material-icons" data-icon="chevron_left">chevron_left</i>
+                                    上一页
+                                </button>
+                                <div id="role-page-numbers" class="page-numbers"></div>
+                                <button id="role-next-page" class="btn btn-outline-primary" onclick="changeRolePage(1)">
+                                    下一页
+                                    <i class="material-icons" data-icon="chevron_right">chevron_right</i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 权限管理选项卡 -->
+                    <div class="tab-pane fade" id="permissions" role="tabpanel">
+                        <div class="tab-header">
+                            <h3>权限管理</h3>
+                            <button class="btn btn-primary" onclick="openPermissionModal()">
+                                <i class="material-icons" data-icon="add">add</i>
+                                添加权限
+                            </button>
+                        </div>
+                        
+                        <!-- 权限搜索区域 -->
+                        <div class="search-container">
+                            <form id="permissionSearchForm" class="search-form">
+                                <div class="search-row">
+                                    <div class="search-group">
+                                        <label class="form-label">权限代码</label>
+                                        <input type="text" id="searchPermissionCode" class="form-control" placeholder="输入权限代码">
+                                    </div>
+                                    <div class="search-group">
+                                        <label class="form-label">权限名称</label>
+                                        <input type="text" id="searchPermissionName" class="form-control" placeholder="输入权限名称">
+                                    </div>
+                                    <div class="search-group">
+                                        <label class="form-label">权限类型</label>
+                                        <select id="searchPermissionType" class="form-control">
+                                            <option value="">全部</option>
+                                            <option value="view">查看</option>
+                                            <option value="edit">编辑</option>
+                                            <option value="delete">删除</option>
+                                            <option value="admin">管理</option>
+                                        </select>
+                                    </div>
+                                    <div class="search-group">
+                                        <label class="form-label">所属模块</label>
+                                        <input type="text" id="searchPermissionModule" class="form-control" placeholder="输入模块名称">
+                                    </div>
+                                    <div class="search-group">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="material-icons" data-icon="search">search</i>
+                                            搜索
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" onclick="clearPermissionSearch()">
+                                            <i class="material-icons" data-icon="clear">clear</i>
+                                            清除
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>权限代码</th>
+                                        <th>权限名称</th>
+                                        <th>权限类型</th>
+                                        <th>所属模块</th>
+                                        <th>描述</th>
+                                        <th>分配角色数</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="permissionTableBody">
+                                    <!-- 权限数据将通过JavaScript动态加载 -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- 权限分页控件 -->
+                        <div id="permission-pagination-container" class="pagination-container" style="display: none;">
+                            <div class="pagination-info">
+                                <span id="permission-pagination-info"></span>
+                            </div>
+                            <div class="pagination-controls">
+                                <button id="permission-prev-page" class="btn btn-outline-primary" onclick="changePermissionPage(-1)">
+                                    <i class="material-icons" data-icon="chevron_left">chevron_left</i>
+                                    上一页
+                                </button>
+                                <div id="permission-page-numbers" class="page-numbers"></div>
+                                <button id="permission-next-page" class="btn btn-outline-primary" onclick="changePermissionPage(1)">
+                                    下一页
+                                    <i class="material-icons" data-icon="chevron_right">chevron_right</i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 用户角色分配选项卡 -->
+                    <div class="tab-pane fade" id="assignments" role="tabpanel">
+                        <div class="tab-header">
+                            <h3>用户角色分配</h3>
+                            <button class="btn btn-primary" onclick="openUserRoleModal()">
+                                <i class="material-icons" data-icon="person_add">person_add</i>
+                                分配角色
+                            </button>
+                        </div>
+                        
+                        <!-- 用户角色搜索区域 -->
+                        <div class="search-container">
+                            <form id="userRoleSearchForm" class="search-form">
+                                <div class="search-row">
+                                    <div class="search-group">
+                                        <label class="form-label">用户名</label>
+                                        <input type="text" id="searchUserRoleUsername" class="form-control" placeholder="输入用户名">
+                                    </div>
+                                    <div class="search-group">
+                                        <label class="form-label">姓名</label>
+                                        <input type="text" id="searchUserRoleName" class="form-control" placeholder="输入姓名">
+                                    </div>
+                                    <div class="search-group">
+                                        <label class="form-label">角色</label>
+                                        <select id="searchUserRoleRole" class="form-control">
+                                            <option value="">全部角色</option>
+                                        </select>
+                                    </div>
+                                    <div class="search-group">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="material-icons" data-icon="search">search</i>
+                                            搜索
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" onclick="clearUserRoleSearch()">
+                                            <i class="material-icons" data-icon="clear">clear</i>
+                                            清除
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>用户ID</th>
+                                        <th>用户名</th>
+                                        <th>姓名</th>
+                                        <th>角色</th>
+                                        <th>分配时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userRoleTableBody">
+                                    <!-- 用户角色数据将通过JavaScript动态加载 -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- 用户角色分页控件 -->
+                        <div id="userRole-pagination-container" class="pagination-container" style="display: none;">
+                            <div class="pagination-info">
+                                <span id="userRole-pagination-info"></span>
+                            </div>
+                            <div class="pagination-controls">
+                                <button id="userRole-prev-page" class="btn btn-outline-primary" onclick="changeUserRolePage(-1)">
+                                    <i class="material-icons" data-icon="chevron_left">chevron_left</i>
+                                    上一页
+                                </button>
+                                <div id="userRole-page-numbers" class="page-numbers"></div>
+                                <button id="userRole-next-page" class="btn btn-outline-primary" onclick="changeUserRolePage(1)">
+                                    下一页
+                                    <i class="material-icons" data-icon="chevron_right">chevron_right</i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 角色模态框 -->
+<div class="modal fade" id="roleModal" tabindex="-1" aria-labelledby="roleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roleModalLabel">添加角色</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="roleForm">
+                    <input type="hidden" id="roleId" name="roleId">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="roleName" class="form-label">角色名称 *</label>
+                                <input type="text" class="form-control" id="roleName" name="roleName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="roleDescription" class="form-label">描述</label>
+                                <textarea class="form-control" id="roleDescription" name="roleDescription" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveRole()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 权限模态框 -->
+<div class="modal fade" id="permissionModal" tabindex="-1" aria-labelledby="permissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="permissionModalLabel">添加权限</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="permissionForm">
+                    <input type="hidden" id="permissionId" name="permissionId">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="permissionCode" class="form-label">权限代码 *</label>
+                                <input type="text" class="form-control" id="permissionCode" name="permissionCode" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="permissionName" class="form-label">权限名称 *</label>
+                                <input type="text" class="form-control" id="permissionName" name="permissionName" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="permissionType" class="form-label">权限类型</label>
+                                <select class="form-control" id="permissionType" name="permissionType">
+                                    <option value="module">模块权限</option>
+                                    <option value="operation">操作权限</option>
+                                    <option value="data">数据权限</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="permissionModule" class="form-label">所属模块</label>
+                                <input type="text" class="form-control" id="permissionModule" name="permissionModule">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="permissionDescription" class="form-label">描述</label>
+                                <textarea class="form-control" id="permissionDescription" name="permissionDescription" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="savePermission()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 角色权限分配模态框 -->
+<div class="modal fade" id="rolePermissionModal" tabindex="-1" aria-labelledby="rolePermissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 100vw; width: 100vw; margin: 0 auto;">
+        <div class="modal-content" style="height: 100vh; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rolePermissionModalLabel">
+                    <i class="material-icons" data-icon="security">security</i>
+                    管理角色权限
+                </h5>
+                <div class="d-flex align-items-center">
+                    <div class="width-control me-2">
+                        <input type="range" id="widthSlider" min="90" max="100" value="100" class="form-range" style="width: 100px;">
+                        <small class="text-muted" id="widthValue">100%</small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="closeRolePermissionModal()"></button>
+                </div>
+            </div>
+            <div class="modal-body p-4" style="flex: 1; overflow: hidden; display: flex; flex-direction: column; position: relative;">
+                <!-- 简单搜索 -->
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="material-icons" data-icon="search">search</i>
+                        </span>
+                        <input type="text" id="permissionSearch" placeholder="搜索权限..." class="form-control">
+                    </div>
+                </div>
+                
+                <!-- 权限列表 -->
+                <div class="row" style="flex: 1; min-height: 0;">
+                    <div class="col-md-6" style="display: flex; flex-direction: column;">
+                        <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="material-icons" data-icon="list">list</i>
+                                    所有权限
+                                </h6>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="selectAllPermissions()">全选</button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="clearAllPermissions()">清空</button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0" style="flex: 1; overflow: hidden;">
+                                <div class="permission-list" id="unassignedPermissions" style="height: 100%; overflow-y: auto; overflow-x: auto;">
+                                    <!-- 权限列表 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6" style="display: flex; flex-direction: column;">
+                        <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="material-icons" data-icon="check_circle">check_circle</i>
+                                    已分配权限
+                                </h6>
+                            </div>
+                            <div class="card-body p-0" style="flex: 1; overflow: hidden;">
+                                <div class="permission-list" id="assignedPermissions" style="height: 100%; overflow-y: auto; overflow-x: auto;">
+                                    <!-- 已分配权限列表 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="d-flex justify-content-between w-100">
+                    <div>
+                        <span class="text-muted">总计: <span id="totalPermissions">0</span> 个</span>
+                        <span class="text-muted ms-3">已分配: <span id="assignedTotal">0</span> 个</span>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary" onclick="closeRolePermissionModal()">取消</button>
+                        <button type="button" class="btn btn-primary" onclick="saveRolePermissions()">
+                            <i class="material-icons" data-icon="save">save</i>
+                            保存
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 用户角色分配模态框 -->
+<div class="modal fade" id="userRoleModal" tabindex="-1" aria-labelledby="userRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userRoleModalLabel">分配用户角色</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="userRoleForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="selectedUser" class="form-label">选择用户 *</label>
+                                <select class="form-control" id="selectedUser" name="selectedUser" required>
+                                    <option value="">请选择用户</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="selectedRole" class="form-label">选择角色 *</label>
+                                <select class="form-control" id="selectedRole" name="selectedRole" required>
+                                    <option value="">请选择角色</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveUserRole()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentRoleId = null;
+let currentPermissionId = null;
+let isEditMode = false;
+let currentRoleForPermission = null;
+let allPermissions = [];
+let rolePermissions = [];
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadRoles();
+    loadPermissions();
+    loadUserRoles();
+    loadUsers();
+    
+    // 绑定搜索功能
+    const searchInput = document.getElementById('permissionSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', searchPermissions);
+    }
+    
+    // 绑定分类过滤功能
+    const categoryButtons = document.querySelectorAll('.permission-categories .btn');
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // 移除所有active类
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            // 添加active类到当前按钮
+            this.classList.add('active');
+            // 执行过滤
+            const category = this.getAttribute('data-category');
+            filterPermissionsByCategory(category);
+        });
+    });
+    
+    // 强制显示权限按钮
+    setTimeout(function() {
+        forceShowPermissionButtons();
+    }, 2000);
+    
+    // 全局事件监听器，确保按钮功能正常
+    document.addEventListener('click', function(e) {
+
+        // 全选按钮 - 更精确的匹配
+        if (e.target.textContent.trim() === '全选') {
+            selectAllPermissions();
+            return;
+        }
+        
+        // 清空按钮 - 更精确的匹配
+        if (e.target.textContent.trim() === '清空') {
+            clearAllPermissions();
+            return;
+        }
+        
+        // 关闭按钮 - 让Bootstrap处理，只记录日志
+        if (e.target.classList.contains('btn-close') || 
+            e.target.closest('.btn-close') || 
+            e.target.getAttribute('aria-label') === 'Close') {
+            return;
+        }
+        
+        // 宽度滑块点击事件
+        if (e.target.id === 'widthSlider') {
+            // 滑块点击不需要特殊处理，input事件会处理
+        }
+    });
+    
+    // 宽度滑块事件监听 - 简化版本
+    document.addEventListener('input', function(e) {
+        if (e.target.id === 'widthSlider') {
+            const widthValue = document.getElementById('widthValue');
+            if (widthValue) {
+                widthValue.textContent = e.target.value + '%';
+                setModalWidth(e.target.value + 'vw');
+            }
+        }
+    });
+    
+    // 额外的事件监听器，确保滑块工作
+    document.addEventListener('change', function(e) {
+        if (e.target.id === 'widthSlider') {
+            const widthValue = document.getElementById('widthValue');
+            if (widthValue) {
+                widthValue.textContent = e.target.value + '%';
+                setModalWidth(e.target.value + 'vw');
+            }
+        }
+    });
+    
+    // 鼠标事件监听，确保滑块响应
+    document.addEventListener('mousedown', function(e) {
+        if (e.target.id === 'widthSlider') {
+        }
+    });
+    
+    document.addEventListener('mouseup', function(e) {
+        if (e.target.id === 'widthSlider') {
+            console.log('✅ 宽度滑块被释放');
+        }
+    });
+    
+
+    // 添加测试函数到全局作用域
+    window.testModalControls = function() {
+
+        // 测试关闭按钮
+        const closeButton = document.querySelector('#rolePermissionModal .btn-close');
+        if (closeButton) {
+            // 模拟点击
+            closeButton.click();
+        } else {
+            console.log('❌ 未找到关闭按钮');
+        }
+        
+        // 测试宽度滑块
+        const widthSlider = document.getElementById('widthSlider');
+        if (widthSlider) {
+            console.log('✅ 找到宽度滑块，当前值:', widthSlider.value);
+        } else {
+            console.log('❌ 未找到宽度滑块');
+        }
+        
+        // 测试全选按钮
+        const selectAllBtn = document.querySelector('button[onclick="selectAllPermissions()"]');
+        if (selectAllBtn) {
+            console.log('✅ 找到全选按钮');
+        } else {
+            console.log('❌ 未找到全选按钮');
+        }
+        
+        // 测试清空按钮
+        const clearAllBtn = document.querySelector('button[onclick="clearAllPermissions()"]');
+        if (clearAllBtn) {
+            console.log('✅ 找到清空按钮');
+        } else {
+            console.log('❌ 未找到清空按钮');
+        }
+    };
+    
+    // 强制测试所有模态框功能
+    window.testAllModalFunctions = function() {
+
+        // 1. 检查模态框是否存在
+        const modal = document.getElementById('rolePermissionModal');
+
+        // 2. 检查所有按钮
+        const allButtons = modal ? modal.querySelectorAll('button') : [];
+
+        // 3. 检查滑块
+        const slider = document.getElementById('widthSlider');
+
+        // 4. 检查关闭按钮
+        const closeBtn = modal ? modal.querySelector('.btn-close') : null;
+
+        // 5. 尝试直接绑定事件
+        if (slider) {
+            slider.oninput = function() {
+                const widthValue = document.getElementById('widthValue');
+                if (widthValue) {
+                    widthValue.textContent = this.value + '%';
+                }
+            };
+        }
+        
+        if (closeBtn) {
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            };
+        }
+        
+    };
+    
+
+    // 添加一个简单的测试函数
+    window.testButtons = function() {
+
+        // 测试全选按钮
+        const selectAllBtn = document.querySelector('button[onclick="selectAllPermissions()"]');
+        if (selectAllBtn) {
+            selectAllBtn.click();
+        } else {
+            console.log('❌ 未找到全选按钮');
+        }
+        
+        // 测试清空按钮
+        const clearAllBtn = document.querySelector('button[onclick="clearAllPermissions()"]');
+        if (clearAllBtn) {
+            clearAllBtn.click();
+        } else {
+            console.log('❌ 未找到清空按钮');
+        }
+        
+        // 测试关闭按钮
+        const closeBtn = document.querySelector('#rolePermissionModal .btn-close');
+        if (closeBtn) {
+            closeBtn.click();
+        } else {
+            console.log('❌ 未找到关闭按钮');
+        }
+        
+        // 测试宽度滑块
+        const slider = document.getElementById('widthSlider');
+        if (slider) {
+            slider.value = 80;
+            slider.dispatchEvent(new Event('input'));
+        } else {
+            console.log('❌ 未找到宽度滑块');
+        }
+    };
+    
+
+    // 添加专门的关闭按钮修复函数
+    window.fixCloseButton = function() {
+
+        const closeButton = document.querySelector('#rolePermissionModal .btn-close');
+        if (closeButton) {
+
+            // 移除所有可能的事件监听器
+            const newButton = closeButton.cloneNode(true);
+            closeButton.parentNode.replaceChild(newButton, closeButton);
+            
+            // 确保Bootstrap的data-bs-dismiss属性正常工作
+
+            // 测试点击
+            setTimeout(() => {
+                newButton.click();
+            }, 1000);
+            
+        } else {
+            console.log('❌ 未找到关闭按钮');
+        }
+    };
+    
+});
+
+// 加载角色列表
+function loadRoles() {
+    fetch('/api/rbac/roles/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                renderRoleTable(data.data);
+            } else {
+                showAlert('error', '加载角色列表失败: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Load roles error:', error);
+            showAlert('error', '加载角色列表失败: ' + error.message);
+        });
+}
+
+// 渲染角色表格
+function renderRoleTable(roles) {
+    const tbody = document.getElementById('roleTableBody');
+    tbody.innerHTML = '';
+
+    roles.forEach(role => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${role.id}</td>
+            <td>${role.name}</td>
+            <td>${role.description || '-'}</td>
+            <td>${role.user_count || 0}</td>
+            <td>${role.permission_count || 0}</td>
+            <td>${role.created_at}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline-primary" onclick="editRole(${role.id})" title="编辑角色">
+                        <i class="material-icons" data-icon="edit">edit</i> 编辑
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" onclick="manageRolePermissions(${role.id})" title="管理权限">
+                        <i class="material-icons" data-icon="security">security</i> 权限
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteRole(${role.id})" title="删除角色">
+                        <i class="material-icons" data-icon="delete">delete</i> 删除
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    
+    // 检查按钮是否正确渲染
+    const permissionButtons = tbody.querySelectorAll('button[onclick*="manageRolePermissions"]');
+
+    if (permissionButtons.length === 0) {
+        // 手动添加权限按钮
+        tbody.querySelectorAll('tr').forEach((row, index) => {
+            const actionCell = row.querySelector('td:last-child');
+            if (actionCell) {
+                const actionButtons = actionCell.querySelector('.action-buttons');
+                if (actionButtons) {
+                    // 检查是否已经有权限按钮
+                    const existingPermissionBtn = actionButtons.querySelector('button[onclick*="manageRolePermissions"]');
+                    if (!existingPermissionBtn) {
+                        const permissionBtn = document.createElement('button');
+                        permissionBtn.className = 'btn btn-sm btn-outline-info';
+                        permissionBtn.onclick = function() {
+                            const roleId = roles[index].id;
+                            manageRolePermissions(roleId);
+                        };
+                        permissionBtn.title = '管理权限';
+                        permissionBtn.innerHTML = '<i class="material-icons" data-icon="security">security</i> 权限';
+                        
+                        // 插入到编辑按钮之后
+                        const editBtn = actionButtons.querySelector('button[onclick*="editRole"]');
+                        if (editBtn) {
+                            editBtn.parentNode.insertBefore(permissionBtn, editBtn.nextSibling);
+                        } else {
+                            actionButtons.appendChild(permissionBtn);
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        console.log('✅ 权限按钮渲染正常');
+    }
+}
+
+// 打开添加角色模态框
+function openRoleModal() {
+    isEditMode = false;
+    currentRoleId = null;
+    document.getElementById('roleModalLabel').textContent = '添加角色';
+    document.getElementById('roleForm').reset();
+    
+    const modal = new bootstrap.Modal(document.getElementById('roleModal'));
+    modal.show();
+}
+
+// 编辑角色
+function editRole(roleId) {
+    isEditMode = true;
+    currentRoleId = roleId;
+    
+    fetch(`/api/rbac/roles/${roleId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const role = data.data;
+                document.getElementById('roleModalLabel').textContent = '编辑角色';
+                document.getElementById('roleId').value = role.id;
+                document.getElementById('roleName').value = role.name;
+                document.getElementById('roleDescription').value = role.description || '';
+                
+                const modal = new bootstrap.Modal(document.getElementById('roleModal'));
+                modal.show();
+            } else {
+                showAlert('error', '获取角色信息失败: ' + data.message);
+            }
+        })
+        .catch(error => {
+            showAlert('error', '获取角色信息失败: ' + error.message);
+        });
+}
+
+// 保存角色
+function saveRole() {
+    const formData = new FormData(document.getElementById('roleForm'));
+    const data = {
+        name: formData.get('roleName'),
+        description: formData.get('roleDescription')
+    };
+
+    const url = isEditMode ? `/api/rbac/roles/${currentRoleId}/` : '/api/rbac/roles/';
+    const method = isEditMode ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert('success', isEditMode ? '角色更新成功' : '角色创建成功');
+            bootstrap.Modal.getInstance(document.getElementById('roleModal')).hide();
+            loadRoles();
+        } else {
+            showAlert('error', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('error', '操作失败');
+    });
+}
+
+// 删除角色
+function deleteRole(roleId) {
+    if (confirm('确定要删除这个角色吗？此操作不可恢复。')) {
+        fetch(`/api/rbac/roles/${roleId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert('success', '角色删除成功');
+                loadRoles();
+            } else {
+                showAlert('error', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('error', '删除角色失败');
+        });
+    }
+}
+
+// 管理角色权限
+function manageRolePermissions(roleId) {
+    currentRoleForPermission = roleId;
+    
+    // 加载所有权限和当前角色的权限
+    Promise.all([
+        fetch('/api/rbac/permissions/?all_permissions=true&page_size=1000').then(res => res.json()),
+        fetch(`/api/rbac/roles/${roleId}/permissions/`).then(res => res.json())
+    ])
+    .then(([permissionsData, rolePermissionsData]) => {
+        if (permissionsData.status === 'success' && rolePermissionsData.status === 'success') {
+            // 处理分页格式的数据
+            allPermissions = permissionsData.data.results || permissionsData.data;
+            rolePermissions = rolePermissionsData.data.results || rolePermissionsData.data;
+
+            
+            if (Array.isArray(allPermissions)) {
+                console.log('QC报表相关权限:', allPermissions.filter(p => p.code.includes('qc_report')));
+                console.log('QC报表查看自己的权限:', allPermissions.find(p => p.code === 'qc_report_view_own'));
+            } else {
+                showAlert('error', '权限数据格式错误');
+                return;
+            }
+            
+            renderRolePermissionModal();
+            
+            const modal = new bootstrap.Modal(document.getElementById('rolePermissionModal'));
+            modal.show();
+            
+            // 只绑定宽度控制，让Bootstrap处理关闭按钮
+            setTimeout(() => {
+                    bindWidthControl();
+                bindPermissionSearch();
+                ensureScrollable(); // 确保滚动条可拖动
+            }, 100);
+        } else {
+            showAlert('error', '加载权限数据失败');
+        }
+    })
+    .catch(error => {
+        showAlert('error', '加载权限数据失败');
+    });
+}
+
+// 渲染角色权限分配模态框
+function renderRolePermissionModal() {
+    const unassignedContainer = document.getElementById('unassignedPermissions');
+    const assignedContainer = document.getElementById('assignedPermissions');
+
+    // 获取当前角色已分配的权限ID列表
+    const assignedPermissionIds = rolePermissions.map(p => p.id);
+    
+    // 分离已分配和未分配的权限
+    const unassigned = allPermissions.filter(p => !assignedPermissionIds.includes(p.id));
+    const assigned = allPermissions.filter(p => assignedPermissionIds.includes(p.id));
+    
+
+    // 更新权限计数
+    document.getElementById('totalPermissions').textContent = allPermissions.length;
+    document.getElementById('assignedTotal').textContent = assigned.length;
+    
+    // 渲染所有权限（未分配的）
+    unassignedContainer.innerHTML = '';
+    if (unassigned.length === 0) {
+        unassignedContainer.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="material-icons" data-icon="check_circle" style="font-size: 48px; opacity: 0.3;"></i>
+                <p class="mt-2">所有权限已分配</p>
+            </div>
+        `;
+    } else {
+        unassigned.forEach(permission => {
+            const div = document.createElement('div');
+            div.className = 'permission-item';
+            div.setAttribute('data-permission-id', permission.id);
+            div.innerHTML = `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" data-permission-id="${permission.id}">
+                    <label class="form-check-label">
+                        <div class="permission-name">${permission.name}</div>
+                        <small class="text-muted">${permission.code}</small>
+                    </label>
+                </div>
+            `;
+            
+            // 添加复选框事件
+            const checkbox = div.querySelector('.form-check-input');
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    assignPermission(permission.id);
+                }
+            });
+            
+            unassignedContainer.appendChild(div);
+        });
+    }
+    
+    // 渲染已分配的权限
+    assignedContainer.innerHTML = '';
+    if (assigned.length === 0) {
+        assignedContainer.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="material-icons" data-icon="list" style="font-size: 48px; opacity: 0.3;"></i>
+                <p class="mt-2">暂无分配的权限</p>
+            </div>
+        `;
+    } else {
+        assigned.forEach(permission => {
+            const div = document.createElement('div');
+            div.className = 'permission-item';
+            div.setAttribute('data-permission-id', permission.id);
+            div.innerHTML = `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" data-permission-id="${permission.id}">
+                    <label class="form-check-label">
+                        <div class="permission-name">${permission.name}</div>
+                        <small class="text-muted">${permission.code}</small>
+                    </label>
+                </div>
+            `;
+            
+            // 添加复选框事件
+            const checkbox = div.querySelector('.form-check-input');
+            checkbox.addEventListener('change', function() {
+                if (!this.checked) {
+                    unassignPermission(permission.id);
+                }
+            });
+            
+            assignedContainer.appendChild(div);
+        });
+    }
+}
+
+// 更新传输按钮状态
+function updateTransferButtons() {
+    const unassignedSelected = document.querySelectorAll('#unassignedPermissions .permission-checkbox:checked').length;
+    const assignedSelected = document.querySelectorAll('#assignedPermissions .permission-checkbox:checked').length;
+    
+    document.getElementById('assignBtn').disabled = unassignedSelected === 0;
+    document.getElementById('unassignBtn').disabled = assignedSelected === 0;
+}
+
+// 搜索权限
+function searchPermissions() {
+    const searchTerm = document.getElementById('permissionSearch').value.toLowerCase();
+    const permissionItems = document.querySelectorAll('.permission-item');
+    
+    permissionItems.forEach(item => {
+        const name = item.querySelector('.permission-name').textContent.toLowerCase();
+        const codeElement = item.querySelector('small');
+        const code = codeElement ? codeElement.textContent.toLowerCase() : '';
+        
+        const matches = name.includes(searchTerm) || code.includes(searchTerm);
+        item.style.display = matches ? 'block' : 'none';
+    });
+}
+
+// 权限分类过滤
+function filterPermissionsByCategory(category) {
+    const permissionItems = document.querySelectorAll('.permission-item');
+    
+    permissionItems.forEach(item => {
+        const codeElement = item.querySelector('small');
+        const code = codeElement ? codeElement.textContent.toLowerCase() : '';
+        let show = true;
+        
+        if (category !== 'all') {
+            if (category === 'view') {
+                show = code.includes('_view');
+            } else if (category === 'edit') {
+                show = code.includes('_edit');
+            } else if (category === 'system') {
+                show = code.includes('system') || code.includes('settings');
+            }
+        }
+        
+        item.style.display = show ? 'block' : 'none';
+    });
+}
+
+// 全选权限
+function selectAllPermissions() {
+    const checkboxes = document.querySelectorAll('#unassignedPermissions .form-check-input');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+        // 触发change事件以更新权限分配
+        checkbox.dispatchEvent(new Event('change'));
+    });
+}
+
+// 清空选择
+function clearAllPermissions() {
+    const checkboxes = document.querySelectorAll('#unassignedPermissions .form-check-input');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+// 分配选中的权限
+function assignSelectedPermissions() {
+    const selectedCheckboxes = document.querySelectorAll('#unassignedPermissions .permission-checkbox:checked');
+    selectedCheckboxes.forEach(checkbox => {
+        const permissionId = parseInt(checkbox.getAttribute('data-permission-id'));
+        assignPermission(permissionId);
+    });
+}
+
+// 移除选中的权限
+function unassignSelectedPermissions() {
+    const selectedCheckboxes = document.querySelectorAll('#assignedPermissions .permission-checkbox:checked');
+    selectedCheckboxes.forEach(checkbox => {
+        const permissionId = parseInt(checkbox.getAttribute('data-permission-id'));
+        unassignPermission(permissionId);
+    });
+}
+
+// 设置模态框宽度
+function setModalWidth(width) {
+    const modalDialog = document.querySelector('#rolePermissionModal .modal-dialog');
+    if (modalDialog) {
+        modalDialog.style.width = width;
+        modalDialog.style.maxWidth = width;
+
+        // 强制重新计算布局
+        modalDialog.offsetHeight;
+    } else {
+        console.error('未找到模态框对话框元素');
+    }
+}
+
+// 绑定关闭按钮 - 简化版本，让Bootstrap处理关闭逻辑
+function bindCloseButton() {
+
+    const closeButton = document.querySelector('#rolePermissionModal .btn-close');
+    
+        if (closeButton) {
+
+        // 移除任何可能冲突的自定义事件处理
+        closeButton.onclick = null;
+        
+        // 确保Bootstrap的data-bs-dismiss属性正常工作
+    } else {
+        console.error('❌ 未找到关闭按钮');
+    }
+}
+
+// 绑定权限搜索功能
+function bindPermissionSearch() {
+    const searchInput = document.getElementById('permissionSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', searchPermissions);
+    } else {
+        console.error('❌ 未找到权限搜索输入框');
+    }
+}
+
+// 绑定宽度调节功能
+function bindWidthControl() {
+
+    const widthSlider = document.getElementById('widthSlider');
+    const widthValue = document.getElementById('widthValue');
+    
+    if (widthSlider && widthValue) {
+
+        // 直接使用oninput，更简单直接
+        widthSlider.oninput = function() {
+            const width = this.value;
+            widthValue.textContent = width + '%';
+            setModalWidth(width + 'vw');
+        };
+        
+        // 设置初始值
+        widthValue.textContent = widthSlider.value + '%';
+    } else {
+        console.error('❌ 宽度控制元素未找到:', { 
+            widthSlider: !!widthSlider, 
+            widthValue: !!widthValue 
+        });
+        
+        // 尝试查找所有滑块元素
+        const allSliders = document.querySelectorAll('input[type="range"]');
+    }
+}
+
+
+
+// 分配权限给角色
+function assignPermission(permissionId) {
+    const permission = allPermissions.find(p => p.id === permissionId);
+    if (permission) {
+        rolePermissions.push(permission);
+        renderRolePermissionModal();
+    }
+}
+
+// 从角色移除权限
+function unassignPermission(permissionId) {
+    rolePermissions = rolePermissions.filter(p => p.id !== permissionId);
+    renderRolePermissionModal();
+}
+
+// 关闭角色权限模态框
+function closeRolePermissionModal() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('rolePermissionModal'));
+    if (modal) {
+        modal.hide();
+    } else {
+        // 备用方法
+        const modalElement = document.getElementById('rolePermissionModal');
+        if (modalElement) {
+            modalElement.style.display = 'none';
+            modalElement.classList.remove('show');
+            document.body.classList.remove('modal-open');
+            
+            // 移除背景遮罩
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }
+    }
+}
+
+// 保存角色权限分配
+function saveRolePermissions() {
+    const permissionIds = rolePermissions.map(p => p.id);
+    
+    fetch(`/api/rbac/roles/${currentRoleForPermission}/permissions/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ permission_ids: permissionIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert('success', '角色权限分配保存成功');
+            bootstrap.Modal.getInstance(document.getElementById('rolePermissionModal')).hide();
+            loadRoles(); // 重新加载角色列表以更新权限数量
+        } else {
+            showAlert('error', data.message);
+        }
+    })
+    .catch(error => {
+        showAlert('error', '保存角色权限分配失败');
+    });
+}
+
+// 加载权限列表
+function loadPermissions() {
+    fetch('/api/rbac/permissions/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                renderPermissionTable(data.data);
+            } else {
+                showAlert('error', '加载权限列表失败: ' + data.message);
+            }
+        })
+        .catch(error => {
+            showAlert('error', '加载权限列表失败: ' + error.message);
+        });
+}
+
+// 渲染权限表格
+function renderPermissionTable(permissions) {
+    const tbody = document.getElementById('permissionTableBody');
+    tbody.innerHTML = '';
+
+    permissions.forEach(permission => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${permission.code}</td>
+            <td>${permission.name}</td>
+            <td>
+                <span class="badge bg-${getPermissionTypeColor(permission.permission_type)}">
+                    ${getPermissionTypeText(permission.permission_type)}
+                </span>
+            </td>
+            <td>${permission.module || '-'}</td>
+            <td>${permission.description || '-'}</td>
+            <td>${permission.role_count || 0}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline-primary" onclick="editPermission(${permission.id})" title="编辑权限">
+                        <i class="material-icons" data-icon="edit">edit</i> 编辑
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deletePermission(${permission.id})" title="删除权限">
+                        <i class="material-icons" data-icon="delete">delete</i> 删除
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// 获取权限类型颜色
+function getPermissionTypeColor(type) {
+    const colors = {
+        'module': 'primary',
+        'operation': 'success',
+        'data': 'warning'
+    };
+    return colors[type] || 'secondary';
+}
+
+// 获取权限类型文本
+function getPermissionTypeText(type) {
+    const texts = {
+        'module': '模块权限',
+        'operation': '操作权限',
+        'data': '数据权限'
+    };
+    return texts[type] || '未知';
+}
+
+// 打开添加权限模态框
+function openPermissionModal() {
+    isEditMode = false;
+    currentPermissionId = null;
+    document.getElementById('permissionModalLabel').textContent = '添加权限';
+    document.getElementById('permissionForm').reset();
+    
+    const modal = new bootstrap.Modal(document.getElementById('permissionModal'));
+    modal.show();
+}
+
+// 编辑权限
+function editPermission(permissionId) {
+    isEditMode = true;
+    currentPermissionId = permissionId;
+    
+    fetch(`/api/rbac/permissions/${permissionId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const permission = data.data;
+                document.getElementById('permissionModalLabel').textContent = '编辑权限';
+                document.getElementById('permissionId').value = permission.id;
+                document.getElementById('permissionCode').value = permission.code;
+                document.getElementById('permissionName').value = permission.name;
+                document.getElementById('permissionType').value = permission.permission_type;
+                document.getElementById('permissionModule').value = permission.module || '';
+                document.getElementById('permissionDescription').value = permission.description || '';
+                
+                const modal = new bootstrap.Modal(document.getElementById('permissionModal'));
+                modal.show();
+            } else {
+                showAlert('error', '获取权限信息失败: ' + data.message);
+            }
+        })
+        .catch(error => {
+            showAlert('error', '获取权限信息失败: ' + error.message);
+        });
+}
+
+// 保存权限
+function savePermission() {
+    const formData = new FormData(document.getElementById('permissionForm'));
+    const data = {
+        code: formData.get('permissionCode'),
+        name: formData.get('permissionName'),
+        permission_type: formData.get('permissionType'),
+        module: formData.get('permissionModule'),
+        description: formData.get('permissionDescription')
+    };
+
+    const url = isEditMode ? `/api/rbac/permissions/${currentPermissionId}/` : '/api/rbac/permissions/';
+    const method = isEditMode ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert('success', isEditMode ? '权限更新成功' : '权限创建成功');
+            bootstrap.Modal.getInstance(document.getElementById('permissionModal')).hide();
+            loadPermissions();
+        } else {
+            showAlert('error', data.message);
+        }
+    })
+    .catch(error => {
+        showAlert('error', '操作失败');
+    });
+}
+
+// 删除权限
+function deletePermission(permissionId) {
+    if (confirm('确定要删除这个权限吗？此操作不可恢复。')) {
+        fetch(`/api/rbac/permissions/${permissionId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert('success', '权限删除成功');
+                loadPermissions();
+            } else {
+                showAlert('error', data.message);
+            }
+        })
+        .catch(error => {
+            showAlert('error', '删除权限失败');
+        });
+    }
+}
+
+// 加载用户角色分配列表
+function loadUserRoles() {
+    fetch('/api/rbac/user-roles/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                renderUserRoleTable(data.data);
+            } else {
+                showAlert('error', '加载用户角色分配失败: ' + data.message);
+            }
+        })
+        .catch(error => {
+            showAlert('error', '加载用户角色分配失败: ' + error.message);
+        });
+}
+
+// 渲染用户角色分配表格
+function renderUserRoleTable(userRoles) {
+    const tbody = document.getElementById('userRoleTableBody');
+    tbody.innerHTML = '';
+
+    userRoles.forEach(userRole => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${userRole.user.id}</td>
+            <td>${userRole.user.username}</td>
+            <td>${userRole.user.first_name || '-'}</td>
+            <td>
+                <span class="badge bg-primary">${userRole.role.name}</span>
+            </td>
+            <td>${userRole.created_at}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUserRole(${userRole.id})" title="删除分配">
+                        <i class="material-icons" data-icon="delete">delete</i> 删除
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// 加载用户列表
+function loadUsers() {
+    // 请求所有用户，设置较大的页面大小
+    fetch('/api/user-management/?page_size=100')
+        .then(response => {
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                // 处理分页格式的数据
+                const users = data.data.results || data.data;
+                
+                if (Array.isArray(users)) {
+                    console.log(`✅ 加载了 ${users.length} 个用户`);
+                    populateUserSelect(users);
+                } else {
+                    console.error('❌ 用户数据不是数组:', users);
+                }
+            } else {
+                console.error('用户API返回错误:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Load users error:', error);
+        });
+}
+
+// 填充用户选择下拉框
+function populateUserSelect(users) {
+    const select = document.getElementById('selectedUser');
+    
+    if (!select) {
+        return;
+    }
+    
+    select.innerHTML = '<option value="">请选择用户</option>';
+    
+    // 按用户名排序
+    users.sort((a, b) => a.username.localeCompare(b.username));
+    
+    users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.id;
+        const displayName = user.first_name ? `${user.username} (${user.first_name})` : user.username;
+        option.textContent = displayName;
+        select.appendChild(option);
+    });
+    
+    console.log(`✅ 用户选择框已填充 ${users.length} 个用户`);
+}
+
+// 加载角色列表到选择框
+function loadRolesForSelect() {
+    fetch('/api/rbac/roles/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                populateRoleSelect(data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Load roles for select error:', error);
+        });
+}
+
+// 填充角色选择下拉框
+function populateRoleSelect(roles) {
+    const select = document.getElementById('selectedRole');
+    select.innerHTML = '<option value="">请选择角色</option>';
+    
+    roles.forEach(role => {
+        const option = document.createElement('option');
+        option.value = role.id;
+        option.textContent = role.name;
+        select.appendChild(option);
+    });
+}
+
+// 打开用户角色分配模态框
+function openUserRoleModal() {
+
+    const modalLabel = document.getElementById('userRoleModalLabel');
+    const form = document.getElementById('userRoleForm');
+    const modal = document.getElementById('userRoleModal');
+    
+    if (!modalLabel) {
+        return;
+    }
+    
+    if (!form) {
+        return;
+    }
+    
+    if (!modal) {
+        return;
+    }
+    
+    modalLabel.textContent = '分配用户角色';
+    form.reset();
+    
+    // 确保用户和角色列表已加载
+    loadUsers();
+    loadRolesForSelect();
+    
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+}
+
+// 保存用户角色分配
+function saveUserRole() {
+    const formData = new FormData(document.getElementById('userRoleForm'));
+    const data = {
+        user_id: formData.get('selectedUser'),
+        role_id: formData.get('selectedRole')
+    };
+
+    fetch('/api/rbac/user-roles/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert('success', '用户角色分配成功');
+            bootstrap.Modal.getInstance(document.getElementById('userRoleModal')).hide();
+            loadUserRoles();
+        } else {
+            showAlert('error', data.message);
+        }
+    })
+    .catch(error => {
+        showAlert('error', '分配失败');
+    });
+}
+
+// 删除用户角色分配
+function deleteUserRole(userRoleId) {
+    if (confirm('确定要删除这个用户角色分配吗？')) {
+        fetch(`/api/rbac/user-roles/${userRoleId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert('success', '用户角色分配删除成功');
+                loadUserRoles();
+            } else {
+                showAlert('error', data.message);
+            }
+        })
+        .catch(error => {
+            showAlert('error', '删除失败');
+        });
+    }
+}
+
+// 获取CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// 显示提示信息
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// 强制显示权限按钮函数
+function forceShowPermissionButtons() {
+
+    // 获取所有角色行
+    const roleRows = document.querySelectorAll('#roleTableBody tr');
+
+    roleRows.forEach((row, index) => {
+        const actionCell = row.querySelector('td:last-child');
+        if (actionCell) {
+            const actionButtons = actionCell.querySelector('.action-buttons');
+            if (actionButtons) {
+                // 检查是否已经有权限按钮
+                const existingPermissionBtn = actionButtons.querySelector('button[onclick*="manageRolePermissions"]');
+                
+                if (!existingPermissionBtn) {
+
+                    // 创建权限按钮
+                    const permissionBtn = document.createElement('button');
+                    permissionBtn.className = 'btn btn-sm btn-outline-info';
+                    permissionBtn.style.cssText = 'display: inline-flex !important; visibility: visible !important; opacity: 1 !important;';
+                    permissionBtn.title = '管理权限';
+                    permissionBtn.innerHTML = '<i class="material-icons" data-icon="security">security</i> 权限';
+                    
+                    // 设置点击事件
+                    const roleId = row.querySelector('td:first-child').textContent;
+                    permissionBtn.onclick = function() {
+                        if (typeof manageRolePermissions === 'function') {
+                            manageRolePermissions(parseInt(roleId));
+                        } else {
+                            console.error('manageRolePermissions 函数不存在');
+                        }
+                    };
+                    
+                    // 插入到编辑按钮之后
+                    const editBtn = actionButtons.querySelector('button[onclick*="editRole"]');
+                    if (editBtn) {
+                        editBtn.parentNode.insertBefore(permissionBtn, editBtn.nextSibling);
+                    } else {
+                        actionButtons.appendChild(permissionBtn);
+                    }
+                    
+                    console.log(`✅ 第 ${index + 1} 行权限按钮添加成功`);
+                } else {
+                    console.log(`第 ${index + 1} 行已有权限按钮`);
+                }
+            } else {
+                console.error(`第 ${index + 1} 行没有找到 action-buttons 容器`);
+            }
+        } else {
+            console.error(`第 ${index + 1} 行没有找到操作列`);
+        }
+    });
+    
+    console.log('权限按钮强制显示完成');
+}
+
+// 确保滚动条可拖动的函数
+function ensureScrollable() {
+    const permissionLists = document.querySelectorAll('#rolePermissionModal .permission-list');
+    permissionLists.forEach(list => {
+        // 确保滚动条可见和可拖动
+        list.style.overflowY = 'auto';
+        list.style.overflowX = 'auto';
+        list.style.scrollbarWidth = 'auto';
+        list.style.webkitOverflowScrolling = 'touch';
+        
+    });
+}
+
+// 页面加载完成后初始化
+</script>
+
+<style>
+.rbac-container {
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.page-header {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.page-header h2 {
+    color: #333;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.page-description {
+    color: #666;
+    font-size: 14px;
+    margin: 0;
+}
+
+.nav-tabs {
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 30px;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: #666;
+    padding: 12px 20px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-tabs .nav-link.active {
+    color: #007bff;
+    background: none;
+    border-bottom: 2px solid #007bff;
+}
+
+.tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.tab-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.data-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+.data-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* 确保权限按钮可见 */
+.action-buttons .btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* 特别确保权限按钮可见 */
+.btn-outline-info {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.badge {
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 12px;
+}
+
+.modal-content {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e9ecef;
+    padding: 20px 24px;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 20px 24px;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-control {
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+}
+
+.permission-list {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    background: #f8f9fa;
+}
+
+.permission-item {
+    transition: background-color 0.2s;
+}
+
+.permission-item:hover {
+    background-color: #e9ecef;
+}
+
+.permission-item:last-child {
+    border-bottom: none !important;
+}
+
+/* 角色权限分配模态框样式 */
+.permission-section {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.section-title .material-icons {
+    font-size: 18px;
+    color: #007bff;
+}
+
+.permission-count {
+    background: #007bff;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.permission-list {
+    padding: 10px;
+    background: white;
+}
+
+.permission-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.permission-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.permission-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.permission-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.permission-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    margin-bottom: 4px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    background: white;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    user-select: none;
+}
+
+.permission-item:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff;
+}
+
+.permission-item.selected {
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+    border-left: 3px solid #2196f3;
+}
+
+.permission-item .permission-checkbox {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    width: 16px;
+    height: 16px;
+}
+
+.permission-item .permission-content {
+    margin-left: 35px;
+    flex: 1;
+}
+
+.permission-item .permission-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.permission-item .permission-description {
+    font-size: 11px;
+    color: #666;
+    line-height: 1.3;
+}
+
+.permission-item .permission-description code {
+    background: #f1f3f4;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 10px;
+    color: #d63384;
+}
+
+.permission-item.selected .permission-name {
+    color: #1976d2;
+}
+
+.permission-item .permission-actions {
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.permission-item:hover .permission-actions {
+    opacity: 1;
+}
+
+.permission-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+/* 简化样式 */
+.permission-item {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.permission-item:last-child {
+    border-bottom: none;
+}
+
+.permission-item .form-check {
+    margin: 0;
+}
+
+.permission-item .permission-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.permission-item small {
+    font-size: 11px;
+    color: #666;
+}
+
+/* 宽度调节控件样式 */
+.width-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.width-control .form-range {
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    outline: none;
+}
+
+.width-control .form-range::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #007bff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.width-control .form-range::-webkit-slider-thumb:hover {
+    background: #0056b3;
+    transform: scale(1.1);
+}
+
+.width-control small {
+    font-size: 10px;
+    min-width: 30px;
+    text-align: center;
+}
+
+
+
+
+
+.permission-item .permission-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #2c3e50;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.permission-item .permission-description {
+    font-size: 12px;
+    color: #6c757d;
+    line-height: 1.4;
+}
+
+.permission-item .permission-description code {
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #e83e8c;
+}
+
+.permission-item.selected {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    box-shadow: 0 2px 12px rgba(33,150,243,0.15);
+}
+
+.permission-item.selected .permission-checkbox {
+    color: #2196f3;
+}
+
+.permission-item.selected .permission-name {
+    color: #1976d2;
+}
+
+/* 批量操作提示 */
+.batch-actions {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+    z-index: 1050;
+    display: none;
+}
+
+.batch-actions.show {
+    display: block;
+    animation: slideInUp 0.3s ease;
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 992px) {
+    .modal-dialog {
+        max-width: 98vw !important;
+        margin: 10px auto !important;
+    }
+    
+    .modal-body {
+        min-height: 50vh !important;
+        padding: 20px !important;
+    }
+    
+    .permission-list {
+        min-height: 300px;
+        max-height: 50vh;
+    }
+    
+    .row.g-4 {
+        gap: 20px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-dialog {
+        max-width: 100vw !important;
+        margin: 0 !important;
+        height: 100vh;
+    }
+    
+    .modal-content {
+        height: 100vh;
+        border-radius: 0;
+    }
+    
+    .modal-body {
+        min-height: 60vh !important;
+        padding: 15px !important;
+    }
+    
+    .permission-list {
+        min-height: 250px;
+        max-height: 45vh;
+    }
+    
+    .permission-section-title {
+        font-size: 14px;
+        padding: 10px 12px;
+    }
+    
+    .permission-item {
+        padding: 10px 12px;
+    }
+    
+    .modal-footer {
+        padding: 15px 20px;
+    }
+    
+    .permission-summary {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    .rbac-container {
+        padding: 15px;
+    }
+    
+    .tab-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .data-table {
+        font-size: 14px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 8px;
+    }
+}
+
+/* 模态框内容显示优化 */
+.modal-dialog {
+    height: 90vh;
+    margin: 5vh auto;
+}
+
+.modal-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.permission-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    max-height: 100%;
+}
+
+.permission-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.permission-item:hover {
+    background-color: #f8f9fa;
+}
+
+.permission-item.selected {
+    background-color: #e3f2fd;
+    border-left: 3px solid #2196f3;
+}
+
+.permission-item .permission-name {
+    font-weight: 500;
+    color: #333;
+    flex: 1;
+}
+
+.permission-item .permission-code {
+    font-size: 11px;
+    color: #666;
+    font-family: monospace;
+    margin-left: 10px;
+}
+
+/* 确保滚动条可见 */
+.permission-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.permission-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.permission-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.permission-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 确保模态框内容正确显示 */
+#rolePermissionModal .modal-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#rolePermissionModal .row {
+    flex: 1;
+    min-height: 0;
+}
+
+#rolePermissionModal .col-md-6 {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#rolePermissionModal .card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#rolePermissionModal .card-body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#rolePermissionModal .permission-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: auto;
+    min-height: 0;
+    max-height: calc(100vh - 300px);
+    scrollbar-width: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 自定义滚动条样式 */
+#rolePermissionModal .permission-list::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+#rolePermissionModal .permission-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 6px;
+}
+
+#rolePermissionModal .permission-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 6px;
+    border: 2px solid #f1f1f1;
+}
+
+#rolePermissionModal .permission-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+#rolePermissionModal .permission-list::-webkit-scrollbar-corner {
+    background: #f1f1f1;
+}
+
+/* 确保权限项正确显示 */
+#rolePermissionModal .permission-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: flex-start;
+    min-height: 60px;
+    flex-wrap: wrap;
+}
+
+#rolePermissionModal .permission-item:hover {
+    background-color: #f8f9fa;
+}
+
+#rolePermissionModal .permission-item .form-check {
+    width: 100%;
+    margin: 0;
+}
+
+#rolePermissionModal .permission-item .form-check-label {
+    width: 100%;
+    cursor: pointer;
+    margin: 0;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+
+#rolePermissionModal .permission-item .permission-name {
+    font-weight: 500;
+    color: #333;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+
+#rolePermissionModal .permission-item small {
+    color: #666;
+    font-size: 0.85em;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+
+/* 搜索和分页样式 */
+.search-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.search-form {
+    width: 100%;
+}
+
+.search-row {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.search-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-group .form-label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.search-group .form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.search-group .form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.search-group .btn {
+    white-space: nowrap;
+    margin-right: 10px;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    gap: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pagination-info {
+    color: #666;
+    font-size: 14px;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 5px;
+}
+
+.page-btn {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.page-btn:hover {
+    background-color: #f8f9fa;
+}
+
+.page-btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .search-row {
+        flex-direction: column;
+    }
+    
+    .search-group {
+        min-width: 100%;
+    }
+    
+    .pagination-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .pagination-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %} 

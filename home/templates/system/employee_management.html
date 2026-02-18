@@ -1,0 +1,755 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}员工管理{% endblock %}
+
+{% block extra_css %}
+<style>
+    .employee-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .employee-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .employee-name {
+        font-weight: bold;
+        font-size: 16px;
+        color: #333;
+    }
+    
+    .employee-status {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .status-active {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .employee-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .detail-label {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 2px;
+    }
+    
+    .detail-value {
+        font-size: 14px;
+        color: #333;
+    }
+    
+    .btn-edit {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .btn-edit:hover {
+        background-color: #0056b3;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .modal-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
+    .close:hover {
+        color: #000;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    
+    .btn-save {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .btn-save:hover {
+        background-color: #218838;
+    }
+    
+    .btn-cancel {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .btn-cancel:hover {
+        background-color: #545b62;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+    
+    .success-message {
+        color: #28a745;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+    
+    /* 搜索和分页样式 */
+    .search-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .search-form {
+        display: flex;
+        gap: 15px;
+        align-items: end;
+        flex-wrap: wrap;
+    }
+    
+    .search-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .search-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+    
+    .search-btn:hover {
+        background-color: #0056b3;
+    }
+    
+    .clear-btn {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+    
+    .clear-btn:hover {
+        background-color: #545b62;
+    }
+    
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+        gap: 10px;
+    }
+    
+    .pagination-info {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .pagination-controls {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .page-btn {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        background: white;
+        color: #333;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    .page-btn:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .page-btn.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    
+    .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+        font-size: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>员工管理</h2>
+                <div>
+                    <button class="btn btn-primary" onclick="refreshEmployees()">
+                        <i class="fas fa-sync-alt"></i> 刷新
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 搜索区域 -->
+            <div class="search-container">
+                <form id="searchForm" class="search-form">
+                    <div class="search-group">
+                        <label class="form-label">搜索用户名</label>
+                        <input type="text" id="searchUsername" class="form-control" placeholder="输入用户名">
+                    </div>
+                    <div class="search-group">
+                        <label class="form-label">搜索姓名</label>
+                        <input type="text" id="searchName" class="form-control" placeholder="输入姓名">
+                    </div>
+                    <div class="search-group">
+                        <label class="form-label">搜索邮箱</label>
+                        <input type="email" id="searchEmail" class="form-control" placeholder="输入邮箱">
+                    </div>
+                    <div class="search-group">
+                        <label class="form-label">状态</label>
+                        <select id="searchStatus" class="form-control">
+                            <option value="">全部</option>
+                            <option value="true">启用</option>
+                            <option value="false">禁用</option>
+                        </select>
+                    </div>
+                    <div class="search-group">
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                        <button type="button" class="clear-btn" onclick="clearSearch()">
+                            <i class="fas fa-times"></i> 清除
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="loading" class="loading">
+                <i class="fas fa-spinner fa-spin"></i> 正在加载员工信息...
+            </div>
+            
+            <div id="employees-container" style="display: none;">
+                <!-- 员工列表将在这里动态加载 -->
+            </div>
+            
+            <!-- 分页控件 -->
+            <div id="pagination-container" class="pagination-container" style="display: none;">
+                <div class="pagination-info">
+                    <span id="pagination-info"></span>
+                </div>
+                <div class="pagination-controls">
+                    <button id="prev-page" class="page-btn" onclick="changePage(-1)">
+                        <i class="fas fa-chevron-left"></i> 上一页
+                    </button>
+                    <div id="page-numbers"></div>
+                    <button id="next-page" class="page-btn" onclick="changePage(1)">
+                        下一页 <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑员工模态框 -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">编辑员工信息</h3>
+            <span class="close" onclick="closeEditModal()">&times;</span>
+        </div>
+        
+        <form id="editForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" id="editUsername" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">员工编号</label>
+                    <input type="text" id="editEmployeeId" class="form-control">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">姓名</label>
+                    <input type="text" id="editFirstName" class="form-control" placeholder="姓">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">姓名</label>
+                    <input type="text" id="editLastName" class="form-control" placeholder="名">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" id="editEmail" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">电话</label>
+                    <input type="text" id="editPhone" class="form-control">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">企业微信ID</label>
+                <input type="text" id="editWechatId" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">状态</label>
+                <select id="editIsActive" class="form-control">
+                    <option value="true">启用</option>
+                    <option value="false">禁用</option>
+                </select>
+            </div>
+            
+            <div id="editMessage"></div>
+            
+            <div class="text-right">
+                <button type="button" class="btn-cancel" onclick="closeEditModal()">取消</button>
+                <button type="submit" class="btn-save">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentEmployee = null;
+let currentPage = 1;
+let totalPages = 1;
+let totalCount = 0;
+let pageSize = 10;
+let searchParams = {};
+
+// 页面加载时获取数据
+document.addEventListener('DOMContentLoaded', function() {
+    loadEmployees();
+    
+    // 绑定搜索表单提交事件
+    document.getElementById('searchForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        currentPage = 1;
+        loadEmployees();
+    });
+});
+
+// 加载员工列表
+async function loadEmployees() {
+    try {
+        // 获取搜索参数
+        searchParams = getSearchParams();
+        
+        // 构建查询参数
+        const params = new URLSearchParams({
+            page: currentPage,
+            page_size: pageSize,
+            ...searchParams
+        });
+        
+        const response = await fetch(`/api/employees/?${params.toString()}`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            displayEmployees(data.data.results || data.data);
+            updatePagination(data.data);
+        } else {
+            showError('加载员工信息失败: ' + data.message);
+        }
+    } catch (error) {
+        showError('加载员工信息失败: ' + error.message);
+    }
+}
+
+// 更新分页信息
+function updatePagination(data) {
+    const paginationContainer = document.getElementById('pagination-container');
+    const paginationInfo = document.getElementById('pagination-info');
+    const pageNumbers = document.getElementById('page-numbers');
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+    
+    if (data.count !== undefined) {
+        // 分页数据
+        totalCount = data.count;
+        totalPages = Math.ceil(totalCount / pageSize);
+        
+        // 显示分页信息
+        const start = (currentPage - 1) * pageSize + 1;
+        const end = Math.min(currentPage * pageSize, totalCount);
+        paginationInfo.textContent = `显示第 ${start}-${end} 条，共 ${totalCount} 条记录`;
+        
+        // 更新分页按钮
+        prevBtn.disabled = currentPage <= 1;
+        nextBtn.disabled = currentPage >= totalPages;
+        
+        // 生成页码按钮
+        pageNumbers.innerHTML = '';
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+            pageBtn.textContent = i;
+            pageBtn.onclick = () => goToPage(i);
+            pageNumbers.appendChild(pageBtn);
+        }
+        
+        paginationContainer.style.display = 'flex';
+    } else {
+        // 非分页数据，隐藏分页控件
+        paginationContainer.style.display = 'none';
+    }
+}
+
+// 切换页面
+function changePage(delta) {
+    const newPage = currentPage + delta;
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        loadEmployees();
+    }
+}
+
+// 跳转到指定页面
+function goToPage(page) {
+    if (page >= 1 && page <= totalPages) {
+        currentPage = page;
+        loadEmployees();
+    }
+}
+
+// 清除搜索条件
+function clearSearch() {
+    document.getElementById('searchUsername').value = '';
+    document.getElementById('searchName').value = '';
+    document.getElementById('searchEmail').value = '';
+    document.getElementById('searchStatus').value = '';
+    searchParams = {};
+    currentPage = 1;
+    loadEmployees();
+}
+
+// 获取搜索参数
+function getSearchParams() {
+    const username = document.getElementById('searchUsername').value.trim();
+    const name = document.getElementById('searchName').value.trim();
+    const email = document.getElementById('searchEmail').value.trim();
+    const status = document.getElementById('searchStatus').value;
+    
+    const params = {};
+    if (username) params.username = username;
+    if (name) params.name = name;
+    if (email) params.email = email;
+    if (status) params.is_active = status;
+    
+    return params;
+}
+
+// 显示员工列表
+function displayEmployees(employees) {
+    const container = document.getElementById('employees-container');
+    const loading = document.getElementById('loading');
+    
+    loading.style.display = 'none';
+    container.style.display = 'block';
+    
+    if (employees.length === 0) {
+        container.innerHTML = '<div class="no-results">暂无员工信息</div>';
+        return;
+    }
+    
+    const html = employees.map(employee => `
+        <div class="employee-card">
+            <div class="employee-info">
+                <div class="employee-name">${employee.first_name} ${employee.last_name} (${employee.username})</div>
+                <div class="employee-status ${employee.is_active ? 'status-active' : 'status-inactive'}">
+                    ${employee.is_active ? '启用' : '禁用'}
+                </div>
+            </div>
+            
+            <div class="employee-details">
+                <div class="detail-item">
+                    <span class="detail-label">员工编号</span>
+                    <span class="detail-value">${employee.employee_id || '未设置'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">邮箱</span>
+                    <span class="detail-value">${employee.email || '未设置'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">电话</span>
+                    <span class="detail-value">${employee.phone || '未设置'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">企业微信ID</span>
+                    <span class="detail-value">${employee.wechat_id || '未设置'}</span>
+                </div>
+            </div>
+            
+            <div class="text-right">
+                <button class="btn-edit" onclick="editEmployee(${employee.id})">编辑</button>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = html;
+}
+
+// 编辑员工
+async function editEmployee(userId) {
+    try {
+        const response = await fetch(`/api/employees/${userId}/`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            currentEmployee = data.data;
+            populateEditForm(data.data);
+            document.getElementById('editModal').style.display = 'block';
+        } else {
+            showError('获取员工信息失败: ' + data.message);
+        }
+    } catch (error) {
+        showError('获取员工信息失败: ' + error.message);
+    }
+}
+
+// 填充编辑表单
+function populateEditForm(employee) {
+    document.getElementById('editUsername').value = employee.username;
+    document.getElementById('editEmployeeId').value = employee.employee_id || '';
+    document.getElementById('editFirstName').value = employee.first_name || '';
+    document.getElementById('editLastName').value = employee.last_name || '';
+    document.getElementById('editEmail').value = employee.email || '';
+    document.getElementById('editPhone').value = employee.phone || '';
+    document.getElementById('editWechatId').value = employee.wechat_id || '';
+    document.getElementById('editIsActive').value = employee.is_active.toString();
+}
+
+// 关闭编辑模态框
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+    currentEmployee = null;
+}
+
+// 刷新员工列表
+function refreshEmployees() {
+    currentPage = 1;
+    loadEmployees();
+}
+
+// 保存员工信息
+document.getElementById('editForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        first_name: document.getElementById('editFirstName').value,
+        last_name: document.getElementById('editLastName').value,
+        email: document.getElementById('editEmail').value,
+        phone: document.getElementById('editPhone').value,
+        wechat_id: document.getElementById('editWechatId').value,
+        employee_id: document.getElementById('editEmployeeId').value,
+        is_active: document.getElementById('editIsActive').value === 'true'
+    };
+    
+    try {
+        const response = await fetch(`/api/employees/${currentEmployee.id}/`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            showSuccess('员工信息更新成功');
+            closeEditModal();
+            loadEmployees(); // 刷新列表
+        } else {
+            showError('更新失败: ' + data.message);
+        }
+    } catch (error) {
+        showError('更新失败: ' + error.message);
+    }
+});
+
+// 显示成功消息
+function showSuccess(message) {
+    const messageDiv = document.getElementById('editMessage');
+    messageDiv.innerHTML = `<div class="success-message">${message}</div>`;
+    setTimeout(() => {
+        messageDiv.innerHTML = '';
+    }, 3000);
+}
+
+// 显示错误消息
+function showError(message) {
+    const messageDiv = document.getElementById('editMessage');
+    messageDiv.innerHTML = `<div class="error-message">${message}</div>`;
+    setTimeout(() => {
+        messageDiv.innerHTML = '';
+    }, 5000);
+}
+
+// 获取CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %} 

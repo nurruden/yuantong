@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_extra %}
+<style>
+    .config-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .config-section {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        padding: 20px;
+    }
+    
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 5px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        margin-right: 10px;
+    }
+    
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+    
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-warning {
+        background: #ffc107;
+        color: #212529;
+    }
+    
+    .alert {
+        padding: 12px 16px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+    
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .alert-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+    
+    .status-display {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .status-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .status-item:last-child {
+        border-bottom: none;
+    }
+    
+    .status-value {
+        font-weight: 600;
+    }
+    
+    .status-enabled {
+        color: #28a745;
+    }
+    
+    .status-disabled {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="config-container">
+    <h1>权限配置管理</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- 当前状态显示 -->
+    <div class="config-section">
+        <h2 class="section-title">当前权限状态</h2>
+        <div class="status-display">
+            <div class="status-item">
+                <span>跨用户编辑功能</span>
+                <span class="status-value {% if cross_user_edit_enabled %}status-enabled{% else %}status-disabled{% endif %}">
+                    {% if cross_user_edit_enabled %}✅ 已启用{% else %}❌ 已禁用{% endif %}
+                </span>
+            </div>
+            <div class="status-item">
+                <span>编辑期限</span>
+                <span class="status-value">{{ edit_limit }} 天</span>
+            </div>
+            <div class="status-item">
+                <span>东泰QC报表跨用户编辑</span>
+                <span class="status-value {% if dongtai_edit_others %}status-enabled{% else %}status-disabled{% endif %}">
+                    {% if dongtai_edit_others %}✅ 已启用{% else %}❌ 已禁用{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 快速配置 -->
+    <div class="config-section">
+        <h2 class="section-title">快速配置</h2>
+        
+        <div class="alert alert-info">
+            <strong>说明：</strong>以下配置将立即生效，让B用户可以编辑A用户录入的东泰QC报表数据。
+        </div>
+        
+        <form method="post" id="quickConfigForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label>操作选择</label>
+                <div>
+                    <button type="submit" name="action" value="enable_all" class="btn btn-success">
+                        ✅ 启用跨用户编辑（推荐）
+                    </button>
+                    <button type="submit" name="action" value="disable_all" class="btn btn-warning">
+                        ❌ 禁用跨用户编辑
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit_limit">编辑期限（天）</label>
+                <input type="number" name="edit_limit" id="edit_limit" 
+                       class="form-control" value="{{ edit_limit }}" min="1" max="365">
+                <small class="text-muted">超过此天数的数据将无法编辑</small>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" name="action" value="update_limit" class="btn btn-primary">
+                    🔧 更新编辑期限
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- 详细配置 -->
+    <div class="config-section">
+        <h2 class="section-title">详细配置</h2>
+        
+        <form method="post" id="detailConfigForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="enable_cross_user_edit" value="true" 
+                           {% if cross_user_edit_enabled %}checked{% endif %}>
+                    启用跨用户编辑功能
+                </label>
+                <small class="text-muted d-block">启用后，具有相应权限的用户可以编辑他人录入的数据</small>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="dongtai_edit_others" value="true" 
+                           {% if dongtai_edit_others %}checked{% endif %}>
+                    东泰QC报表跨用户编辑权限
+                </label>
+                <small class="text-muted d-block">启用后，具有东泰QC报表编辑权限的用户可以编辑他人录入的东泰QC报表数据</small>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" name="action" value="save_detail" class="btn btn-primary">
+                    💾 保存详细配置
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- 使用说明 -->
+    <div class="config-section">
+        <h2 class="section-title">使用说明</h2>
+        <div class="alert alert-info">
+            <h4>如何让B用户编辑A用户的东泰QC报表数据：</h4>
+            <ol>
+                <li><strong>启用跨用户编辑功能</strong> - 点击"启用跨用户编辑（推荐）"按钮</li>
+                <li><strong>确保B用户有东泰QC报表编辑权限</strong> - 在用户权限管理中为B用户分配 <code>dongtai_qc_report_edit</code> 权限</li>
+                <li><strong>确保数据未超过编辑期限</strong> - 默认7天，可在上方修改</li>
+            </ol>
+            
+            <h4>权限检查顺序：</h4>
+            <ol>
+                <li>检查是否登录</li>
+                <li>检查是否超级管理员（超级管理员可以编辑所有数据）</li>
+                <li>检查编辑期限</li>
+                <li>检查是否是数据录入者本人</li>
+                <li>检查跨用户编辑权限</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<script>
+// 表单提交处理
+document.getElementById('quickConfigForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitForm(this);
+});
+
+document.getElementById('detailConfigForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitForm(this);
+});
+
+function submitForm(form) {
+    const formData = new FormData(form);
+    
+    fetch('{% url "simple_permission_config" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        }
+    })
+    .then(response => {
+        // 检查响应状态
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        // 检查响应内容类型
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('服务器返回的不是JSON格式的响应');
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            alert('配置保存成功！');
+            location.reload();
+        } else {
+            alert('保存失败：' + (data.message || '未知错误'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('保存失败：' + error.message);
+    });
+}
+</script>
+{% endblock %}

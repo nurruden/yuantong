@@ -1,0 +1,549 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="app-container">
+    <div class="header">
+        <div class="header-left">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <span class="material-icons" data-icon="menu">menu</span>
+            </button>
+            <div class="user-info">
+                <span class="material-icons" data-icon="person">person</span>
+                <span class="username">{{ user.first_name }}</span>
+                {% if user.last_name %}
+                    <span class="department">({{ user.last_name }})</span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="{% url 'logout' %}" class="logout-btn">
+            <span class="material-icons" data-icon="logout">logout</span>
+            <span class="logout-text">退出登录</span>
+        </a>
+    </div>
+    <div class="main-container">
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+        <div id="sideMenu" class="side-menu">
+            {% include 'shared/sidebar.html' %}
+        </div>
+        <div class="main-content" id="mainContentArea">
+            <div class="admin-panel-container">
+                <!-- 首页内容 -->
+                <div class="welcome-panel">
+                    <h1>欢迎使用吉林远通后台管理系统</h1>
+                    <p>请从左侧菜单选择您需要的功能</p>
+                </div>
+                <div id="favoritesPanel" class="favorites-panel" style="margin-top:32px;display:none;">
+                    <h2 style="font-size:20px;margin-bottom:12px;">我的收藏</h2>
+                    <div id="favoriteLinks"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block head_extra %}
+<link href="{% static 'libs/material-icons/material-icons.css' %}" rel="stylesheet">
+<style>
+/* 移动端优化样式 */
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.mobile-menu-btn:hover {
+    background-color: #f0f2f5;
+}
+
+.mobile-menu-btn .material-icons {
+    font-size: 24px;
+    color: #666;
+    margin: 0;
+}
+
+
+
+/* 桌面端样式 */
+@media (min-width: 769px) {
+    .mobile-menu-btn {
+        display: none !important;
+    }
+    
+    .side-menu {
+        position: static;
+        width: 250px;
+        height: calc(100vh - 64px);
+        background-color: #fff;
+        border-right: 1px solid #e0e0e0;
+    }
+    
+    .menu-close-btn {
+        display: none !important;
+    }
+    
+    .mobile-overlay {
+        display: none !important;
+    }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .mobile-menu-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+    }
+    
+    .mobile-menu-btn .material-icons {
+        color: #333 !important;
+        font-size: 20px !important;
+        margin: 0 !important;
+    }
+    
+    .header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .user-info {
+        gap: 0.25rem;
+    }
+    
+    .user-info .material-icons {
+        font-size: 20px;
+    }
+    
+    .username {
+        font-size: 14px;
+    }
+    
+    .department {
+        font-size: 12px;
+    }
+    
+    .logout-text {
+        display: none;
+    }
+    
+    .logout-btn {
+        padding: 8px;
+        min-width: auto;
+    }
+    
+    .side-menu {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        height: 100vh;
+        width: 280px;
+        z-index: 1001;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        background-color: #fff;
+        overflow-y: auto;
+    }
+    
+    .side-menu.expanded {
+        left: 0;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+        height: calc(100vh - 60px);
+    }
+    
+    .welcome-panel {
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
+    
+    .welcome-panel h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .welcome-panel p {
+        font-size: 14px;
+    }
+    
+    .favorites-panel {
+        margin-top: 1.5rem !important;
+    }
+    
+    .favorites-panel h2 {
+        font-size: 18px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    #favoriteLinks .btn {
+        margin-right: 8px !important;
+        margin-bottom: 8px;
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+}
+
+/* 移动端遮罩层 */
+@media (max-width: 768px) {
+    .mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.3); /* 降低遮罩层透明度 */
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .mobile-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* 确保移动端菜单有正确的背景色 */
+    .side-menu {
+        background-color: #fff !important;
+        color: #333 !important;
+    }
+    
+    .side-menu * {
+        color: inherit;
+    }
+    
+    .menu-group-header {
+        background-color: #fff !important;
+        color: #333 !important;
+    }
+    
+    .submenu-item {
+        background-color: #fff !important;
+        color: #333 !important;
+    }
+    
+    .submenu-item:hover {
+        background-color: #f5f5f5 !important;
+    }
+}
+
+/* 侧边栏移动端优化 */
+@media (max-width: 768px) {
+    .side-menu .menu-header {
+        padding: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .side-menu .menu-header h2 {
+        font-size: 18px;
+        margin: 0;
+        color: #333;
+    }
+    
+        .menu-close-btn {
+        display: block !important;
+        background: none;
+        border: none;
+        padding: 4px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .menu-close-btn:hover {
+        background-color: #f0f0f0;
+    }
+
+    .menu-close-btn .material-icons {
+        font-size: 24px;
+        color: #666;
+    }
+    
+    .menu-group-header {
+        padding: 1rem;
+        font-size: 16px;
+    }
+    
+    .submenu-item {
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        font-size: 14px;
+    }
+    
+    .menu-icon {
+        font-size: 18px !important;
+    }
+    
+    /* 菜单导航基础样式 */
+    .menu-nav {
+        padding: 0;
+    }
+    
+    .menu-group {
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .menu-group:last-child {
+        border-bottom: none;
+    }
+    
+    .arrow {
+        transition: transform 0.3s ease;
+    }
+}
+</style>
+<script>
+function toggleSubmenu(header) {
+    const submenu = header.nextElementSibling;
+    const arrow = header.querySelector('.arrow');
+    
+    if (submenu.style.maxHeight) {
+        submenu.style.maxHeight = null;
+        arrow.style.transform = 'rotate(0deg)';
+        header.setAttribute('aria-expanded', 'false');
+    } else {
+        submenu.style.maxHeight = submenu.scrollHeight + 'px';
+        arrow.style.transform = 'rotate(90deg)';
+        header.setAttribute('aria-expanded', 'true');
+    }
+}
+
+function toggleMobileMenu() {
+    console.log('toggleMobileMenu called'); // 调试信息
+    const sideMenu = document.getElementById('sideMenu');
+    const overlay = document.getElementById('mobileOverlay');
+    
+    console.log('sideMenu:', sideMenu); // 调试信息
+    console.log('overlay:', overlay); // 调试信息
+    
+    if (sideMenu && overlay) {
+        if (sideMenu.classList.contains('expanded')) {
+            closeMobileMenu();
+        } else {
+            openMobileMenu();
+        }
+    } else {
+        console.error('sideMenu or overlay not found');
+    }
+}
+
+function openMobileMenu() {
+    console.log('openMobileMenu called'); // 调试信息
+    const sideMenu = document.getElementById('sideMenu');
+    const overlay = document.getElementById('mobileOverlay');
+    
+    if (sideMenu && overlay) {
+        sideMenu.classList.add('expanded');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden'; // 防止背景滚动
+        console.log('Menu opened'); // 调试信息
+    }
+}
+
+function closeMobileMenu() {
+    console.log('closeMobileMenu called'); // 调试信息
+    const sideMenu = document.getElementById('sideMenu');
+    const overlay = document.getElementById('mobileOverlay');
+    
+    if (sideMenu && overlay) {
+        sideMenu.classList.remove('expanded');
+        overlay.classList.remove('active');
+        document.body.style.overflow = ''; // 恢复滚动
+        console.log('Menu closed'); // 调试信息
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 绑定移动端菜单事件
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const menuCloseBtn = document.getElementById('menuCloseBtn');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+    
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    }
+    
+    if (menuCloseBtn) {
+        menuCloseBtn.addEventListener('click', closeMobileMenu);
+    }
+    
+    if (mobileOverlay) {
+        mobileOverlay.addEventListener('click', closeMobileMenu);
+    }
+    
+    // 初始化当前页面的功能
+    if (typeof initInventoryOrg === 'function') {
+        console.log('初始化库存组织功能');
+        initInventoryOrg();
+    }
+
+    if (typeof initMaterialMapping === 'function') {
+        console.log('初始化物料映射功能');
+        initMaterialMapping();
+    }
+
+    if (typeof initWarehouseMapping === 'function') {
+        console.log('初始化仓库映射功能');
+        initWarehouseMapping();
+    }
+});
+
+// 初始化
+window.addEventListener('load', function() {
+    // 设置初始状态
+    document.querySelectorAll('.menu-group-header').forEach(header => {
+        header.setAttribute('aria-expanded', 'false');
+    });
+    
+    // 在桌面端默认展开第一个菜单
+    if (window.innerWidth > 768) {
+        const firstMenu = document.querySelector('.menu-group-header');
+        if (firstMenu) {
+            toggleSubmenu(firstMenu);
+        }
+    }
+    
+    // 点击菜单项后自动关闭移动端菜单
+    document.addEventListener('click', function(event) {
+        if (window.innerWidth <= 768) {
+            const sideMenu = document.getElementById('sideMenu');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            
+            // 如果点击的是菜单项链接，关闭菜单
+            if (event.target.closest('.submenu-item')) {
+                closeMobileMenu();
+            }
+            
+            // 如果点击的不是菜单按钮和菜单内容，关闭菜单
+            if (!sideMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                closeMobileMenu();
+            }
+        }
+    });
+});
+
+// 我的收藏功能
+(function() {
+    function renderFavorites() {
+        const panel = document.getElementById('favoritesPanel');
+        const links = document.getElementById('favoriteLinks');
+        fetch('/api/user-favorite/?page=all')
+            .then(res => res.json())
+            .then(data => {
+                if (data.status !== 'success') {
+                    console.error('获取收藏失败:', data.message);
+                    return;
+                }
+                
+                let html = '';
+                const favorites = data.data || {};
+                
+                if (favorites.dayuan_report) {
+                    html += `<a href="/dayuan_report/" class="btn btn-primary" style="margin-right:12px;">
+                        <span class="material-icons" data-icon="star">star</span> 大塬报表
+                    </a>`;
+                }
+                if (favorites.xinghui_report) {
+                    html += `<a href="/xinghui_report/" class="btn btn-primary" style="margin-right:12px;">
+                        <span class="material-icons" data-icon="star">star</span> 兴辉报表
+                    </a>`;
+                }
+                if (favorites.xinghui2_report) {
+                    html += `<a href="/xinghui2_report/" class="btn btn-primary" style="margin-right:12px;">
+                        <span class="material-icons" data-icon="star">star</span> 兴辉二线报表
+                    </a>`;
+                }
+                if (favorites.dongtai_report) {
+                    html += `<a href="/dongtai_report/" class="btn btn-primary" style="margin-right:12px;">
+                        <span class="material-icons" data-icon="star">star</span> 东泰报表
+                    </a>`;
+                }
+                if (favorites.raw_soil_storage) {
+                    html += `<a href="/production/raw-soil-storage/" class="btn btn-primary" style="margin-right:12px;">
+                        <span class="material-icons" data-icon="star">star</span> 原土入库
+                    </a>`;
+                }
+                if (favorites.changfu_report) {
+                    html += `<a href="/changfu_report/" class="btn btn-primary" style="margin-right:12px;">
+                        <span class="material-icons" data-icon="star">star</span> 长富报表
+                    </a>`;
+                }
+                if (favorites.yuantong_report) {
+                    html += `<a href="/yuantong_report/" class="btn btn-primary" style="margin-right:12px;">
+                        <span class="material-icons" data-icon="star">star</span> 远通报表
+                    </a>`;
+                }
+                if (favorites.yuantong2_report) {
+                    html += `<a href="/yuantong2_report/" class="btn btn-primary" style="margin-right:12px;">
+                        <span class="material-icons" data-icon="star">star</span> 远通二线报表
+                    </a>`;
+                }
+                if (html) {
+                    panel.style.display = '';
+                    links.innerHTML = html;
+                } else {
+                    panel.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('获取收藏出错:', error);
+            });
+    }
+    window.addEventListener('favoriteChanged', renderFavorites);
+    document.addEventListener('DOMContentLoaded', renderFavorites);
+})();
+
+// 添加触摸手势支持
+(function() {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    
+    document.addEventListener('touchstart', function(e) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    document.addEventListener('touchmove', function(e) {
+        if (window.innerWidth <= 768) {
+            const touchX = e.touches[0].clientX;
+            const touchY = e.touches[0].clientY;
+            const deltaX = touchX - touchStartX;
+            const deltaY = touchY - touchStartY;
+            
+            // 水平滑动距离大于垂直滑动距离，且滑动距离足够
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                const sideMenu = document.getElementById('sideMenu');
+                
+                // 从左边缘向右滑动打开菜单
+                if (deltaX > 0 && touchStartX < 20 && !sideMenu.classList.contains('expanded')) {
+                    openMobileMenu();
+                }
+                // 在菜单打开时向左滑动关闭菜单
+                else if (deltaX < -50 && sideMenu.classList.contains('expanded')) {
+                    closeMobileMenu();
+                }
+            }
+        }
+    }, { passive: true });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,355 @@
+{% extends 'layouts/main_layout.html' %}
+{% load static %}
+
+{% block title %}任务管理{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .page-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .page-title h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        transition: background-color 0.2s;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    .btn-success {
+        background-color: #28a745;
+        color: white;
+    }
+    .btn-success:hover {
+        background-color: #1e7e34;
+    }
+    .btn-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .btn-warning:hover {
+        background-color: #e0a800;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
+    .filters {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .filter-group label {
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+    .filter-group select,
+    .filter-group input {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+    .table th,
+    .table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        color: #495057;
+    }
+    .table tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .status-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .status-failed {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    .status-running {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+        gap: 10px;
+    }
+    .pagination a,
+    .pagination span {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        text-decoration: none;
+        color: #007bff;
+        border-radius: 4px;
+    }
+    .pagination .current {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    .pagination a:hover {
+        background-color: #e9ecef;
+    }
+    .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        color: #ccc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-title">
+        <h1>📋 定时任务管理</h1>
+        <div class="action-buttons">
+            <a href="{% url 'qc_schedule_management' %}" class="btn btn-info">
+                ⚙️ QC报表定时发送配置
+            </a>
+            <button class="btn btn-success" onclick="triggerDayuanReport()">
+                🚀 手动触发大塬报表
+            </button>
+            <button class="btn btn-primary" onclick="refreshLogs()">
+                🔄 刷新日志
+            </button>
+        </div>
+    </div>
+
+    <!-- 过滤器 -->
+    <div class="filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="statusFilter">状态筛选</label>
+                <select id="statusFilter" onchange="applyFilters()">
+                    <option value="">全部状态</option>
+                    <option value="success">成功</option>
+                    <option value="failed">失败</option>
+                    <option value="running">执行中</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="taskFilter">任务名称</label>
+                <input type="text" id="taskFilter" placeholder="输入任务名称" onkeyup="applyFilters()">
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务日志表格 -->
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>任务名称</th>
+                    <th>状态</th>
+                    <th>执行时间</th>
+                    <th>创建时间</th>
+                    <th>执行时长</th>
+                    <th>消息</th>
+                </tr>
+            </thead>
+            <tbody id="logsTableBody">
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.task_name }}</td>
+                    <td>
+                        <span class="status-badge status-{{ log.status }}">
+                            {% if log.status == 'success' %}✅ 成功
+                            {% elif log.status == 'failed' %}❌ 失败
+                            {% elif log.status == 'running' %}⏳ 执行中
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+                    <td>{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+                    <td>
+                        {% if log.execution_time %}
+                            {{ log.execution_time|floatformat:2 }}秒
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td title="{{ log.message }}">
+                        {{ log.message|truncatechars:50 }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="empty-state">
+                        <i>📝</i>
+                        <div>暂无任务日志</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分页 -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; 首页</a>
+            <a href="?page={{ page_obj.previous_page_number }}">上一页</a>
+        {% endif %}
+        
+        <span class="current">
+            第 {{ page_obj.number }} 页，共 {{ page_obj.paginator.num_pages }} 页
+        </span>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">下一页</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">末页 &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// 手动触发大塬报表
+function triggerDayuanReport() {
+    if (confirm('确定要手动触发大塬报表发送吗？')) {
+        fetch('/tasks/api/trigger-dayuan-report/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('任务已提交执行！');
+                refreshLogs();
+            } else {
+                alert('触发失败：' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('触发失败：' + error.message);
+        });
+    }
+}
+
+// 刷新日志
+function refreshLogs() {
+    location.reload();
+}
+
+// 应用过滤器
+function applyFilters() {
+    const status = document.getElementById('statusFilter').value;
+    const taskName = document.getElementById('taskFilter').value;
+    
+    let url = new URL(window.location);
+    url.searchParams.set('page', '1');
+    
+    if (status) {
+        url.searchParams.set('status', status);
+    } else {
+        url.searchParams.delete('status');
+    }
+    
+    if (taskName) {
+        url.searchParams.set('task_name', taskName);
+    } else {
+        url.searchParams.delete('task_name');
+    }
+    
+    window.location.href = url.toString();
+}
+
+// 页面加载时应用URL参数
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+    const taskName = urlParams.get('task_name');
+    
+    if (status) {
+        document.getElementById('statusFilter').value = status;
+    }
+    if (taskName) {
+        document.getElementById('taskFilter').value = taskName;
+    }
+});
+</script>
+{% endblock %}

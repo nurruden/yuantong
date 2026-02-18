@@ -1,0 +1,1023 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% block head_extra %}
+<style>
+    .operation-log-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 20px;
+    }
+    
+    .page-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .page-title h1 {
+        margin: 0;
+        font-size: 24px;
+        color: #333;
+    }
+    
+    .user-info-display {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 16px;
+        background: #f8f9fa;
+        border-radius: 20px;
+        border: 1px solid #e9ecef;
+        font-size: 14px;
+    }
+    
+    .user-status {
+        color: #6c757d;
+    }
+    
+    .user-info-display.logged-in {
+        background: #d4edda;
+        border-color: #c3e6cb;
+    }
+    
+    .user-info-display.logged-in .user-status {
+        color: #155724;
+    }
+    
+    .user-info-display.not-logged-in {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+    }
+    
+    .user-info-display.not-logged-in .user-status {
+        color: #721c24;
+    }
+    
+    .filter-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #555;
+        font-size: 14px;
+    }
+    
+    .filter-control {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    .filter-control:focus {
+        border-color: #4CAF50;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+    
+    .filter-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(90deg, #81d4fa 0%, #a5d6a7 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #4fc3f7 0%, #66bb6a 100%);
+    }
+    
+    .btn-secondary {
+        background: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+    }
+    
+    .btn-secondary:hover {
+        background: #e0e0e0;
+    }
+    
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #4CAF50;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .logs-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .logs-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .logs-table th {
+        background: #f8f9fa;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        color: #333;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .logs-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e9ecef;
+        color: #555;
+    }
+    
+    .logs-table tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .operation-type {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    
+    .operation-type.CREATE {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .operation-type.UPDATE {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .operation-type.DELETE {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .operation-type.VIEW {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .operation-type.EXPORT {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+    
+    .operation-type.LOGIN {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .operation-type.LOGOUT {
+        background: #ffebee;
+        color: #c62828;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        gap: 10px;
+    }
+    
+    .pagination-info {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .pagination-button {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        background: white;
+        color: #333;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    
+    .pagination-button:hover {
+        background: #f5f5f5;
+    }
+    
+    .pagination-button.active {
+        background: #4CAF50;
+        color: white;
+        border-color: #4CAF50;
+    }
+    
+    .pagination-button:disabled {
+        background: #f5f5f5;
+        color: #ccc;
+        cursor: not-allowed;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+    
+    /* 模态框样式 */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 0;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid #eee;
+        background: #f8f9fa;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        color: #333;
+    }
+    
+    .close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+    }
+    
+    .close:hover {
+        color: #000;
+    }
+    
+    .modal-controls {
+        display: flex;
+        align-items: center;
+    }
+    
+    .modal-controls .btn {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    
+    /* 标签页样式 */
+    .detail-tabs {
+        display: flex;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 20px;
+    }
+    
+    .tab-button {
+        padding: 10px 20px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .tab-button:hover {
+        background: #f5f5f5;
+    }
+    
+    .tab-button.active {
+        border-bottom-color: #4CAF50;
+        color: #4CAF50;
+        font-weight: bold;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    /* 详情内容样式 */
+    .detail-section {
+        margin-bottom: 20px;
+    }
+    
+    .detail-section h4 {
+        color: #333;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .detail-item {
+        display: flex;
+        margin-bottom: 10px;
+        padding: 8px;
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+    
+    .detail-label {
+        font-weight: bold;
+        min-width: 120px;
+        color: #555;
+    }
+    
+    .detail-value {
+        flex: 1;
+        color: #333;
+        word-break: break-word;
+    }
+    
+    .json-viewer {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .json-viewer.empty {
+        color: #999;
+        font-style: italic;
+    }
+    
+    /* 查看详情按钮样式 */
+    .view-details-btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background 0.3s ease;
+    }
+    
+    .view-details-btn:hover {
+        background: #0056b3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <div class="header">
+        <div class="header-left">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <span class="material-icons" data-icon="menu">menu</span>
+            </button>
+            <div class="user-info">
+                <span class="material-icons" data-icon="person">person</span>
+                <span class="username">{{ user.first_name }}</span>
+                {% if user.last_name %}
+                    <span class="department">({{ user.last_name }})</span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="{% url 'logout' %}" class="logout-btn">
+            <span class="material-icons" data-icon="logout">logout</span>
+            <span class="logout-text">退出登录</span>
+        </a>
+    </div>
+    <div class="main-container">
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+        <div id="sideMenu" class="side-menu">
+            {% include 'shared/sidebar.html' %}
+        </div>
+        <div class="main-content" id="mainContentArea">
+            <div class="admin-panel-container">
+                <div class="operation-log-container">
+                    <div class="page-title">
+                        <h1>📊 用户操作日志</h1>
+                        <div class="user-info-display" id="userInfo">
+                            <span class="user-status">正在获取用户信息...</span>
+                        </div>
+                        <div class="filter-buttons">
+                            <button class="btn btn-secondary" onclick="refreshLogs()">🔄 刷新</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 筛选条件 -->
+                    <div class="filter-container">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label for="username">用户名</label>
+                                <input type="text" id="username" class="filter-control" placeholder="输入用户名">
+                            </div>
+                            <div class="filter-group">
+                                <label for="operation_type">操作类型</label>
+                                <select id="operation_type" class="filter-control">
+                                    <option value="">全部操作类型</option>
+                                    <option value="CREATE">创建</option>
+                                    <option value="UPDATE">更新</option>
+                                    <option value="DELETE">删除</option>
+                                    <option value="VIEW">查看</option>
+                                    <option value="EXPORT">导出</option>
+                                    <option value="LOGIN">登录</option>
+                                    <option value="LOGOUT">登出</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="report_type">报表类型</label>
+                                <select id="report_type" class="filter-control">
+                                    <option value="">全部报表类型</option>
+                                    <option value="dongtai">东泰QC报表</option>
+                                    <option value="yuantong">远通QC报表</option>
+                                    <option value="yuantong2">远通2号QC报表</option>
+                                    <option value="dayuan">大塬QC报表</option>
+                                    <option value="changfu">长富QC报表</option>
+                                    <option value="xinghui">兴辉QC报表</option>
+                                    <option value="xinghui2">兴辉2号QC报表</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="start_date">开始日期</label>
+                                <input type="date" id="start_date" class="filter-control">
+                            </div>
+                            <div class="filter-group">
+                                <label for="end_date">结束日期</label>
+                                <input type="date" id="end_date" class="filter-control">
+                            </div>
+                        </div>
+                        <div class="filter-buttons">
+                            <button class="btn btn-secondary" onclick="clearFilters()">清除筛选</button>
+                            <button class="btn btn-primary" onclick="searchLogs()">🔍 搜索</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 统计信息 -->
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalLogs">0</div>
+                            <div class="stat-label">总操作数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="todayLogs">0</div>
+                            <div class="stat-label">今日操作</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="uniqueUsers">0</div>
+                            <div class="stat-label">操作用户数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="reportOperations">0</div>
+                            <div class="stat-label">报表操作数</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 日志列表 -->
+                    <div class="logs-container">
+                        <div id="logsTable">
+                            <div class="loading">正在加载日志数据...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 详细数据模态框 -->
+                    <div id="detailModal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3 id="modalTitle">操作详情</h3>
+                                <div class="modal-controls">
+                                    <button class="btn btn-secondary" onclick="closeModal()" style="margin-right: 10px;">关闭</button>
+                                    <span class="close" onclick="closeModal()">&times;</span>
+                                </div>
+                            </div>
+                            <div class="modal-body">
+                                <div class="detail-tabs">
+                                    <button class="tab-button active" onclick="showTab('basic')">基本信息</button>
+                                    <button class="tab-button" onclick="showTab('newData')">新数据</button>
+                                    <button class="tab-button" onclick="showTab('oldData')">旧数据</button>
+                                    <button class="tab-button" onclick="showTab('context')">操作上下文</button>
+                                </div>
+                                
+                                <div id="basicTab" class="tab-content active">
+                                    <div class="detail-section">
+                                        <h4>操作基本信息</h4>
+                                        <div id="basicInfo"></div>
+                                    </div>
+                                </div>
+                                
+                                <div id="newDataTab" class="tab-content">
+                                    <div class="detail-section">
+                                        <h4>新数据内容</h4>
+                                        <div id="newDataContent"></div>
+                                    </div>
+                                </div>
+                                
+                                <div id="oldDataTab" class="tab-content">
+                                    <div class="detail-section">
+                                        <h4>旧数据内容</h4>
+                                        <div id="oldDataContent"></div>
+                                    </div>
+                                </div>
+                                
+                                <div id="contextTab" class="tab-content">
+                                    <div class="detail-section">
+                                        <h4>操作上下文</h4>
+                                        <div id="contextInfo"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    <div class="pagination" id="pagination" style="display: none;">
+                        <button class="pagination-button" id="prevPage" onclick="changePage(-1)">上一页</button>
+                        <span class="pagination-info" id="pageInfo">第 1 页，共 1 页</span>
+                        <button class="pagination-button" id="nextPage" onclick="changePage(1)">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+let totalPages = 1;
+let currentFilters = {};
+
+// 页面加载完成后自动加载日志
+document.addEventListener('DOMContentLoaded', function() {
+    // 设置默认日期范围（最近7天）
+    const today = new Date();
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    document.getElementById('end_date').value = today.toISOString().split('T')[0];
+    document.getElementById('start_date').value = weekAgo.toISOString().split('T')[0];
+    
+    // 获取用户信息
+    getUserInfo();
+    
+    // 加载日志
+    loadLogs();
+});
+
+// 获取用户信息
+function getUserInfo() {
+    const userInfoDiv = document.getElementById('userInfo');
+    
+    // 尝试从页面获取用户信息（如果Django模板中有的话）
+    const usernameElement = document.querySelector('[data-username]');
+    if (usernameElement) {
+        const username = usernameElement.getAttribute('data-username');
+        userInfoDiv.innerHTML = `<span class="user-status">👤 当前用户: ${username}</span>`;
+        userInfoDiv.className = 'user-info-display logged-in';
+        return;
+    }
+    
+    // 如果没有找到用户信息，尝试调用API获取
+    fetch('/api/user-info/')
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else if (response.status === 401) {
+                throw new Error('未登录');
+            } else {
+                throw new Error('获取用户信息失败');
+            }
+        })
+        .then(data => {
+            if (data.status === 'success' && data.user) {
+                userInfoDiv.innerHTML = `<span class="user-status">👤 当前用户: ${data.user.username}</span>`;
+                userInfoDiv.className = 'user-info-display logged-in';
+            } else {
+                throw new Error('用户信息无效');
+            }
+        })
+        .catch(error => {
+            console.error('获取用户信息失败:', error);
+            if (error.message === '未登录') {
+                userInfoDiv.innerHTML = `<span class="user-status">❌ 未登录，请先登录系统</span>`;
+                userInfoDiv.className = 'user-info-display not-logged-in';
+            } else {
+                userInfoDiv.innerHTML = `<span class="user-status">❓ 无法获取用户信息</span>`;
+                userInfoDiv.className = 'user-info-display not-logged-in';
+            }
+        });
+}
+
+// 加载日志数据
+function loadLogs(page = 1) {
+    const loadingDiv = document.getElementById('logsTable');
+    loadingDiv.innerHTML = '<div class="loading">正在加载日志数据...</div>';
+    
+    // 获取筛选条件
+    const filters = {
+        username: document.getElementById('username').value,
+        operation_type: document.getElementById('operation_type').value,
+        report_type: document.getElementById('report_type').value,
+        start_date: document.getElementById('start_date').value,
+        end_date: document.getElementById('end_date').value,
+        page: page,
+        page_size: 50
+    };
+    
+    currentFilters = filters;
+    
+    // 构建查询字符串
+    const queryString = Object.keys(filters)
+        .filter(key => filters[key] !== undefined && filters[key] !== '')
+        .map(key => `${key}=${encodeURIComponent(filters[key])}`)
+        .join('&');
+    
+    // 发送API请求
+    fetch(`/api/operation-log/?${queryString}`)
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 403) {
+                    throw new Error('权限不足，请检查是否已登录或联系管理员');
+                } else if (response.status === 401) {
+                    throw new Error('未登录，请先登录系统');
+                } else {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                displayLogs(data.data);
+                updatePagination(data.data.pagination);
+                updateStats(data.data.pagination.total_count);
+            } else {
+                loadingDiv.innerHTML = `<div class="no-data">加载失败: ${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('API调用失败:', error);
+            loadingDiv.innerHTML = `<div class="no-data">加载失败: ${error.message}</div>`;
+        });
+}
+
+// 显示日志数据
+function displayLogs(data) {
+    const logsTable = document.getElementById('logsTable');
+    const logs = data.logs;
+    
+    if (logs.length === 0) {
+        logsTable.innerHTML = '<div class="no-data">没有找到符合条件的日志记录</div>';
+        return;
+    }
+    
+    let html = `
+        <table class="logs-table">
+            <thead>
+                <tr>
+                    <th>时间</th>
+                    <th>用户</th>
+                    <th>操作类型</th>
+                    <th>报表类型</th>
+                    <th>操作详情</th>
+                    <th>IP地址</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    logs.forEach(log => {
+        html += `
+            <tr>
+                <td>${log.created_at}</td>
+                <td>${log.username}</td>
+                <td><span class="operation-type ${log.operation_type}">${log.operation_type_display}</span></td>
+                <td>${log.report_type_display}</td>
+                <td>${log.operation_detail || '-'}</td>
+                <td>${log.ip_address || '-'}</td>
+                <td>
+                    <button class="view-details-btn" onclick="viewLogDetails(${JSON.stringify(log).replace(/"/g, '&quot;')})">
+                        查看详情
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table>';
+    logsTable.innerHTML = html;
+}
+
+// 更新分页信息
+function updatePagination(pagination) {
+    const paginationDiv = document.getElementById('pagination');
+    const pageInfo = document.getElementById('pageInfo');
+    const prevButton = document.getElementById('prevPage');
+    const nextButton = document.getElementById('nextPage');
+    
+    currentPage = pagination.current_page;
+    totalPages = pagination.total_pages;
+    
+    pageInfo.textContent = `第 ${currentPage} 页，共 ${totalPages} 页`;
+    
+    prevButton.disabled = currentPage <= 1;
+    nextButton.disabled = currentPage >= totalPages;
+    
+    paginationDiv.style.display = 'block';
+}
+
+// 更新统计信息
+function updateStats(totalCount) {
+    document.getElementById('totalLogs').textContent = totalCount;
+    
+    // 这里可以添加更多统计信息的计算
+    // 暂时使用简单的方式
+    const today = new Date().toISOString().split('T')[0];
+    if (currentFilters.start_date === today) {
+        document.getElementById('todayLogs').textContent = totalCount;
+    }
+}
+
+// 切换页面
+function changePage(delta) {
+    const newPage = currentPage + delta;
+    if (newPage >= 1 && newPage <= totalPages) {
+        loadLogs(newPage);
+    }
+}
+
+// 搜索日志
+function searchLogs() {
+    loadLogs(1);
+}
+
+// 清除筛选条件
+function clearFilters() {
+    document.getElementById('username').value = '';
+    document.getElementById('operation_type').value = '';
+    document.getElementById('report_type').value = '';
+    document.getElementById('start_date').value = '';
+    document.getElementById('end_date').value = '';
+    
+    // 设置默认日期范围
+    const today = new Date();
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    document.getElementById('end_date').value = today.toISOString().split('T')[0];
+    document.getElementById('start_date').value = weekAgo.toISOString().split('T')[0];
+    
+    loadLogs(1);
+}
+
+// 刷新日志
+function refreshLogs() {
+    loadLogs(currentPage);
+}
+
+// 查看日志详情
+function viewLogDetails(log) {
+    // 设置模态框标题
+    document.getElementById('modalTitle').textContent = `操作详情 - ${log.operation_type_display} ${log.report_type_display || '系统操作'}`;
+    
+    // 填充基本信息
+    const basicInfo = document.getElementById('basicInfo');
+    basicInfo.innerHTML = `
+        <div class="detail-item">
+            <span class="detail-label">操作ID:</span>
+            <span class="detail-value">${log.id}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">操作用户:</span>
+            <span class="detail-value">${log.username}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">操作类型:</span>
+            <span class="detail-value">${log.operation_type_display} (${log.operation_type})</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">报表类型:</span>
+            <span class="detail-value">${log.report_type_display || '系统操作'}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">报表ID:</span>
+            <span class="detail-value">${log.report_id || '无'}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">操作时间:</span>
+            <span class="detail-value">${log.created_at}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">IP地址:</span>
+            <span class="detail-value">${log.ip_address || '无'}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">请求路径:</span>
+            <span class="detail-value">${log.request_path || '无'}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">请求方法:</span>
+            <span class="detail-value">${log.request_method || '无'}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">操作详情:</span>
+            <span class="detail-value">${log.operation_detail || '无'}</span>
+        </div>
+    `;
+    
+    // 填充新数据内容
+    const newDataContent = document.getElementById('newDataContent');
+    if (log.new_data && Object.keys(log.new_data).length > 0) {
+        newDataContent.innerHTML = `<div class="json-viewer">${JSON.stringify(log.new_data, null, 2)}</div>`;
+    } else {
+        newDataContent.innerHTML = '<div class="json-viewer empty">暂无新数据</div>';
+    }
+    
+    // 填充旧数据内容
+    const oldDataContent = document.getElementById('oldDataContent');
+    if (log.old_data && Object.keys(log.old_data).length > 0) {
+        oldDataContent.innerHTML = `<div class="json-viewer">${JSON.stringify(log.old_data, null, 2)}</div>`;
+    } else {
+        oldDataContent.innerHTML = '<div class="json-viewer empty">暂无旧数据</div>';
+    }
+    
+    // 填充操作上下文
+    const contextInfo = document.getElementById('contextInfo');
+    contextInfo.innerHTML = `
+        <div class="detail-item">
+            <span class="detail-label">操作环境:</span>
+            <span class="detail-value">Web系统</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">数据来源:</span>
+            <span class="detail-value">${log.report_type ? 'QC报表系统' : '系统操作'}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">操作影响:</span>
+            <span class="detail-value">${getOperationImpact(log.operation_type)}</span>
+        </div>
+    `;
+    
+    // 显示模态框
+    document.getElementById('detailModal').style.display = 'block';
+}
+
+// 获取操作影响描述
+function getOperationImpact(operationType) {
+    const impacts = {
+        'CREATE': '创建新记录，增加数据',
+        'UPDATE': '修改现有记录，更新数据',
+        'DELETE': '删除记录，减少数据',
+        'VIEW': '查看数据，不影响数据',
+        'EXPORT': '导出数据，不影响数据',
+        'LOGIN': '用户登录，系统访问',
+        'LOGOUT': '用户登出，系统访问'
+    };
+    return impacts[operationType] || '未知操作';
+}
+
+// 关闭模态框
+function closeModal() {
+    console.log('closeModal函数被调用');
+    const modal = document.getElementById('detailModal');
+    if (modal) {
+        modal.style.display = 'none';
+        console.log('模态框已关闭');
+    } else {
+        console.error('未找到模态框元素');
+    }
+}
+
+// 显示指定标签页
+function showTab(tabName) {
+    // 隐藏所有标签页内容
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(tab => tab.classList.remove('active'));
+    
+    // 移除所有标签页按钮的active状态
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(btn => btn.classList.remove('active'));
+    
+    // 显示选中的标签页内容
+    document.getElementById(tabName + 'Tab').classList.add('active');
+    
+    // 激活选中的标签页按钮
+    event.target.classList.add('active');
+}
+
+// 点击模态框外部关闭
+window.onclick = function(event) {
+    const modal = document.getElementById('detailModal');
+    if (event.target === modal) {
+        console.log('点击外部区域关闭模态框');
+        modal.style.display = 'none';
+    }
+}
+
+// 添加键盘ESC键关闭模态框功能
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const modal = document.getElementById('detailModal');
+        if (modal && modal.style.display === 'block') {
+            console.log('按ESC键关闭模态框');
+            modal.style.display = 'none';
+        }
+    }
+});
+
+// 确保页面加载完成后函数可用
+document.addEventListener('DOMContentLoaded', function() {
+    // 测试closeModal函数是否可用
+    window.testCloseModal = function() {
+        console.log('测试closeModal函数');
+        closeModal();
+    };
+    
+    console.log('操作日志页面JavaScript已加载完成');
+    console.log('closeModal函数:', typeof closeModal);
+});
+</script>
+{% endblock %}

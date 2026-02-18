@@ -1,0 +1,2419 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{% static 'css/icon-alignment-fix.css' %}">
+<!-- 添加Flatpickr CSS -->
+<link rel="stylesheet" href="/static/libs/flatpickr/flatpickr.min.css">
+<link rel="stylesheet" href="/static/libs/flatpickr/material_blue.css">
+<script src="/static/libs/flatpickr/flatpickr.min.js"></script>
+<script src="/static/libs/flatpickr/zh.js"></script>
+<style>
+    .page-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .page-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .page-title h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .form-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .form-control:focus {
+        border-color: #4CAF50;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+    input[type="number"].form-control {
+        -moz-appearance: textfield;
+    }
+    input[type="number"].form-control::-webkit-outer-spin-button,
+    input[type="number"].form-control::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        min-height: 44px;
+        white-space: nowrap;
+    }
+    .btn-primary {
+        background: linear-gradient(90deg, #81d4fa 0%, #a5d6a7 100%);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+    }
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #4fc3f7 0%, #66bb6a 100%);
+        transform: translateY(-1px);
+    }
+    .btn-secondary {
+        background: #e3f2fd;
+        color: #1976d2;
+        box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+    }
+    .btn-secondary:hover {
+        background: #b3e5fc;
+        transform: translateY(-1px);
+    }
+    .material-icons {
+        vertical-align: middle;
+        font-size: 20px;
+        margin-right: 8px;
+    }
+    .submit-btn {
+        width: 100%;
+        margin-top: 20px;
+        height: 48px;
+        font-size: 18px;
+    }
+    .table-container {
+        margin-top: 20px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 800px;
+    }
+    th, td {
+        padding: 12px 16px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+        white-space: nowrap;
+        font-size: 14px;
+    }
+    th {
+        background: #f5f5f5;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+    tr:hover {
+        background: #f9f9f9;
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+        .page-container {
+            padding: 10px;
+        }
+        .page-title {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .page-title h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .action-buttons {
+            justify-content: center;
+        }
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        .form-group label {
+            font-size: 16px;
+        }
+        .form-control {
+            font-size: 16px;
+            padding: 12px;
+        }
+        .btn {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 12px;
+        }
+        .table-container {
+            margin: 10px -10px;
+            border-radius: 0;
+        }
+        table {
+            font-size: 14px;
+        }
+        th, td {
+            padding: 10px;
+        }
+    }
+
+    /* 暗色模式支持 */
+    @media (prefers-color-scheme: dark) {
+        body {
+            background: #121212;
+            color: #fff;
+        }
+        .form-container, .table-container {
+            background: #1e1e1e;
+        }
+        .form-control {
+            background: #2d2d2d;
+            border-color: #404040;
+            color: #fff;
+        }
+        .form-group label {
+            color: #e0e0e0;
+        }
+        th {
+            background: #2d2d2d;
+            color: #fff;
+        }
+        tr:hover {
+            background: #2d2d2d;
+        }
+        td {
+            border-bottom-color: #404040;
+        }
+    }
+
+    /* 触摸屏优化 */
+    @media (hover: none) {
+        .btn:hover {
+            transform: none;
+        }
+        .form-control:focus {
+            font-size: 16px;
+        }
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 500;
+        color: #1976d2;
+        margin: 30px 0 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e3f2fd;
+    }
+
+    /* 暗色模式支持 */
+    @media (prefers-color-scheme: dark) {
+        .section-title {
+            color: #81d4fa;
+            border-bottom-color: #404040;
+        }
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+        .section-title {
+            font-size: 16px;
+            margin: 20px 0 10px;
+            text-align: center;
+        }
+    }
+
+    /* Flatpickr自定义样式 */
+    .flatpickr-calendar {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        box-shadow: 0 3px 13px rgba(0,0,0,0.08);
+        border-radius: 8px;
+    }
+
+    .flatpickr-time {
+        height: 50px;
+        font-size: 16px;
+    }
+
+    .flatpickr-time input {
+        font-size: 16px;
+        height: 50px;
+    }
+
+    .numInputWrapper:hover {
+        background: rgba(0,0,0,0.05);
+    }
+
+    .flatpickr-current-month {
+        font-size: 16px;
+    }
+
+    /* 移动端优化 */
+    @media (max-width: 768px) {
+        .flatpickr-calendar {
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .flatpickr-time {
+            height: 60px;
+        }
+
+        .flatpickr-time input {
+            height: 60px;
+            font-size: 18px;
+        }
+    }
+
+    .autocomplete-suggestions {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        background: #fff;
+        border: 1px solid #eee;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 9999;
+        width: 100%;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 0 0 6px 6px;
+    }
+    .autocomplete-suggestion {
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 15px;
+    }
+    .autocomplete-suggestion:hover, .autocomplete-suggestion.active {
+        background: #f5f5f5;
+    }
+
+    /* 悬浮导入按钮样式 */
+    .floating-import-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #81d4fa 0%, #4fc3f7 100%);
+        color: #fff;
+        border: none;
+        box-shadow: 0 4px 16px rgba(129, 212, 250, 0.4);
+        cursor: pointer;
+        z-index: 999998;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .floating-import-btn:hover {
+        transform: scale(1.1) translateY(-2px);
+        box-shadow: 0 6px 24px rgba(129, 212, 250, 0.6);
+    }
+    .floating-import-btn:active {
+        transform: scale(0.95);
+    }
+    .floating-import-btn .material-icons {
+        font-size: 32px;
+        margin: 0;
+    }
+
+    /* 导入提示区域样式 */
+    .import-tip-section {
+        padding: 24px 32px;
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-bottom: 1px solid #fcd34d;
+        margin: 0;
+    }
+    .tip-header {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .tip-icon-wrapper {
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+    }
+    .tip-icon {
+        color: white;
+        font-size: 24px;
+    }
+    .tip-content {
+        flex: 1;
+    }
+    .tip-title {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #92400e;
+    }
+    .tip-text {
+        margin: 0;
+        font-size: 14px;
+        color: #78350f;
+        line-height: 1.6;
+    }
+    .download-button-wrapper {
+        position: relative;
+        display: flex;
+        justify-content: center;
+    }
+    .download-template-btn {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        transition: all 0.3s ease;
+    }
+    .download-template-btn:hover:not(:disabled) {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    }
+    .download-template-btn:active:not(:disabled) {
+        transform: translateY(0);
+    }
+    .download-template-btn:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+    .download-template-btn .material-icons {
+        font-size: 20px;
+    }
+    .download-progress-tooltip {
+        display: none;
+        position: absolute;
+        top: calc(100% + 12px);
+        left: 0;
+        padding: 12px 18px;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        border-radius: 10px;
+        font-size: 14px;
+        white-space: nowrap;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        z-index: 1000;
+        animation: slideDown 0.3s ease-out;
+    }
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .download-progress-tooltip .progress-icon {
+        vertical-align: middle;
+        margin-right: 8px;
+        font-size: 18px;
+    }
+    .download-progress-tooltip .progress-text {
+        color: white;
+        margin: 0;
+    }
+
+    /* 导入模态框样式 - 悬浮在主页面之上 */
+    #importModal.modal {
+        display: none;
+        position: fixed !important;
+        z-index: 999999 !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background-color: rgba(0, 0, 0, 0.5) !important;
+        backdrop-filter: blur(4px);
+        overflow-y: auto;
+        animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    #importModal .modal-content {
+        position: relative !important;
+        z-index: 1000000 !important;
+        background-color: #fff !important;
+        margin: 8% auto;
+        padding: 30px;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2) !important;
+        animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e3f2fd;
+    }
+    .modal-header h2 {
+        margin: 0;
+        font-size: 24px;
+        color: #1976d2;
+    }
+    .close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.3s;
+    }
+    .close:hover {
+        color: #1976d2;
+    }
+    .file-upload-area {
+        border: 2px dashed #81d4fa;
+        border-radius: 8px;
+        padding: 40px 20px;
+        text-align: center;
+        background: #f8fbff;
+        transition: all 0.3s;
+        cursor: pointer;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 1;
+        pointer-events: auto;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+    .file-upload-area:hover {
+        border-color: #4fc3f7;
+        background: #e3f2fd;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(129, 212, 250, 0.3);
+    }
+    .file-upload-area.dragover {
+        border-color: #1976d2;
+        background: #bbdefb;
+        border-width: 3px;
+    }
+    .file-upload-area .file-upload-icon,
+    .file-upload-area .file-upload-text,
+    .file-upload-area .file-upload-hint {
+        pointer-events: none;
+    }
+    .file-upload-icon {
+        font-size: 48px;
+        color: #81d4fa;
+        margin-bottom: 10px;
+    }
+    .file-upload-text {
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+    .file-upload-hint {
+        color: #999;
+        font-size: 14px;
+    }
+    .file-name {
+        margin-top: 15px;
+        padding: 10px;
+        background: #e3f2fd;
+        border-radius: 6px;
+        color: #1976d2;
+        font-size: 14px;
+        display: none;
+    }
+    .file-name.show {
+        display: block;
+    }
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+    .import-progress {
+        display: none;
+        margin-top: 20px;
+        padding: 15px;
+        background: #e3f2fd;
+        border-radius: 6px;
+        text-align: center;
+    }
+    .import-progress.show {
+        display: block;
+    }
+    .progress-text {
+        color: #1976d2;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+    .error-messages {
+        margin-top: 15px;
+        padding: 15px;
+        background: #ffebee;
+        border-radius: 6px;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+    }
+    .error-messages.show {
+        display: block;
+    }
+    .error-message {
+        color: #c62828;
+        font-size: 13px;
+        margin-bottom: 5px;
+        padding: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-title">
+        <h1>远通二线QC报表</h1>
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="window.location.href='{% url 'qc_report' %}'">
+                <span class="material-icons">arrow_back</span> 返回
+            </button>
+            <button id="favoriteBtn" class="btn btn-secondary" type="button">
+                <span class="material-icons" id="favoriteIcon">star_border</span> <span id="favoriteText">收藏</span>
+            </button>
+            <button class="btn btn-secondary" onclick="showImportModal()">
+                <span class="material-icons">upload_file</span> 导入Excel
+            </button>
+            <button class="btn btn-primary" onclick="window.location.href='{% url 'yuantong2_report_history' %}'">
+                <span class="material-icons">history</span> 查看历史记录
+            </button>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <form id="qcForm" method="post">
+            {% csrf_token %}
+            <!-- 必要信息 -->
+            <h3 class="section-title">必要信息</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="material_type">物料类型</label>
+                    <select id="material_type" name="material_type" class="form-control">
+                        <option value="助熔煅烧品" selected>助熔煅烧品</option>
+                        <option value="煅烧品">煅烧品</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="yuantong_permeability_coefficient">远通渗透率系数</label>
+                    <input type="number" id="yuantong_permeability_coefficient" name="yuantong_permeability_coefficient" class="form-control" step="0.0001">
+                </div>
+                <div class="form-group">
+                    <label for="yuantong_sample_weight">远通样品重量</label>
+                    <input type="number" id="yuantong_sample_weight" name="yuantong_sample_weight" class="form-control" step="0.001">
+                </div>
+                <div class="form-group">
+                    <label for="yuantong_filter_area">远通过滤面积</label>
+                    <input type="number" id="yuantong_filter_area" name="yuantong_filter_area" class="form-control" step="0.01">
+                </div>
+            </div>
+
+            <!-- 基本信息 -->
+            <h3 class="section-title">基本信息</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date">日期<span style="color:red">*</span></label>
+                    <input type="date" id="date" name="date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="time">时间<span style="color:red">*</span></label>
+                    <input type="time" id="time" name="time" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="moisture_after_drying">烘干后原土水分(%)</label>
+                    <input type="number" id="moisture_after_drying" name="moisture_after_drying" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="alkali_content">入窑前碱含量(%)</label>
+                    <input type="number" id="alkali_content" name="alkali_content" class="form-control" step="0.01">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="flux">助溶剂添加比例</label>
+                    <input type="text" id="flux" name="flux" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="product_name">产品型号<span style="color:red">*</span></label>
+                    <input type="text" id="product_name" name="product_name" class="form-control" required autocomplete="off">
+                </div>
+            </div>
+
+            <!-- 渗透测试 -->
+            <h3 class="section-title">渗透测试</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="permeability">远通渗透率(Darcy)</label>
+                    <input type="number" id="permeability" name="permeability" class="form-control" step="0.0001">
+                </div>
+                <div class="form-group">
+                    <label for="permeability_long">长富渗透率(Darcy)</label>
+                    <input type="number" id="permeability_long" name="permeability_long" class="form-control" step="0.0001">
+                </div>
+                <div class="form-group">
+                    <label for="filter_time">过滤时间(秒)</label>
+                    <input type="number" id="filter_time" name="filter_time" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="water_viscosity">水黏度(mPa.s)</label>
+                    <input type="number" id="water_viscosity" name="water_viscosity" class="form-control" step="0.0001">
+                </div>
+                <div class="form-group">
+                    <label for="cake_thickness">饼厚(mm)</label>
+                    <input type="number" id="cake_thickness" name="cake_thickness" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="wet_cake_density">饼密度(g/cm3)</label>
+                    <input type="number" id="wet_cake_density" name="wet_cake_density" class="form-control" step="0.001">
+                </div>
+                <div class="form-group">
+                    <label for="yuantong_cake_density">远通饼密度(g/cm3)</label>
+                    <input type="number" id="yuantong_cake_density" name="yuantong_cake_density" class="form-control" step="0.001">
+                </div>
+                <div class="form-group">
+                    <label for="changfu_cake_density">长富饼密度(g/cm3)</label>
+                    <input type="number" id="changfu_cake_density" name="changfu_cake_density" class="form-control" step="0.001">
+                </div>
+
+                <div class="form-group">
+                    <label for="bulk_density">振实密度(g/cm3)</label>
+                    <input type="number" id="bulk_density" name="bulk_density" class="form-control" step="0.001">
+                </div>
+            </div>
+
+            <!-- 筛分数据 -->
+            <h3 class="section-title">筛分数据</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="sieving_14m">+14M (%)</label>
+                    <input type="number" id="sieving_14m" name="sieving_14m" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="sieving_30m">+30M (%)</label>
+                    <input type="number" id="sieving_30m" name="sieving_30m" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="sieving_40m">+40M</label>
+                    <input type="number" id="sieving_40m" name="sieving_40m" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="sieving_80m">+80M</label>
+                    <input type="number" id="sieving_80m" name="sieving_80m" class="form-control" step="0.01">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="sieving_100m">+100M</label>
+                    <input type="text" id="sieving_100m" name="sieving_100m" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="sieving_150m">+150M</label>
+                    <input type="text" id="sieving_150m" name="sieving_150m" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="sieving_200m">+200M</label>
+                    <input type="text" id="sieving_200m" name="sieving_200m" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="sieving_325m">+325M</label>
+                    <input type="text" id="sieving_325m" name="sieving_325m" class="form-control">
+                </div>
+            </div>
+            <!-- 可溶性金属 -->
+            <h3 class="section-title">可溶性金属</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fe_ion">铁离子(mg/kg)</label>
+                    <input type="number" id="fe_ion" name="fe_ion" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="ca_ion">钙离子(mg/kg)</label>
+                    <input type="number" id="ca_ion" name="ca_ion" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="al_ion">铝离子(mg/kg)</label>
+                    <input type="number" id="al_ion" name="al_ion" class="form-control" step="0.01">
+                </div>
+            </div>
+
+            <!-- 其他信息 -->
+            <h3 class="section-title">其他信息</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="brightness">白度</label>
+                    <input type="number" id="brightness" name="brightness" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="swirl">涡值(cm)</label>
+                    <input type="number" id="swirl" name="swirl" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="odor">气味</label>
+                    <input type="number" id="odor" name="odor" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="conductance">⚡电导值(ms/cm)</label>
+                    <input type="number" id="conductance" name="conductance" class="form-control" step="0.01">
+                </div>
+
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="ph">pH</label>
+                    <input type="number" id="ph" name="ph" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="oil_absorption">吸油率(%)</label>
+                    <input type="number" id="oil_absorption" name="oil_absorption" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="water_absorption">吸水率(%)</label>
+                    <input type="number" id="water_absorption" name="water_absorption" class="form-control" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label for="moisture">水分(%)</label>
+                    <input type="number" id="moisture" name="moisture" class="form-control" step="0.01">
+                </div>
+
+
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bags">袋数<span style="color:red">*</span></label>
+                    <input type="number" id="bags" name="bags" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="packaging">包装类型<span style="color:red">*</span></label>
+                    <input type="text" id="packaging" name="packaging" class="form-control" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="tons">吨</label>
+                    <input type="number" id="tons" name="tons" class="form-control" step="0.001">
+                </div>
+                <div class="form-group">
+                    <label for="batch_number">LOT批号</label>
+                    <input type="text" id="batch_number" name="batch_number" class="form-control">
+                </div>
+
+            </div>
+            <div class="form-row">
+
+
+                <div class="form-group" style="grid-column: span 2;">
+                    <label for="remarks">备注</label>
+                    <input type="text" id="remarks" name="remarks" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="shift">班组<span style="color:red">*</span></label>
+                    <select id="shift" name="shift" class="form-control" required>
+                        <option value="">请选择班组</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary submit-btn">
+                <span class="material-icons">save</span> 保存数据
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+// 导入Excel功能 - 全局函数，供onclick调用
+function showImportModal() {
+    document.getElementById('importModal').style.display = 'block';
+    setTimeout(function() {
+        document.getElementById('importModal').style.opacity = '1';
+    }, 100);
+}
+
+function closeImportModal() {
+    document.getElementById('importModal').style.display = 'none';
+    const importForm = document.getElementById('importForm');
+    if (importForm) {
+        importForm.reset();
+    }
+    const fileName = document.getElementById('fileName');
+    if (fileName) {
+        fileName.classList.remove('show');
+    }
+    const importProgress = document.getElementById('importProgress');
+    if (importProgress) {
+        importProgress.classList.remove('show');
+    }
+    const errorMessages = document.getElementById('errorMessages');
+    if (errorMessages) {
+        errorMessages.classList.remove('show');
+        errorMessages.innerHTML = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化日期选择器
+    flatpickr("#date", {
+        locale: window.flatpickr.l10ns.zh,
+        dateFormat: "Y-m-d",
+        defaultDate: new Date()
+    });
+
+    // 初始化时间字段
+    function initializeTimeField() {
+        const now = new Date();
+        const minutes = now.getMinutes();
+        // 将分钟数调整为5的倍数
+        const roundedMinutes = Math.round(minutes / 5) * 5;
+        now.setMinutes(roundedMinutes);
+        now.setSeconds(0);
+
+        flatpickr("#time", {
+            locale: window.flatpickr.l10ns.zh,
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            defaultDate: now,
+            minuteIncrement: 5  // 设置分钟增量为5
+        });
+    }
+
+    // 初始化时间字段
+    initializeTimeField();
+
+    // 存储系数参数
+    let coefficients = {
+        yuantong_permeability: 6.4,
+        yuantong_sample_weight: 5,
+        yuantong_filter_area: 3.14
+    };
+
+    // 从服务器加载系数参数
+    async function loadCoefficients() {
+        try {
+            // 加载远通渗透率系数
+            const response1 = await fetch('/api/report-parameters/yuantong_permeability_coefficient/');
+            const result1 = await response1.json();
+            if (result1.status === 'success') {
+                coefficients.yuantong_permeability = parseFloat(result1.data.value);
+            }
+
+            // 加载远通样品重量
+            const response2 = await fetch('/api/report-parameters/yuantong_sample_weight/');
+            const result2 = await response2.json();
+            if (result2.status === 'success') {
+                coefficients.yuantong_sample_weight = parseFloat(result2.data.value);
+            }
+
+            // 加载远通过滤面积
+            const response3 = await fetch('/api/report-parameters/yuantong_filter_area/');
+            const result3 = await response3.json();
+            if (result3.status === 'success') {
+                coefficients.yuantong_filter_area = parseFloat(result3.data.value);
+            }
+
+            console.log('系数参数已加载:', coefficients);
+        } catch (error) {
+            console.warn('加载系数参数失败，使用默认值:', error);
+        }
+    }
+
+    // 根据物料类型设置系数值
+    function updateCoefficientsByMaterialType() {
+        const materialType = document.getElementById('material_type').value;
+
+        if (materialType === '助熔煅烧品') {
+            // 从后台参数管理读取值
+            document.getElementById('yuantong_permeability_coefficient').value = coefficients.yuantong_permeability || '';
+            document.getElementById('yuantong_sample_weight').value = coefficients.yuantong_sample_weight || '';
+            document.getElementById('yuantong_filter_area').value = coefficients.yuantong_filter_area || '';
+        } else if (materialType === '煅烧品') {
+            // 使用动态加载的系数值，如果没有则使用默认值
+            document.getElementById('yuantong_permeability_coefficient').value = coefficients.yuantong_permeability || '6.4';
+            document.getElementById('yuantong_sample_weight').value = coefficients.yuantong_sample_weight || '5';
+            document.getElementById('yuantong_filter_area').value = coefficients.yuantong_filter_area || '3.14';
+            // 饼厚字段保持为空，不设置默认值
+        }
+    }
+
+    // 自动计算功能
+    function calculateValues() {
+        // 获取输入字段
+        const cakeThickness = parseFloat(document.getElementById('cake_thickness').value) || 0;
+        const waterViscosity = parseFloat(document.getElementById('water_viscosity').value) || 0;
+        const filterTime = parseFloat(document.getElementById('filter_time').value) || 0;
+
+        // 计算远通渗透率 = 系数 * 饼厚 * 水粘度 / 过滤时间
+        if (cakeThickness && waterViscosity && filterTime) {
+            const permeability = (coefficients.yuantong_permeability * cakeThickness * waterViscosity / filterTime);
+            document.getElementById('permeability').value = permeability.toFixed(4);
+        } else {
+            // 如果缺少必要数据，清空计算字段
+            document.getElementById('permeability').value = '';
+        }
+    }
+
+    // 初始化系数参数
+    loadCoefficients().then(() => {
+        // 初始化完成后设置系数值
+        updateCoefficientsByMaterialType();
+    });
+
+    // 为物料类型添加变化监听器
+    document.getElementById('material_type').addEventListener('change', updateCoefficientsByMaterialType);
+
+    // 为相关字段添加事件监听器
+    const calculationFields = ['yuantong_permeability_coefficient', 'yuantong_sample_weight', 'yuantong_filter_area', 'cake_thickness', 'water_viscosity', 'filter_time'];
+    calculationFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', () => calculateAllValues(false));
+            field.addEventListener('change', () => calculateAllValues(false));
+        }
+    });
+
+    // 每10分钟自动刷新页面 - 已禁用
+    // setInterval(function() {
+    //     console.log('自动刷新页面...');
+    //     window.location.reload();
+    // }, 10 * 60 * 1000); // 10分钟 = 10 * 60 * 1000 毫秒
+
+    // 获取CSRF Token的函数
+    function getCSRFToken() {
+        const name = 'csrftoken';
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // 表单提交处理
+    document.querySelector('form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = {};
+
+        // 定义允许的字段列表
+        const allowedFields = [
+            'date', 'time', 'material_type', 'shift', 'product_name', 'packaging',
+            'moisture_after_drying', 'alkali_content', 'flux',
+            'yuantong_permeability_coefficient', 'yuantong_sample_weight', 'yuantong_filter_area',
+            'permeability', 'permeability_long', 'filter_time', 'water_viscosity',
+            'cake_thickness','wet_cake_density', 'yuantong_cake_density', 'changfu_cake_density', 'bulk_density',
+            'brightness', 'swirl', 'odor', 'conductance', 'ph', 'moisture',
+            'bags', 'tons', 'sieving_14m', 'sieving_30m',
+            'sieving_40m', 'sieving_80m', 'sieving_100m', 'sieving_150m', 'sieving_200m',
+            'sieving_325m', 'fe_ion', 'ca_ion', 'al_ion',
+            'oil_absorption', 'water_absorption', 'remarks',
+            'batch_number'  // 使用batch_number字段
+        ];
+
+        for (let [key, value] of formData.entries()) {
+            // 跳过CSRF token和不在允许列表中的字段
+            if (key === 'csrfmiddlewaretoken' || !allowedFields.includes(key)) {
+                continue;
+            }
+
+            if (value === '') continue;  // 跳过空值
+
+            // 对数字类型的字段进行转换
+            if ([
+                'moisture_after_drying', 'alkali_content', 'permeability',
+                'permeability_long', 'filter_time', 'water_viscosity',
+                'cake_thickness','wet_cake_density', 'yuantong_cake_density', 'changfu_cake_density', 'bulk_density', 'brightness', 'conductance',
+                'ph', 'moisture', 'bags', 'tons', 'sieving_14m', 'sieving_30m',
+                'sieving_40m', 'sieving_80m',
+                'fe_ion', 'ca_ion', 'al_ion', 'oil_absorption', 'water_absorption',
+                'yuantong_permeability_coefficient', 'yuantong_sample_weight', 'yuantong_filter_area'
+            ].includes(key)) {
+                data[key] = parseFloat(value);
+            } else {
+                data[key] = value;
+            }
+        }
+
+        try {
+            const response = await fetch('/api/yuantong2-report/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert('保存成功');
+
+                // 重新加载表格数据，但不重置表单
+                await loadTableData();
+
+                // 不重置表单，保留所有字段信息
+                // 用户可以继续基于当前数据进行修改和保存
+
+            } else {
+                alert('保存失败: ' + result.message);
+            }
+        } catch (error) {
+            alert('提交失败: ' + error.message);
+        }
+    });
+
+    // 加载表格数据
+    async function loadTableData() {
+        try {
+            const response = await fetch('/api/yuantong2-report/', {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const tbody = document.querySelector('table tbody');
+                if (!tbody) return; // 防止报错
+                tbody.innerHTML = '';
+
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.date}</td>
+                        <td>${item.time}</td>
+                        <td>${item.material_type || '-'}</td>
+                        <td>${item.yuantong_permeability_coefficient || '-'}</td>
+                        <td>${item.yuantong_sample_weight || '-'}</td>
+                        <td>${item.yuantong_filter_area || '-'}</td>
+                        <td>${item.moisture_after_drying || '-'}</td>
+                        <td>${item.alkali_content || '-'}</td>
+                        <td>${item.flux || '-'}</td>
+                        <td>${item.product_name || '-'}</td>
+                        <td>${item.permeability || '-'}</td>
+                        <td>${item.permeability_long || '-'}</td>
+                        <td>${item.filter_time}</td>
+                        <td>${item.water_viscosity}</td>
+                        <td>${item.cake_thickness}</td>
+                        <td>${item.wet_cake_density || '-'}</td>
+                        <td>${item.yuantong_cake_density || '-'}</td>
+                        <td>${item.changfu_cake_density || '-'}</td>
+                        <td>${item.bulk_density || '-'}</td>
+                        <td>${item.brightness || '-'}</td>
+                        <td>${item.swirl || '-'}</td>
+                        <td>${item.odor || '-'}</td>
+                        <td>${item.conductance || '-'}</td>
+                        <td>${item.ph || '-'}</td>
+                        <td>${item.moisture || '-'}</td>
+                        <td>${item.bags || '-'}</td>
+                        <td>${item.packaging || '-'}</td>
+                        <td>${item.tons || '-'}</td>
+                        <td>${item.fe_ion || '-'}</td>
+                        <td>${item.ca_ion || '-'}</td>
+                        <td>${item.al_ion || '-'}</td>
+                        <td>${item.oil_absorption || '-'}</td>
+                        <td>${item.water_absorption || '-'}</td>
+                        <td>${item.remarks || '-'}</td>
+                        <td>${item.batch_number || '-'}</td>
+                        <td>${item.shift || '-'}</td>
+                        <td>${item.sieving_14m || '-'}</td>
+                        <td>${item.sieving_30m || '-'}</td>
+                        <td>${item.sieving_40m || '-'}</td>
+                        <td>${item.sieving_80m || '-'}</td>
+                        <td>${item.sieving_150m || '-'}</td>
+                        <td>${item.sieving_200m || '-'}</td>
+                        <td>${item.sieving_325m || '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                const result = await response.json();
+                console.error('加载数据失败:', result.message);
+            }
+        } catch (error) {
+            console.error('加载数据失败:', error);
+        }
+    }
+
+
+
+    // 从服务器加载系数参数
+    async function loadCoefficients() {
+        try {
+            // 加载远通渗透率系数
+            const response1 = await fetch('/api/report-parameters/yuantong_permeability_coefficient/');
+            const result1 = await response1.json();
+            if (result1.status === 'success') {
+                coefficients.yuantong_permeability = parseFloat(result1.data.value);
+            }
+
+            // 加载远通样品重量
+            const response2 = await fetch('/api/report-parameters/yuantong_sample_weight/');
+            const result2 = await response2.json();
+            if (result2.status === 'success') {
+                coefficients.yuantong_sample_weight = parseFloat(result2.data.value);
+            }
+
+            // 加载远通过滤面积
+            const response3 = await fetch('/api/report-parameters/yuantong_filter_area/');
+            const result3 = await response3.json();
+            if (result3.status === 'success') {
+                coefficients.yuantong_filter_area = parseFloat(result3.data.value);
+            }
+
+            console.log('系数参数已加载:', coefficients);
+        } catch (error) {
+            console.warn('加载系数参数失败，使用默认值:', error);
+        }
+    }
+
+    // 根据物料类型设置系数值
+    function updateCoefficientsByMaterialType() {
+        const materialType = document.getElementById('material_type')?.value;
+        console.log('=== updateCoefficientsByMaterialType 开始 ===');
+        console.log('当前物料类型:', materialType);
+
+        if (!materialType) {
+            console.log('物料类型为空，退出');
+            return;
+        }
+
+        if (materialType === '助熔煅烧品') {
+            console.log('处理助熔煅烧品模式');
+            // 从后台参数管理读取值
+            const coefficientField = document.getElementById('yuantong_permeability_coefficient');
+            const sampleWeightField = document.getElementById('yuantong_sample_weight');
+            const filterAreaField = document.getElementById('yuantong_filter_area');
+
+            if (coefficientField) coefficientField.value = coefficients.yuantong_permeability || '';
+            if (sampleWeightField) sampleWeightField.value = coefficients.yuantong_sample_weight || '';
+            if (filterAreaField) filterAreaField.value = coefficients.yuantong_filter_area || '';
+
+            console.log('助熔煅烧品系数设置完成:', {
+                coefficient: coefficients.yuantong_permeability,
+                sampleWeight: coefficients.yuantong_sample_weight,
+                filterArea: coefficients.yuantong_filter_area
+            });
+        } else if (materialType === '煅烧品') {
+            console.log('处理煅烧品模式');
+            // 使用固定值
+            const coefficientField = document.getElementById('yuantong_permeability_coefficient');
+            const sampleWeightField = document.getElementById('yuantong_sample_weight');
+            const filterAreaField = document.getElementById('yuantong_filter_area');
+            const cakeThicknessField = document.getElementById('cake_thickness');
+
+            if (coefficientField) coefficientField.value = '6.4';
+            if (sampleWeightField) sampleWeightField.value = '5';
+            if (filterAreaField) filterAreaField.value = '3.14';
+            // 饼厚字段保持为空，不设置默认值
+
+            console.log('煅烧品系数设置完成:', {
+                coefficient: '6.4',
+                sampleWeight: '5',
+                filterArea: '3.14',
+                cakeThickness: '空'
+            });
+        }
+
+        console.log('=== updateCoefficientsByMaterialType 完成 ===');
+    }
+
+    // 根据物料类型更新字段可编辑性
+    function updateFieldEditability() {
+        const materialType = document.getElementById('material_type')?.value;
+        if (!materialType) return;
+
+        const yuantongCakeDensityField = document.getElementById('yuantong_cake_density');
+        const changfuCakeDensityField = document.getElementById('changfu_cake_density');
+        const wetCakeDensityField = document.getElementById('wet_cake_density');
+
+        if (materialType === '助熔煅烧品') {
+            // 助熔煅烧品：远通饼密度，长富饼密度两个字段不可编辑
+            if (yuantongCakeDensityField) {
+                yuantongCakeDensityField.readOnly = true;
+                yuantongCakeDensityField.style.backgroundColor = '#f5f5f5';
+                yuantongCakeDensityField.title = '此字段由系统自动计算';
+                // 清空远通饼密度和长富饼密度
+                yuantongCakeDensityField.value = '';
+            }
+            if (changfuCakeDensityField) {
+                changfuCakeDensityField.readOnly = true;
+                changfuCakeDensityField.style.backgroundColor = '#f5f5f5';
+                changfuCakeDensityField.title = '此字段由系统自动计算';
+                // 清空长富饼密度
+                changfuCakeDensityField.value = '';
+            }
+            if (wetCakeDensityField) {
+                wetCakeDensityField.readOnly = false;
+                wetCakeDensityField.style.backgroundColor = '';
+                wetCakeDensityField.title = '';
+            }
+        } else if (materialType === '煅烧品') {
+            // 煅烧品：饼密度字段不可编辑
+            if (wetCakeDensityField) {
+                wetCakeDensityField.readOnly = true;
+                wetCakeDensityField.style.backgroundColor = '#f5f5f5';
+                wetCakeDensityField.title = '此字段由系统自动计算';
+                // 清空饼密度
+                wetCakeDensityField.value = '';
+            }
+            if (yuantongCakeDensityField) {
+                yuantongCakeDensityField.readOnly = false;
+                yuantongCakeDensityField.style.backgroundColor = '';
+                yuantongCakeDensityField.title = '';
+            }
+            if (changfuCakeDensityField) {
+                changfuCakeDensityField.readOnly = false;
+                changfuCakeDensityField.style.backgroundColor = '';
+                changfuCakeDensityField.title = '';
+            }
+        }
+    }
+
+    // 执行所有计算
+    function calculateAllValues(skipAutoFill = false) {
+        console.log('=== calculateAllValues 开始 ===');
+        console.log('skipAutoFill参数:', skipAutoFill);
+
+        const materialType = document.getElementById('material_type')?.value;
+        console.log('当前物料类型:', materialType);
+
+        if (!materialType) {
+            console.log('物料类型为空，退出计算');
+            return;
+        }
+
+        if (materialType === '助熔煅烧品') {
+            console.log('调用助熔煅烧品计算函数');
+            calculateForFluxCalcined();
+        } else if (materialType === '煅烧品') {
+            console.log('调用煅烧品计算函数');
+            calculateForCalcined(skipAutoFill);
+        }
+
+        console.log('=== calculateAllValues 完成 ===');
+    }
+
+    // 助熔煅烧品的计算逻辑
+    function calculateForFluxCalcined() {
+        const yuantongCoefficient = parseFloat(document.getElementById('yuantong_permeability_coefficient')?.value) || 0;
+        const yuantongSampleWeight = parseFloat(document.getElementById('yuantong_sample_weight')?.value) || 0;
+        const yuantongFilterArea = parseFloat(document.getElementById('yuantong_filter_area')?.value) || 0;
+        const cakeThickness = parseFloat(document.getElementById('cake_thickness')?.value) || 0;
+        const waterViscosity = parseFloat(document.getElementById('water_viscosity')?.value) || 0;
+        const filterTime = parseFloat(document.getElementById('filter_time')?.value) || 0;
+
+        // 远通渗透率 = 远通渗透率系数 * 饼厚 * 水黏度 / 过滤时间
+        let yuantongPermeability = null;
+        if (yuantongCoefficient && cakeThickness && waterViscosity && filterTime) {
+            yuantongPermeability = (yuantongCoefficient * cakeThickness * waterViscosity / filterTime);
+            document.getElementById('permeability').value = yuantongPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability').value = '';
+        }
+
+        // 长富渗透率 = (远通渗透率 - 0.366) / 1.23
+        if (yuantongPermeability !== null) {
+            const changfuPermeability = (yuantongPermeability - 0.366) / 1.23;
+            document.getElementById('permeability_long').value = changfuPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability_long').value = '';
+        }
+
+        // 饼密度 = 远通样品重量 / 远通过滤面积 / 饼厚
+        if (yuantongSampleWeight && yuantongFilterArea && cakeThickness) {
+            const cakeDensity = yuantongSampleWeight / yuantongFilterArea / cakeThickness;
+            document.getElementById('wet_cake_density').value = cakeDensity.toFixed(3);
+        } else {
+            document.getElementById('wet_cake_density').value = '';
+        }
+
+        // 远通饼密度和长富饼密度不可编辑，由系统计算
+        document.getElementById('yuantong_cake_density').value = '';
+        document.getElementById('changfu_cake_density').value = '';
+    }
+
+    // 煅烧品的特殊计算逻辑（用于物料类型切换时）
+    function calculateForCalcinedSpecial() {
+        console.log('=== calculateForCalcinedSpecial 开始 ===');
+
+        const yuantongCoefficient = parseFloat(document.getElementById('yuantong_permeability_coefficient')?.value) || 0;
+        const yuantongSampleWeight = parseFloat(document.getElementById('yuantong_sample_weight')?.value) || 0;
+        const yuantongFilterArea = parseFloat(document.getElementById('yuantong_filter_area')?.value) || 0;
+        const cakeThickness = parseFloat(document.getElementById('cake_thickness')?.value) || 0;
+        const waterViscosity = parseFloat(document.getElementById('water_viscosity')?.value) || 0;
+        const filterTime = parseFloat(document.getElementById('filter_time')?.value) || 0;
+
+        console.log('计算参数:', {
+            yuantongCoefficient,
+            yuantongSampleWeight,
+            yuantongFilterArea,
+            cakeThickness,
+            waterViscosity,
+            filterTime
+        });
+
+        // 远通渗透率 = 远通渗透率系数 * 饼厚 * 水粘度 / 过滤时间
+        let yuantongPermeability = null;
+        if (yuantongCoefficient && cakeThickness && waterViscosity && filterTime) {
+            yuantongPermeability = (yuantongCoefficient * cakeThickness * waterViscosity / filterTime);
+            document.getElementById('permeability').value = yuantongPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability').value = '';
+        }
+
+        // 长富渗透率 = 远通渗透率 - 0.02
+        if (yuantongPermeability !== null) {
+            const changfuPermeability = yuantongPermeability - 0.02;
+            document.getElementById('permeability_long').value = changfuPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability_long').value = '';
+        }
+
+        // 饼密度字段保持为空（已在updateFieldEditability中清空）
+        document.getElementById('wet_cake_density').value = '';
+
+        // 自动计算并填充远通饼密度和长富饼密度
+        // 只有在饼厚有值时才进行计算
+        if (yuantongSampleWeight && yuantongFilterArea && cakeThickness) {
+            const yuantongCakeDensity = yuantongSampleWeight / yuantongFilterArea / cakeThickness;
+
+            console.log('饼密度计算:', {
+                yuantongSampleWeight,
+                yuantongFilterArea,
+                cakeThickness,
+                yuantongCakeDensity
+            });
+
+            // 自动填充远通饼密度
+            const yuantongCakeDensityField = document.getElementById('yuantong_cake_density');
+            if (yuantongCakeDensityField) {
+                console.log('自动填充远通饼密度字段');
+                yuantongCakeDensityField.value = yuantongCakeDensity.toFixed(3);
+            }
+
+            // 自动填充长富饼密度
+            const changfuCakeDensityField = document.getElementById('changfu_cake_density');
+            if (changfuCakeDensityField) {
+                const changfuCakeDensity = yuantongCakeDensity - 0.02;
+                console.log('自动填充长富饼密度字段');
+                changfuCakeDensityField.value = changfuCakeDensity.toFixed(3);
+            }
+        } else {
+            console.log('计算参数不完整或饼厚为空，清空饼密度字段');
+            document.getElementById('yuantong_cake_density').value = '';
+            document.getElementById('changfu_cake_density').value = '';
+        }
+
+        console.log('=== calculateForCalcinedSpecial 完成 ===');
+    }
+
+    // 助熔煅烧品的特殊计算逻辑（用于物料类型切换时）
+    function calculateForFluxCalcinedSpecial() {
+        const yuantongCoefficient = parseFloat(document.getElementById('yuantong_permeability_coefficient')?.value) || 0;
+        const yuantongSampleWeight = parseFloat(document.getElementById('yuantong_sample_weight')?.value) || 0;
+        const yuantongFilterArea = parseFloat(document.getElementById('yuantong_filter_area')?.value) || 0;
+        const cakeThickness = parseFloat(document.getElementById('cake_thickness')?.value) || 0;
+        const waterViscosity = parseFloat(document.getElementById('water_viscosity')?.value) || 0;
+        const filterTime = parseFloat(document.getElementById('filter_time')?.value) || 0;
+
+        // 远通渗透率 = 远通渗透率系数 * 饼厚 * 水黏度 / 过滤时间
+        let yuantongPermeability = null;
+        if (yuantongCoefficient && cakeThickness && waterViscosity && filterTime) {
+            yuantongPermeability = (yuantongCoefficient * cakeThickness * waterViscosity / filterTime);
+            document.getElementById('permeability').value = yuantongPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability').value = '';
+        }
+
+        // 长富渗透率 = (远通渗透率 - 0.366) / 1.23
+        if (yuantongPermeability !== null) {
+            const changfuPermeability = (yuantongPermeability - 0.366) / 1.23;
+            document.getElementById('permeability_long').value = changfuPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability_long').value = '';
+        }
+
+        // 自动计算并填充饼密度
+        if (yuantongSampleWeight && yuantongFilterArea && cakeThickness) {
+            const cakeDensity = yuantongSampleWeight / yuantongFilterArea / cakeThickness;
+            document.getElementById('wet_cake_density').value = cakeDensity.toFixed(3);
+        } else {
+            document.getElementById('wet_cake_density').value = '';
+        }
+
+        // 远通饼密度和长富饼密度字段保持为空（已在updateFieldEditability中清空）
+        document.getElementById('yuantong_cake_density').value = '';
+        document.getElementById('changfu_cake_density').value = '';
+    }
+
+    // 煅烧品的计算逻辑
+    function calculateForCalcined(skipAutoFill = false) {
+        console.log('=== calculateForCalcined 开始 ===');
+        console.log('skipAutoFill参数:', skipAutoFill);
+
+        const yuantongCoefficient = parseFloat(document.getElementById('yuantong_permeability_coefficient')?.value) || 0;
+        const yuantongSampleWeight = parseFloat(document.getElementById('yuantong_sample_weight')?.value) || 0;
+        const yuantongFilterArea = parseFloat(document.getElementById('yuantong_filter_area')?.value) || 0;
+        const cakeThickness = parseFloat(document.getElementById('cake_thickness')?.value) || 0;
+        const waterViscosity = parseFloat(document.getElementById('water_viscosity')?.value) || 0;
+        const filterTime = parseFloat(document.getElementById('filter_time')?.value) || 0;
+
+        console.log('计算参数:', {
+            yuantongCoefficient,
+            yuantongSampleWeight,
+            yuantongFilterArea,
+            cakeThickness,
+            waterViscosity,
+            filterTime
+        });
+
+        // 远通渗透率 = 远通渗透率系数 * 饼厚 * 水粘度 / 过滤时间
+        let yuantongPermeability = null;
+        if (yuantongCoefficient && cakeThickness && waterViscosity && filterTime) {
+            yuantongPermeability = (yuantongCoefficient * cakeThickness * waterViscosity / filterTime);
+            document.getElementById('permeability').value = yuantongPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability').value = '';
+        }
+
+        // 长富渗透率 = 远通渗透率 - 0.02
+        if (yuantongPermeability !== null) {
+            const changfuPermeability = yuantongPermeability - 0.02;
+            document.getElementById('permeability_long').value = changfuPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability_long').value = '';
+        }
+
+        // 饼密度计算
+        // 远通饼密度 = 远通样品重量 / 远通过滤面积 / 饼厚
+        // 在煅烧品模式下，如果饼厚为空，则使用默认值1进行计算
+        if (yuantongSampleWeight && yuantongFilterArea) {
+            const effectiveCakeThickness = cakeThickness || 1; // 如果饼厚为空，使用默认值1
+            const yuantongCakeDensity = yuantongSampleWeight / yuantongFilterArea / effectiveCakeThickness;
+
+            console.log('饼密度计算:', {
+                yuantongSampleWeight,
+                yuantongFilterArea,
+                cakeThickness,
+                effectiveCakeThickness,
+                yuantongCakeDensity
+            });
+
+            // 在煅烧品模式下，饼密度字段是只读的，不应该被自动填充
+            // 只有在助熔煅烧品模式下才自动填充饼密度字段
+            const materialType = document.getElementById('material_type')?.value;
+            if (materialType === '助熔煅烧品' && !skipAutoFill) {
+                console.log('助熔煅烧品模式，自动填充饼密度字段');
+                document.getElementById('wet_cake_density').value = yuantongCakeDensity.toFixed(3);
+            } else {
+                console.log('煅烧品模式或其他情况，跳过饼密度字段自动填充');
+            }
+
+            // 在煅烧品模式下，远通饼密度和长富饼密度字段是可编辑的
+            // 当参数变化时，自动重新计算这些字段
+            const yuantongCakeDensityField = document.getElementById('yuantong_cake_density');
+            const changfuCakeDensityField = document.getElementById('changfu_cake_density');
+
+            // 如果skipAutoFill为true，则不自动填充
+            if (!skipAutoFill) {
+                console.log('处理远通饼密度和长富饼密度字段');
+                // 自动计算并填充远通饼密度和长富饼密度
+                if (yuantongCakeDensityField) {
+                    console.log('自动填充远通饼密度字段');
+                    yuantongCakeDensityField.value = yuantongCakeDensity.toFixed(3);
+                }
+                if (changfuCakeDensityField) {
+                    const changfuCakeDensity = yuantongCakeDensity - 0.02;
+                    console.log('自动填充长富饼密度字段');
+                    changfuCakeDensityField.value = changfuCakeDensity.toFixed(3);
+                }
+            } else {
+                console.log('跳过远通饼密度和长富饼密度字段自动填充（skipAutoFill=true）');
+            }
+        } else {
+            console.log('计算参数不完整，清空相关字段');
+            // 如果skipAutoFill为true，则不自动清空饼密度字段
+            if (!skipAutoFill) {
+                console.log('自动清空饼密度字段');
+                document.getElementById('wet_cake_density').value = '';
+            } else {
+                console.log('跳过饼密度字段自动清空（skipAutoFill=true）');
+            }
+            // 清空远通饼密度和长富饼密度
+            const yuantongCakeDensityField = document.getElementById('yuantong_cake_density');
+            const changfuCakeDensityField = document.getElementById('changfu_cake_density');
+            if (yuantongCakeDensityField) {
+                yuantongCakeDensityField.value = '';
+            }
+            if (changfuCakeDensityField) {
+                changfuCakeDensityField.value = '';
+            }
+        }
+
+        console.log('=== calculateForCalcined 完成 ===');
+    }
+
+    // 初始化计算逻辑
+    function initCalculationLogic() {
+        console.log('=== initCalculationLogic 开始 ===');
+
+        // 加载系数参数
+        loadCoefficients().then(() => {
+            console.log('系数参数加载完成，开始初始化');
+            // 初始化完成后设置系数值
+            updateCoefficientsByMaterialType();
+            // 设置字段可编辑性
+            updateFieldEditability();
+            // 执行初始计算
+            console.log('执行初始计算');
+            calculateAllValues();
+            console.log('初始计算完成');
+        });
+
+        // 为物料类型添加变化监听器
+        const materialTypeSelect = document.getElementById('material_type');
+        console.log('物料类型选择器:', materialTypeSelect);
+
+        if (materialTypeSelect) {
+            console.log('添加物料类型变化监听器');
+            materialTypeSelect.addEventListener('change', function() {
+                console.log('=== 物料类型切换事件触发 ===');
+                console.log('切换到的物料类型:', this.value);
+
+                updateCoefficientsByMaterialType();
+                updateFieldEditability();
+
+                // 根据切换到的物料类型决定是否自动填充
+                if (this.value === '煅烧品') {
+                    console.log('切换到煅烧品，调用calculateForCalcinedSpecial');
+                    // 切换到煅烧品：清空饼密度，但自动填充远通饼密度和长富饼密度
+                    calculateForCalcinedSpecial();
+                } else if (this.value === '助熔煅烧品') {
+                    console.log('切换到助熔煅烧品，调用calculateForFluxCalcinedSpecial');
+                    // 切换到助熔煅烧品：清空远通饼密度和长富饼密度，但自动填充饼密度
+                    calculateForFluxCalcinedSpecial();
+                } else {
+                    console.log('其他物料类型，调用calculateAllValues(true)');
+                    // 其他情况，跳过自动填充
+                    calculateAllValues(true);
+                }
+            });
+        } else {
+            console.log('未找到物料类型选择器');
+        }
+
+        // 为相关字段添加事件监听器
+        const calculationFields = ['yuantong_permeability_coefficient', 'yuantong_sample_weight', 'yuantong_filter_area', 'cake_thickness', 'water_viscosity', 'filter_time'];
+        console.log('为计算字段添加事件监听器:', calculationFields);
+
+        calculationFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                console.log(`为字段 ${fieldId} 添加事件监听器`);
+                field.addEventListener('input', () => calculateAllValues(false));
+                field.addEventListener('change', () => calculateAllValues(false));
+            } else {
+                console.log(`未找到字段 ${fieldId}`);
+            }
+        });
+
+        console.log('=== initCalculationLogic 完成 ===');
+    }
+
+    // 初始化计算逻辑
+    initCalculationLogic();
+
+    // 初始加载表格数据
+    loadTableData();
+
+    // 产品型号自动补全（脱离父容器，body下绝对定位）
+    (function() {
+        const input = document.getElementById('product_name');
+        let suggestionsBox = document.getElementById('productNameSuggestions');
+        if (!suggestionsBox) {
+            suggestionsBox = document.createElement('div');
+            suggestionsBox.id = 'productNameSuggestions';
+            suggestionsBox.className = 'autocomplete-suggestions';
+            suggestionsBox.style.display = 'none';
+            document.body.appendChild(suggestionsBox);
+        }
+        let lastQuery = '';
+        let activeIndex = -1;
+        let suggestions = [];
+        let debounceTimer = null;
+
+        function positionBox() {
+            const rect = input.getBoundingClientRect();
+            suggestionsBox.style.position = 'fixed';
+            suggestionsBox.style.left = rect.left + 'px';
+            suggestionsBox.style.top = rect.bottom + 'px';
+            suggestionsBox.style.width = rect.width + 'px';
+            suggestionsBox.style.zIndex = 99999;
+        }
+
+        function fetchSuggestions(query) {
+            fetch(`/api/product-models/suggest/?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success' && data.data.length > 0) {
+                        suggestions = data.data;
+                        suggestionsBox.innerHTML = data.data.map((item, idx) =>
+                            `<div class="autocomplete-suggestion${idx===0?' active':''}" data-name="${item.name}">${item.name}</div>`
+                        ).join('');
+                        suggestionsBox.style.display = 'block';
+                        activeIndex = 0;
+                        positionBox();
+                    } else {
+                        suggestions = [];
+                        suggestionsBox.innerHTML = '';
+                        suggestionsBox.style.display = 'none';
+                    }
+                });
+        }
+
+        input.addEventListener('input', function() {
+            const query = this.value.trim();
+            lastQuery = query;
+            if (debounceTimer) clearTimeout(debounceTimer);
+            if (!query) {
+                suggestionsBox.innerHTML = '';
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+            debounceTimer = setTimeout(() => {
+                fetchSuggestions(query);
+            }, 300);
+        });
+        input.addEventListener('focus', positionBox);
+        window.addEventListener('resize', function() {
+            if (suggestionsBox.style.display === 'block') positionBox();
+        });
+        window.addEventListener('scroll', function() {
+            if (suggestionsBox.style.display === 'block') positionBox();
+        }, true);
+
+        suggestionsBox.addEventListener('mousedown', function(e) {
+            if (e.target.classList.contains('autocomplete-suggestion')) {
+                input.value = e.target.getAttribute('data-name');
+                suggestionsBox.innerHTML = '';
+                suggestionsBox.style.display = 'none';
+            }
+        });
+
+        // 键盘上下键选择
+        input.addEventListener('keydown', function(e) {
+            if (!suggestions.length || suggestionsBox.style.display === 'none') return;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIndex = (activeIndex + 1) % suggestions.length;
+                updateActive();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIndex = (activeIndex - 1 + suggestions.length) % suggestions.length;
+                updateActive();
+            } else if (e.key === 'Enter') {
+                if (activeIndex >= 0 && suggestions[activeIndex]) {
+                    input.value = suggestions[activeIndex].name;
+                    suggestionsBox.innerHTML = '';
+                    suggestionsBox.style.display = 'none';
+                    e.preventDefault();
+                }
+            }
+        });
+        function updateActive() {
+            const items = suggestionsBox.querySelectorAll('.autocomplete-suggestion');
+            items.forEach((el, idx) => {
+                if (idx === activeIndex) {
+                    el.classList.add('active');
+                    el.scrollIntoView({block:'nearest'});
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        }
+        // 点击外部关闭建议
+        document.addEventListener('mousedown', function(e) {
+            if (!input.contains(e.target) && !suggestionsBox.contains(e.target)) {
+                suggestionsBox.innerHTML = '';
+                suggestionsBox.style.display = 'none';
+            }
+        });
+    })();
+
+    // 包装类型自动补全（脱离父容器，body下绝对定位）
+    (function() {
+        const input = document.getElementById('packaging');
+        let suggestionsBox = document.getElementById('packagingSuggestions');
+        if (!suggestionsBox) {
+            suggestionsBox = document.createElement('div');
+            suggestionsBox.id = 'packagingSuggestions';
+            suggestionsBox.className = 'autocomplete-suggestions';
+            suggestionsBox.style.display = 'none';
+            document.body.appendChild(suggestionsBox);
+        }
+        let lastQuery = '';
+        let activeIndex = -1;
+        let suggestions = [];
+        let debounceTimer = null;
+
+        function positionBox() {
+            const rect = input.getBoundingClientRect();
+            suggestionsBox.style.position = 'fixed';
+            suggestionsBox.style.left = rect.left + 'px';
+            suggestionsBox.style.top = rect.bottom + 'px';
+            suggestionsBox.style.width = rect.width + 'px';
+            suggestionsBox.style.zIndex = 99999;
+        }
+
+        function fetchSuggestions(query) {
+            fetch(`/api/packagings/suggest/?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success' && data.data.length > 0) {
+                        suggestions = data.data;
+                        suggestionsBox.innerHTML = data.data.map((item, idx) =>
+                            `<div class="autocomplete-suggestion${idx===0?' active':''}" data-name="${item.name}">${item.name}</div>`
+                        ).join('');
+                        suggestionsBox.style.display = 'block';
+                        activeIndex = 0;
+                        positionBox();
+                    } else {
+                        suggestions = [];
+                        suggestionsBox.innerHTML = '';
+                        suggestionsBox.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('包装类型自动完成错误:', error);
+                    suggestions = [];
+                    suggestionsBox.innerHTML = '';
+                    suggestionsBox.style.display = 'none';
+                });
+        }
+
+        input.addEventListener('input', function() {
+            const query = this.value.trim();
+            lastQuery = query;
+            if (debounceTimer) clearTimeout(debounceTimer);
+            if (!query) {
+                suggestionsBox.innerHTML = '';
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+            debounceTimer = setTimeout(() => {
+                fetchSuggestions(query);
+            }, 300);
+        });
+        input.addEventListener('focus', positionBox);
+        window.addEventListener('resize', function() {
+            if (suggestionsBox.style.display === 'block') positionBox();
+        });
+        window.addEventListener('scroll', function() {
+            if (suggestionsBox.style.display === 'block') positionBox();
+        }, true);
+
+        suggestionsBox.addEventListener('mousedown', function(e) {
+            if (e.target.classList.contains('autocomplete-suggestion')) {
+                input.value = e.target.getAttribute('data-name');
+                suggestionsBox.innerHTML = '';
+                suggestionsBox.style.display = 'none';
+            }
+        });
+
+        // 键盘上下键选择
+        input.addEventListener('keydown', function(e) {
+            if (!suggestions.length || suggestionsBox.style.display === 'none') return;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIndex = (activeIndex + 1) % suggestions.length;
+                updateActive();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIndex = (activeIndex - 1 + suggestions.length) % suggestions.length;
+                updateActive();
+            } else if (e.key === 'Enter') {
+                if (activeIndex >= 0 && suggestions[activeIndex]) {
+                    input.value = suggestions[activeIndex].name;
+                    suggestionsBox.innerHTML = '';
+                    suggestionsBox.style.display = 'none';
+                    e.preventDefault();
+                }
+            }
+        });
+        function updateActive() {
+            const items = suggestionsBox.querySelectorAll('.autocomplete-suggestion');
+            items.forEach((el, idx) => {
+                if (idx === activeIndex) {
+                    el.classList.add('active');
+                    el.scrollIntoView({block:'nearest'});
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        }
+        // 点击外部关闭建议
+        document.addEventListener('mousedown', function(e) {
+            if (!input.contains(e.target) && !suggestionsBox.contains(e.target)) {
+                suggestionsBox.innerHTML = '';
+                suggestionsBox.style.display = 'none';
+            }
+        });
+    })();
+
+    // 收藏功能（与后端同步）
+    (function() {
+        const btn = document.getElementById('favoriteBtn');
+        const icon = document.getElementById('favoriteIcon');
+        const text = document.getElementById('favoriteText');
+        const pageKey = 'yuantong2_report';
+        let isFav = false;
+        function setState(fav) {
+            if (fav) {
+                icon.textContent = 'star';
+                text.textContent = '取消收藏';
+            } else {
+                icon.textContent = 'star_border';
+                text.textContent = '收藏';
+            }
+        }
+        // 初始化状态
+        fetch(`/api/user-favorite/?page=${pageKey}`)
+            .then(res => res.json())
+            .then(data => {
+                isFav = !!data.favorite;
+                setState(isFav);
+            });
+        btn.addEventListener('click', function() {
+            if (isFav) {
+                fetch(`/api/user-favorite/?page=${pageKey}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    credentials: 'same-origin'
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        isFav = false;
+                        setState(false);
+                        window.dispatchEvent(new Event('favoriteChanged'));
+                    });
+            } else {
+                fetch(`/api/user-favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({page: pageKey}),
+                    credentials: 'same-origin'
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        isFav = true;
+                        setState(true);
+                        window.dispatchEvent(new Event('favoriteChanged'));
+                    });
+            }
+        });
+    })();
+
+    // 拖拽上传和点击上传
+    function bindFileUploadEvents() {
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const excelFileInput = document.getElementById('excelFileInput');
+        
+        if (!fileUploadArea || !excelFileInput) {
+            return;
+        }
+        
+        const newFileUploadArea = fileUploadArea.cloneNode(true);
+        fileUploadArea.parentNode.replaceChild(newFileUploadArea, fileUploadArea);
+        
+        newFileUploadArea.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            excelFileInput.click();
+        });
+        
+        newFileUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            newFileUploadArea.classList.add('dragover');
+        });
+
+        newFileUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            newFileUploadArea.classList.remove('dragover');
+        });
+
+        newFileUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            newFileUploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    excelFileInput.files = dataTransfer.files;
+                    
+                    const fileNameDiv = document.getElementById('fileName');
+                    if (fileNameDiv) {
+                        fileNameDiv.textContent = '已选择: ' + file.name;
+                        fileNameDiv.classList.add('show');
+                    }
+                } else {
+                    alert('请选择Excel文件格式(.xlsx 或 .xls)');
+                }
+            }
+        });
+    }
+
+    // 文件选择处理
+    const excelFileInput = document.getElementById('excelFileInput');
+    if (excelFileInput) {
+        excelFileInput.addEventListener('change', function(e) {
+            const fileNameDiv = document.getElementById('fileName');
+            if (this.files && this.files.length > 0) {
+                fileNameDiv.textContent = '已选择: ' + this.files[0].name;
+                fileNameDiv.classList.add('show');
+            } else {
+                fileNameDiv.classList.remove('show');
+            }
+        });
+    }
+    bindFileUploadEvents();
+    
+    // 表单提交处理
+    const importForm = document.getElementById('importForm');
+    if (importForm) {
+        importForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('excelFileInput');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('请选择要导入的Excel文件');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('excel_file', fileInput.files[0]);
+            formData.append('csrfmiddlewaretoken', getCSRFToken());
+
+            document.getElementById('importProgress').classList.add('show');
+            document.getElementById('importSubmitBtn').disabled = true;
+            document.getElementById('errorMessages').classList.remove('show');
+            document.getElementById('errorMessages').innerHTML = '';
+
+            try {
+                const response = await fetch('{% url "yuantong2_report_import_excel" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                });
+
+                const result = await response.json();
+                
+                document.getElementById('importProgress').classList.remove('show');
+                document.getElementById('importSubmitBtn').disabled = false;
+
+                if (result.status === 'success') {
+                    alert(`导入成功！\n成功导入: ${result.imported_count} 条数据${result.error_count > 0 ? '\n失败: ' + result.error_count + ' 条' : ''}`);
+                    
+                    if (result.error_messages && result.error_messages.length > 0) {
+                        const errorDiv = document.getElementById('errorMessages');
+                        errorDiv.innerHTML = '<strong>部分数据导入失败：</strong><br>' + 
+                            result.error_messages.map(msg => `<div class="error-message">${msg}</div>`).join('');
+                        errorDiv.classList.add('show');
+                    } else {
+                        closeImportModal();
+                        if (typeof loadTableData === 'function') {
+                            await loadTableData();
+                        } else {
+                            window.location.reload();
+                        }
+                    }
+                } else {
+                    alert('导入失败: ' + result.message);
+                    if (result.error_messages && result.error_messages.length > 0) {
+                        const errorDiv = document.getElementById('errorMessages');
+                        errorDiv.innerHTML = '<strong>错误信息：</strong><br>' + 
+                            result.error_messages.map(msg => `<div class="error-message">${msg}</div>`).join('');
+                        errorDiv.classList.add('show');
+                    }
+                }
+            } catch (error) {
+                document.getElementById('importProgress').classList.remove('show');
+                document.getElementById('importSubmitBtn').disabled = false;
+                alert('导入失败: ' + error.message);
+            }
+        });
+    }
+    
+    // 点击模态框外部关闭
+    window.onclick = function(event) {
+        const modal = document.getElementById('importModal');
+        if (event.target === modal) {
+            closeImportModal();
+        }
+    };
+});
+
+// 下载模板功能 - 全局函数，供onclick调用
+function downloadYuantong2Template() {
+    // 获取按钮和进度提示元素
+    const downloadBtn = document.getElementById('downloadTemplateBtn');
+    const downloadBtnText = document.getElementById('downloadBtnText');
+    const downloadIcon = document.getElementById('downloadIcon');
+    const downloadProgress = document.getElementById('downloadProgress');
+    
+    // 如果按钮已禁用，说明正在下载，直接返回
+    if (downloadBtn && downloadBtn.disabled) {
+        return;
+    }
+    
+    // 重要：在下载之前，先完全关闭导入模态框，避免遮挡浏览器的文件保存对话框
+    const importModal = document.getElementById('importModal');
+    if (importModal) {
+        const isVisible = importModal.style.display === 'block' || 
+                         importModal.style.display === '' ||
+                         window.getComputedStyle(importModal).display !== 'none' ||
+                         window.getComputedStyle(importModal).opacity !== '0';
+        
+        if (isVisible) {
+            if (typeof closeImportModal === 'function') {
+                closeImportModal();
+            }
+            importModal.style.display = 'none';
+            importModal.style.opacity = '0';
+            importModal.style.visibility = 'hidden';
+            importModal.style.zIndex = '-1';
+            
+            setTimeout(() => {
+                startDownload();
+            }, 500);
+        } else {
+            startDownload();
+        }
+    } else {
+        startDownload();
+    }
+    
+    function startDownload() {
+        const url = '{% url "yuantong2_report_download_template" %}';
+        const startTime = Date.now();
+        
+        // 更新UI：禁用按钮，显示进度提示
+        if (downloadBtn) {
+            downloadBtn.disabled = true;
+        }
+        if (downloadBtnText) {
+            downloadBtnText.textContent = '正在下载...';
+        }
+        if (downloadIcon) {
+            downloadIcon.textContent = 'hourglass_empty';
+        }
+        if (downloadProgress) {
+            downloadProgress.style.display = 'block';
+            const progressText = downloadProgress.querySelector('.progress-text');
+            if (progressText) {
+                progressText.textContent = '正在下载模板，请稍候...';
+            }
+            downloadProgress.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+        }
+        
+        console.log('[下载模板] 开始下载远通二线QC报表导入模板', {
+            url: url,
+            timestamp: new Date().toISOString()
+        });
+        
+        // 恢复UI状态的辅助函数
+        function restoreUI() {
+            if (downloadBtn) {
+                downloadBtn.disabled = false;
+            }
+            if (downloadBtnText) {
+                downloadBtnText.textContent = '下载导入模板';
+            }
+            if (downloadIcon) {
+                downloadIcon.textContent = 'download';
+            }
+            if (downloadProgress) {
+                downloadProgress.style.display = 'none';
+            }
+            const importModal = document.getElementById('importModal');
+            if (importModal) {
+                importModal.style.zIndex = '99999';
+                importModal.style.opacity = '';
+                importModal.style.visibility = '';
+            }
+        }
+        
+        // 显示成功提示的辅助函数
+        function showSuccessMessage(message) {
+            if (downloadProgress) {
+                downloadProgress.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                downloadProgress.innerHTML = '<span class="material-icons progress-icon">check_circle</span><span class="progress-text">' + message + '</span>';
+                downloadProgress.style.display = 'block';
+                setTimeout(() => {
+                    downloadProgress.style.display = 'none';
+                    downloadProgress.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+                    downloadProgress.innerHTML = '<span class="material-icons progress-icon">hourglass_empty</span><span class="progress-text">正在下载模板，请稍候...</span>';
+                }, 3000);
+            }
+        }
+        
+        // 检测是否在企业微信环境中
+        const isWeChatWork = /wxwork/i.test(navigator.userAgent) || window.wx || window.WeixinJSBridge;
+        
+        // 优先使用 File System Access API（现代浏览器支持，可以直接弹出保存对话框）
+        if ('showSaveFilePicker' in window && !isWeChatWork) {
+            fetch(url, {
+                method: 'GET',
+                credentials: 'same-origin',
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('下载失败：' + response.statusText + ' (状态码: ' + response.status + ')');
+                }
+                return response.blob();
+            })
+            .then(async blob => {
+                const downloadDuration = Date.now() - startTime;
+                const fileSize = (blob.size / 1024).toFixed(2);
+                
+                restoreUI();
+                
+                const importModal = document.getElementById('importModal');
+                if (importModal) {
+                    importModal.style.display = 'none';
+                    importModal.style.opacity = '0';
+                    importModal.style.visibility = 'hidden';
+                    importModal.style.zIndex = '-1';
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                try {
+                    const fileHandle = await window.showSaveFilePicker({
+                        suggestedName: '远通二线QC报表导入模板.xlsx',
+                        types: [{
+                            description: 'Excel文件',
+                            accept: {
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+                            }
+                        }]
+                    });
+                    
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+                    
+                    console.log('[下载模板] 下载成功（用户选择路径）', {
+                        filename: '远通二线QC报表导入模板.xlsx',
+                        fileSize: fileSize + ' KB',
+                        duration: downloadDuration + ' ms',
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    restoreUI();
+                    showSuccessMessage('下载成功！文件已保存到您选择的位置');
+                    
+                } catch (saveError) {
+                    if (saveError.name === 'AbortError') {
+                        console.log('[下载模板] 用户取消了保存对话框');
+                        restoreUI();
+                    } else {
+                        console.warn('[下载模板] File System Access API失败，使用备用方法:', saveError);
+                        restoreUI();
+                        // 使用传统下载方式
+                        const downloadUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = '远通二线QC报表导入模板.xlsx';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(downloadUrl);
+                        showSuccessMessage('下载成功！');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('[下载模板] 下载失败:', error);
+                restoreUI();
+                alert('下载失败：' + error.message);
+            });
+        } else {
+            // 使用传统下载方式（企业微信或旧浏览器）
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '远通二线QC报表导入模板.xlsx';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            setTimeout(() => {
+                restoreUI();
+                showSuccessMessage('下载成功！');
+            }, 1000);
+        }
+    }
+}
+</script>
+
+<!-- 悬浮导入按钮 -->
+<button class="floating-import-btn" onclick="showImportModal()" title="导入Excel">
+    <span class="material-icons">upload_file</span>
+</button>
+
+<!-- 导入Excel模态框 - 悬浮在主页面之上 -->
+<div id="importModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>导入Excel报表</h2>
+            <span class="close" onclick="closeImportModal()">&times;</span>
+        </div>
+        <div class="import-tip-section">
+            <div class="tip-header">
+                <div class="tip-icon-wrapper">
+                    <span class="material-icons tip-icon">lightbulb</span>
+                </div>
+                <div class="tip-content">
+                    <h3 class="tip-title">重要提示</h3>
+                    <p class="tip-text">
+                        请先下载模板文件，按照模板格式填写数据。表头必须与模板完全一致，不能修改或删除任何列。
+                    </p>
+                </div>
+            </div>
+            <div class="download-button-wrapper">
+                <button type="button" id="downloadTemplateBtn" class="download-template-btn" onclick="downloadYuantong2Template()">
+                    <span class="material-icons" id="downloadIcon">download</span>
+                    <span id="downloadBtnText">下载导入模板</span>
+                </button>
+                <!-- 下载进度提示 -->
+                <div id="downloadProgress" class="download-progress-tooltip">
+                    <span class="material-icons progress-icon">hourglass_empty</span>
+                    <span class="progress-text">正在下载模板，请稍候...</span>
+                </div>
+            </div>
+        </div>
+        <form id="importForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="file-upload-area" id="fileUploadArea">
+                <div class="file-upload-icon">
+                    <span class="material-icons" style="font-size: 48px;">cloud_upload</span>
+                </div>
+                <div class="file-upload-text">点击选择Excel文件或拖拽文件到此处</div>
+                <div class="file-upload-hint">支持格式: .xlsx, .xls（必须使用模板文件）</div>
+                <div class="file-name" id="fileName"></div>
+            </div>
+            <input type="file" id="excelFileInput" name="excel_file" accept=".xlsx,.xls" style="display: none;">
+            <div class="import-progress" id="importProgress">
+                <div class="progress-text">正在导入，请稍候...</div>
+            </div>
+            <div class="error-messages" id="errorMessages"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeImportModal()">取消</button>
+                <button type="submit" class="btn btn-primary" id="importSubmitBtn">
+                    <span class="material-icons">upload</span> 开始导入
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,998 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{% static 'css/icon-alignment-fix.css' %}">
+<link rel="stylesheet" href="/static/libs/flatpickr/flatpickr.min.css">
+<link rel="stylesheet" href="/static/libs/flatpickr/material_blue.css">
+<script src="/static/libs/flatpickr/flatpickr.min.js"></script>
+<script src="/static/libs/flatpickr/zh.js"></script>
+<script src="/static/libs/autocomplete/autoComplete.min.js"></script>
+<style>
+    .page-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .page-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .page-title h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .form-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .form-control:focus {
+        border-color: #4CAF50;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+    input[type="number"].form-control {
+        -moz-appearance: textfield;
+    }
+    input[type="number"].form-control::-webkit-outer-spin-button,
+    input[type="number"].form-control::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        min-height: 44px;
+        white-space: nowrap;
+    }
+    .btn-primary {
+        background: linear-gradient(90deg, #81d4fa 0%, #a5d6a7 100%);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+    }
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #4fc3f7 0%, #66bb6a 100%);
+        transform: translateY(-1px);
+    }
+    .btn-secondary {
+        background: #e3f2fd;
+        color: #1976d2;
+        box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+    }
+    .btn-secondary:hover {
+        background: #b3e5fc;
+        transform: translateY(-1px);
+    }
+    .material-icons {
+        vertical-align: middle;
+        font-size: 20px;
+        margin-right: 8px;
+    }
+    .section-title {
+        margin: 20px 0 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e0e0e0;
+        color: #1976d2;
+        font-size: 18px;
+    }
+    .error-message {
+        color: #d32f2f;
+        margin-top: 5px;
+        font-size: 14px;
+    }
+    /* 自动完成样式 */
+    .autoComplete_wrapper {
+        width: 100%;
+    }
+    .autoComplete_wrapper > input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+    .autoComplete_wrapper > ul {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-top: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .autoComplete_wrapper > ul > li {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+    .autoComplete_wrapper > ul > li:hover {
+        background: #f5f5f5;
+    }
+    .autoComplete_wrapper > ul > li mark {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 0;
+    }
+    /* 暗色模式支持 */
+    @media (prefers-color-scheme: dark) {
+        body {
+            background: #121212;
+            color: #fff;
+        }
+        .form-container {
+            background: #1e1e1e;
+        }
+        .form-control {
+            background: #2d2d2d;
+            border-color: #404040;
+            color: #fff;
+        }
+        .form-group label {
+            color: #e0e0e0;
+        }
+        .section-title {
+            color: #81d4fa;
+            border-bottom-color: #404040;
+        }
+    }
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+        .page-container {
+            padding: 10px;
+        }
+        .page-title {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .page-title h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .action-buttons {
+            justify-content: center;
+        }
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        .form-group label {
+            font-size: 16px;
+        }
+        .form-control {
+            font-size: 16px;
+            padding: 12px;
+        }
+        .btn {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-title">
+        <h1>编辑远通QC报表</h1>
+        <div class="action-buttons">
+            <a class="btn btn-secondary" href="{% url 'yuantong_report_history' %}">
+                <span class="material-icons">arrow_back</span> 返回
+            </a>
+        </div>
+    </div>
+
+    <div class="form-container">
+        {% if is_expired %}
+        <div class="alert alert-warning" style="background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+            <strong>⚠️ 编辑期限已过</strong><br>
+            该记录已超过{{ edit_limit }}天编辑期限，无法进行编辑操作。
+        </div>
+        {% endif %}
+        <form id="editForm" action="" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="reportId" value="{{ report.id }}">
+            <input type="hidden" id="isExpired" value="{{ is_expired|yesno:'true,false' }}">
+
+            <!-- 必要信息 -->
+            <h3 class="section-title">必要信息</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="material_type">物料类型</label>
+                    <select id="material_type" name="material_type" class="form-control">
+                        <option value="助熔煅烧品" {% if report.material_type == '助熔煅烧品' %}selected{% endif %}>助熔煅烧品</option>
+                        <option value="煅烧品" {% if report.material_type == '煅烧品' %}selected{% endif %}>煅烧品</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="yuantong_permeability_coefficient">远通渗透率系数</label>
+                    <input type="number" id="yuantong_permeability_coefficient" name="yuantong_permeability_coefficient" class="form-control" step="0.0001" value="{{ report.yuantong_permeability_coefficient|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="yuantong_sample_weight">远通样品重量</label>
+                    <input type="number" id="yuantong_sample_weight" name="yuantong_sample_weight" class="form-control" step="0.001" value="{{ report.yuantong_sample_weight|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="yuantong_filter_area">远通过滤面积</label>
+                    <input type="number" id="yuantong_filter_area" name="yuantong_filter_area" class="form-control" step="0.01" value="{{ report.yuantong_filter_area|default_if_none:'' }}">
+                </div>
+            </div>
+
+            <!-- 基本信息 -->
+            <h3 class="section-title">基本信息</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date">日期<span style="color:red">*</span></label>
+                    <input type="text" id="date" name="date" class="form-control" required value="{{ report.date|date:'Y-m-d'|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="time">时间<span style="color:red">*</span></label>
+                    <input type="text" id="time" name="time" class="form-control" required value="{{ report.time|time:'H:i'|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="moisture_after_drying">烘干后原土水分(%)</label>
+                    <input type="number" id="moisture_after_drying" name="moisture_after_drying" class="form-control" step="0.01" value="{{ report.moisture_after_drying|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="alkali_content">入窑前碱含量(%)</label>
+                    <input type="number" id="alkali_content" name="alkali_content" class="form-control" step="0.01" value="{{ report.alkali_content|default_if_none:'' }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="flux">助熔剂添加比例</label>
+                    <input type="text" id="flux" name="flux" class="form-control" value="{{ report.flux|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="product_name">产品型号<span style="color:red">*</span></label>
+                    <div class="autoComplete_wrapper">
+                        <input type="text" id="product_name" name="product_name" class="form-control" required autocomplete="off" value="{{ report.product_name|default_if_none:'' }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 渗透测试 -->
+            <h3 class="section-title">渗透测试</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="permeability">远通渗透率(Darcy)</label>
+                    <input type="number" id="permeability" name="permeability" class="form-control" step="0.0001" value="{{ report.permeability|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="permeability_long">长富渗透率(Darcy)</label>
+                    <input type="number" id="permeability_long" name="permeability_long" class="form-control" step="0.0001" value="{{ report.permeability_long|default_if_none:'' }}">
+                </div>
+                 <div class="form-group">
+                    <label for="filter_time">过滤时间(秒)</label>
+                    <input type="number" id="filter_time" name="filter_time" class="form-control" step="0.01" value="{{ report.filter_time|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="water_viscosity">水黏度(mPa.s)</label>
+                    <input type="number" id="water_viscosity" name="water_viscosity" class="form-control" step="0.0001" value="{{ report.water_viscosity|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="cake_thickness">饼厚(mm)</label>
+                    <input type="number" id="cake_thickness" name="cake_thickness" class="form-control" step="0.01" value="{{ report.cake_thickness|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="wet_cake_density">饼密度(g/cm3)</label>
+                    <input type="number" id="wet_cake_density" name="wet_cake_density" class="form-control" step="0.001" value="{{ report.wet_cake_density|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="yuantong_cake_density">远通饼密度(g/cm3)</label>
+                    <input type="number" id="yuantong_cake_density" name="yuantong_cake_density" class="form-control" step="0.001" value="{{ report.yuantong_cake_density|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="changfu_cake_density">长富饼密度(g/cm3)</label>
+                    <input type="number" id="changfu_cake_density" name="changfu_cake_density" class="form-control" step="0.001" value="{{ report.changfu_cake_density|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="bulk_density">振实密度(g/cm3)</label>
+                    <input type="number" id="bulk_density" name="bulk_density" class="form-control" step="0.001" value="{{ report.bulk_density|default_if_none:'' }}">
+                </div>
+            </div>
+
+            <!-- 筛分数据 -->
+            <h3 class="section-title">筛分数据</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="sieving_14m">+14M (%)</label>
+                    <input type="number" id="sieving_14m" name="sieving_14m" class="form-control" step="0.01" value="{{ report.sieving_14m|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="sieving_30m">+30M (%)</label>
+                    <input type="number" id="sieving_30m" name="sieving_30m" class="form-control" step="0.01" value="{{ report.sieving_30m|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="sieving_40m">+40M</label>
+                    <input type="number" id="sieving_40m" name="sieving_40m" class="form-control" step="0.01" value="{{ report.sieving_40m|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="sieving_80m">+80M</label>
+                    <input type="number" id="sieving_80m" name="sieving_80m" class="form-control" step="0.01" value="{{ report.sieving_80m|default_if_none:'' }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="sieving_100m">+100M</label>
+                    <input type="text" id="sieving_100m" name="sieving_100m" class="form-control" value="{{ report.sieving_100m|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="sieving_150m">+150M</label>
+                    <input type="text" id="sieving_150m" name="sieving_150m" class="form-control" value="{{ report.sieving_150m|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="sieving_200m">+200M</label>
+                    <input type="text" id="sieving_200m" name="sieving_200m" class="form-control" value="{{ report.sieving_200m|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="sieving_325m">+325M</label>
+                    <input type="text" id="sieving_325m" name="sieving_325m" class="form-control" value="{{ report.sieving_325m|default_if_none:'' }}">
+                </div>
+            </div>
+
+            <!-- 可溶性金属 -->
+            <h3 class="section-title">可溶性金属</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fe_ion">铁离子(mg/kg)</label>
+                    <input type="number" id="fe_ion" name="fe_ion" class="form-control" step="0.01" value="{{ report.fe_ion|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="ca_ion">钙离子(mg/kg)</label>
+                    <input type="number" id="ca_ion" name="ca_ion" class="form-control" step="0.01" value="{{ report.ca_ion|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="al_ion">铝离子(mg/kg)</label>
+                    <input type="number" id="al_ion" name="al_ion" class="form-control" step="0.01" value="{{ report.al_ion|default_if_none:'' }}">
+                </div>
+            </div>
+
+            <!-- 其他信息 -->
+            <h3 class="section-title">其他信息</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="brightness">白度</label>
+                    <input type="number" id="brightness" name="brightness" class="form-control" step="0.01" value="{{ report.brightness|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="swirl">涡值(cm)</label>
+                    <input type="number" id="swirl" name="swirl" class="form-control" step="0.01" value="{{ report.swirl|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="odor">气味</label>
+                    <input type="number" id="odor" name="odor" class="form-control" step="0.01" value="{{ report.odor|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="conductance">⚡电导值(ms/cm)</label>
+                    <input type="number" id="conductance" name="conductance" class="form-control" step="0.01" value="{{ report.conductance|default_if_none:'' }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="ph">pH</label>
+                    <input type="number" id="ph" name="ph" class="form-control" step="0.01" value="{{ report.ph|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="oil_absorption">吸油率(%)</label>
+                    <input type="number" id="oil_absorption" name="oil_absorption" class="form-control" step="0.01" value="{{ report.oil_absorption|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="water_absorption">吸水率(%)</label>
+                    <input type="number" id="water_absorption" name="water_absorption" class="form-control" step="0.01" value="{{ report.water_absorption|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="moisture">水分(%)</label>
+                    <input type="number" id="moisture" name="moisture" class="form-control" step="0.01" value="{{ report.moisture|default_if_none:'' }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bags">袋数</label>
+                    <input type="number" id="bags" name="bags" class="form-control" step="0.01" value="{{ report.bags|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="packaging">包装类型</label>
+                    <input type="text" id="packaging" name="packaging" class="form-control" value="{{ report.packaging|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="tons">吨数</label>
+                    <input type="number" id="tons" name="tons" class="form-control" step="0.001" value="{{ report.tons|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="batch_number">批次号</label>
+                    <input type="text" id="batch_number" name="batch_number" class="form-control" value="{{ report.batch_number|default_if_none:'' }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="shift">班次<span style="color:red">*</span></label>
+                    <select id="shift" name="shift" class="form-control" required>
+                        <option value="1" {% if report.shift == '1' %}selected{% endif %}>1</option>
+                        <option value="2" {% if report.shift == '2' %}selected{% endif %}>2</option>
+                        <option value="3" {% if report.shift == '3' %}selected{% endif %}>3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="remarks">备注</label>
+                    <textarea id="remarks" name="remarks" class="form-control" rows="3">{{ report.remarks|default_if_none:'' }}</textarea>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                <button type="submit" class="btn btn-primary" {% if is_expired %}disabled{% endif %}>
+                        <span class="material-icons">save</span> {% if is_expired %}已过期{% else %}保存{% endif %}
+                </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 检查是否过期
+    const isExpired = document.getElementById('isExpired').value === 'true';
+    
+    // 如果过期，禁用所有表单字段
+    if (isExpired) {
+        const form = document.getElementById('editForm');
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.disabled = true;
+            input.style.backgroundColor = '#f5f5f5';
+            input.style.cursor = 'not-allowed';
+        });
+        
+        // 禁用提交按钮
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.6';
+            submitBtn.style.cursor = 'not-allowed';
+        }
+        
+        console.log('记录已过期，所有字段已禁用');
+        return; // 过期时不再执行其他逻辑
+    }
+    
+    // 获取报表ID
+    const reportId = '{{ report.id }}';
+
+    // 系数参数对象
+    const coefficients = {
+        yuantong_permeability: 6.4,
+        yuantong_sample_weight: 5,
+        yuantong_filter_area: 3.14
+    };
+
+    // 加载系数参数
+    async function loadCoefficients() {
+        try {
+            const response1 = await fetch('/api/report-parameters/yuantong_permeability_coefficient/');
+            const result1 = await response1.json();
+            if (result1.status === 'success') {
+                coefficients.yuantong_permeability = parseFloat(result1.data.value);
+            }
+
+            const response2 = await fetch('/api/report-parameters/yuantong_sample_weight/');
+            const result2 = await response2.json();
+            if (result2.status === 'success') {
+                coefficients.yuantong_sample_weight = parseFloat(result2.data.value);
+            }
+
+            const response3 = await fetch('/api/report-parameters/yuantong_filter_area/');
+            const result3 = await response3.json();
+            if (result3.status === 'success') {
+                coefficients.yuantong_filter_area = parseFloat(result3.data.value);
+            }
+        } catch (error) {
+            console.warn('加载系数参数失败，使用默认值:', error);
+        }
+    }
+
+    // 根据物料类型设置系数值
+    function updateCoefficientsByMaterialType() {
+        const materialType = document.getElementById('material_type')?.value;
+        if (!materialType) return;
+
+        if (materialType === '助熔煅烧品') {
+            // 从后台参数管理读取值，覆盖历史数据
+            const coefficientField = document.getElementById('yuantong_permeability_coefficient');
+            const sampleWeightField = document.getElementById('yuantong_sample_weight');
+            const filterAreaField = document.getElementById('yuantong_filter_area');
+
+            if (coefficientField) coefficientField.value = coefficients.yuantong_permeability || '';
+            if (sampleWeightField) sampleWeightField.value = coefficients.yuantong_sample_weight || '';
+            if (filterAreaField) filterAreaField.value = coefficients.yuantong_filter_area || '';
+        } else if (materialType === '煅烧品') {
+            // 使用动态加载的系数值，如果没有则使用默认值
+            const coefficientField = document.getElementById('yuantong_permeability_coefficient');
+            const sampleWeightField = document.getElementById('yuantong_sample_weight');
+            const filterAreaField = document.getElementById('yuantong_filter_area');
+
+            if (coefficientField) coefficientField.value = coefficients.yuantong_permeability || '6.4';
+            if (sampleWeightField) sampleWeightField.value = coefficients.yuantong_sample_weight || '5';
+            if (filterAreaField) filterAreaField.value = coefficients.yuantong_filter_area || '3.14';
+        }
+    }
+
+    // 根据物料类型更新字段可编辑性
+    function updateFieldEditability() {
+        const materialType = document.getElementById('material_type')?.value;
+        if (!materialType) return;
+
+        const yuantongCakeDensityField = document.getElementById('yuantong_cake_density');
+        const changfuCakeDensityField = document.getElementById('changfu_cake_density');
+        const wetCakeDensityField = document.getElementById('wet_cake_density');
+
+        if (materialType === '助熔煅烧品') {
+            // 助熔煅烧品：远通饼密度，长富饼密度两个字段不可编辑
+            if (yuantongCakeDensityField) {
+                yuantongCakeDensityField.readOnly = true;
+                yuantongCakeDensityField.style.backgroundColor = '#f5f5f5';
+                yuantongCakeDensityField.title = '此字段由系统自动计算';
+                // 清空远通饼密度和长富饼密度
+                yuantongCakeDensityField.value = '';
+            }
+            if (changfuCakeDensityField) {
+                changfuCakeDensityField.readOnly = true;
+                changfuCakeDensityField.style.backgroundColor = '#f5f5f5';
+                changfuCakeDensityField.title = '此字段由系统自动计算';
+                // 清空长富饼密度
+                changfuCakeDensityField.value = '';
+            }
+            if (wetCakeDensityField) {
+                wetCakeDensityField.readOnly = false;
+                wetCakeDensityField.style.backgroundColor = '';
+                wetCakeDensityField.title = '';
+            }
+        } else if (materialType === '煅烧品') {
+            // 煅烧品：饼密度字段不可编辑
+            if (wetCakeDensityField) {
+                wetCakeDensityField.readOnly = true;
+                wetCakeDensityField.style.backgroundColor = '#f5f5f5';
+                wetCakeDensityField.title = '此字段由系统自动计算';
+                // 清空饼密度
+                wetCakeDensityField.value = '';
+            }
+            if (yuantongCakeDensityField) {
+                yuantongCakeDensityField.readOnly = false;
+                yuantongCakeDensityField.style.backgroundColor = '';
+                yuantongCakeDensityField.title = '';
+            }
+            if (changfuCakeDensityField) {
+                changfuCakeDensityField.readOnly = false;
+                changfuCakeDensityField.style.backgroundColor = '';
+                changfuCakeDensityField.title = '';
+            }
+        }
+    }
+
+    // 执行所有计算
+    function calculateAllValues(skipAutoFill = false) {
+        const materialType = document.getElementById('material_type')?.value;
+        if (!materialType) return;
+
+        if (materialType === '助熔煅烧品') {
+            calculateForFluxCalcined();
+        } else if (materialType === '煅烧品') {
+            calculateForCalcined(skipAutoFill);
+        }
+    }
+
+    // 助熔煅烧品的计算逻辑
+    function calculateForFluxCalcined() {
+        const yuantongCoefficient = parseFloat(document.getElementById('yuantong_permeability_coefficient')?.value) || 0;
+        const yuantongSampleWeight = parseFloat(document.getElementById('yuantong_sample_weight')?.value) || 0;
+        const yuantongFilterArea = parseFloat(document.getElementById('yuantong_filter_area')?.value) || 0;
+        const cakeThickness = parseFloat(document.getElementById('cake_thickness')?.value) || 0;
+        const waterViscosity = parseFloat(document.getElementById('water_viscosity')?.value) || 0;
+        const filterTime = parseFloat(document.getElementById('filter_time')?.value) || 0;
+
+        // 远通渗透率 = 远通渗透率系数 * 饼厚 * 水黏度 / 过滤时间
+        let yuantongPermeability = null;
+        if (yuantongCoefficient && cakeThickness && waterViscosity && filterTime) {
+            yuantongPermeability = (yuantongCoefficient * cakeThickness * waterViscosity / filterTime);
+            document.getElementById('permeability').value = yuantongPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability').value = '';
+        }
+
+        // 长富渗透率 = (远通渗透率 - 0.366) / 1.23
+        if (yuantongPermeability !== null) {
+            const changfuPermeability = (yuantongPermeability - 0.366) / 1.23;
+            document.getElementById('permeability_long').value = changfuPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability_long').value = '';
+        }
+
+        // 饼密度 = 远通样品重量 / 远通过滤面积 / 饼厚
+        if (yuantongSampleWeight && yuantongFilterArea && cakeThickness) {
+            const cakeDensity = yuantongSampleWeight / yuantongFilterArea / cakeThickness;
+            document.getElementById('wet_cake_density').value = cakeDensity.toFixed(3);
+        } else {
+            document.getElementById('wet_cake_density').value = '';
+        }
+
+        // 远通饼密度和长富饼密度不可编辑，由系统计算
+        document.getElementById('yuantong_cake_density').value = '';
+        document.getElementById('changfu_cake_density').value = '';
+    }
+
+    // 煅烧品的特殊计算逻辑（用于物料类型切换时）
+    function calculateForCalcinedSpecial() {
+        const yuantongCoefficient = parseFloat(document.getElementById('yuantong_permeability_coefficient')?.value) || 0;
+        const yuantongSampleWeight = parseFloat(document.getElementById('yuantong_sample_weight')?.value) || 0;
+        const yuantongFilterArea = parseFloat(document.getElementById('yuantong_filter_area')?.value) || 0;
+        const cakeThickness = parseFloat(document.getElementById('cake_thickness')?.value) || 0;
+        const waterViscosity = parseFloat(document.getElementById('water_viscosity')?.value) || 0;
+        const filterTime = parseFloat(document.getElementById('filter_time')?.value) || 0;
+
+        // 远通渗透率 = 远通渗透率系数 * 饼厚 * 水粘度 / 过滤时间
+        let yuantongPermeability = null;
+        if (yuantongCoefficient && cakeThickness && waterViscosity && filterTime) {
+            yuantongPermeability = (yuantongCoefficient * cakeThickness * waterViscosity / filterTime);
+            document.getElementById('permeability').value = yuantongPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability').value = '';
+        }
+
+        // 长富渗透率 = 远通渗透率 - 0.02
+        if (yuantongPermeability !== null) {
+            const changfuPermeability = yuantongPermeability - 0.02;
+            document.getElementById('permeability_long').value = changfuPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability_long').value = '';
+        }
+
+        // 饼密度字段保持为空（已在updateFieldEditability中清空）
+        document.getElementById('wet_cake_density').value = '';
+
+        // 自动计算并填充远通饼密度和长富饼密度
+        if (yuantongSampleWeight && yuantongFilterArea && cakeThickness) {
+            const yuantongCakeDensity = yuantongSampleWeight / yuantongFilterArea / cakeThickness;
+
+            // 自动填充远通饼密度
+            const yuantongCakeDensityField = document.getElementById('yuantong_cake_density');
+            if (yuantongCakeDensityField) {
+                yuantongCakeDensityField.value = yuantongCakeDensity.toFixed(3);
+            }
+
+            // 自动填充长富饼密度
+            const changfuCakeDensityField = document.getElementById('changfu_cake_density');
+            if (changfuCakeDensityField) {
+                const changfuCakeDensity = yuantongCakeDensity - 0.02;
+                changfuCakeDensityField.value = changfuCakeDensity.toFixed(3);
+            }
+        } else {
+            document.getElementById('yuantong_cake_density').value = '';
+            document.getElementById('changfu_cake_density').value = '';
+        }
+    }
+
+    // 助熔煅烧品的特殊计算逻辑（用于物料类型切换时）
+    function calculateForFluxCalcinedSpecial() {
+        const yuantongCoefficient = parseFloat(document.getElementById('yuantong_permeability_coefficient')?.value) || 0;
+        const yuantongSampleWeight = parseFloat(document.getElementById('yuantong_sample_weight')?.value) || 0;
+        const yuantongFilterArea = parseFloat(document.getElementById('yuantong_filter_area')?.value) || 0;
+        const cakeThickness = parseFloat(document.getElementById('cake_thickness')?.value) || 0;
+        const waterViscosity = parseFloat(document.getElementById('water_viscosity')?.value) || 0;
+        const filterTime = parseFloat(document.getElementById('filter_time')?.value) || 0;
+
+        // 远通渗透率 = 远通渗透率系数 * 饼厚 * 水黏度 / 过滤时间
+        let yuantongPermeability = null;
+        if (yuantongCoefficient && cakeThickness && waterViscosity && filterTime) {
+            yuantongPermeability = (yuantongCoefficient * cakeThickness * waterViscosity / filterTime);
+            document.getElementById('permeability').value = yuantongPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability').value = '';
+        }
+
+        // 长富渗透率 = (远通渗透率 - 0.366) / 1.23
+        if (yuantongPermeability !== null) {
+            const changfuPermeability = (yuantongPermeability - 0.366) / 1.23;
+            document.getElementById('permeability_long').value = changfuPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability_long').value = '';
+        }
+
+        // 自动计算并填充饼密度
+        if (yuantongSampleWeight && yuantongFilterArea && cakeThickness) {
+            const cakeDensity = yuantongSampleWeight / yuantongFilterArea / cakeThickness;
+            document.getElementById('wet_cake_density').value = cakeDensity.toFixed(3);
+        } else {
+            document.getElementById('wet_cake_density').value = '';
+        }
+
+        // 远通饼密度和长富饼密度字段保持为空（已在updateFieldEditability中清空）
+        document.getElementById('yuantong_cake_density').value = '';
+        document.getElementById('changfu_cake_density').value = '';
+    }
+
+    // 煅烧品的计算逻辑
+    function calculateForCalcined(skipAutoFill = false) {
+        const yuantongCoefficient = parseFloat(document.getElementById('yuantong_permeability_coefficient')?.value) || 0;
+        const yuantongSampleWeight = parseFloat(document.getElementById('yuantong_sample_weight')?.value) || 0;
+        const yuantongFilterArea = parseFloat(document.getElementById('yuantong_filter_area')?.value) || 0;
+        const cakeThickness = parseFloat(document.getElementById('cake_thickness')?.value) || 0;
+        const waterViscosity = parseFloat(document.getElementById('water_viscosity')?.value) || 0;
+        const filterTime = parseFloat(document.getElementById('filter_time')?.value) || 0;
+
+        // 远通渗透率 = 远通渗透率系数 * 饼厚 * 水粘度 / 过滤时间
+        let yuantongPermeability = null;
+        if (yuantongCoefficient && cakeThickness && waterViscosity && filterTime) {
+            yuantongPermeability = (yuantongCoefficient * cakeThickness * waterViscosity / filterTime);
+            document.getElementById('permeability').value = yuantongPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability').value = '';
+        }
+
+        // 长富渗透率 = 远通渗透率 - 0.02
+        if (yuantongPermeability !== null) {
+            const changfuPermeability = yuantongPermeability - 0.02;
+            document.getElementById('permeability_long').value = changfuPermeability.toFixed(4);
+        } else {
+            document.getElementById('permeability_long').value = '';
+        }
+
+        // 饼密度计算 - 在编辑模式下，只有当字段为空时才自动计算
+        if (yuantongSampleWeight && yuantongFilterArea && cakeThickness) {
+            const yuantongCakeDensity = yuantongSampleWeight / yuantongFilterArea / cakeThickness;
+
+            // 检查饼密度字段是否为空，只有在空的情况下才自动填充
+            const wetCakeDensityField = document.getElementById('wet_cake_density');
+            if (wetCakeDensityField && !wetCakeDensityField.value.trim() && !skipAutoFill) {
+                wetCakeDensityField.value = yuantongCakeDensity.toFixed(3);
+            }
+
+            // 远通饼密度和长富饼密度字段处理
+            const yuantongCakeDensityField = document.getElementById('yuantong_cake_density');
+            const changfuCakeDensityField = document.getElementById('changfu_cake_density');
+
+            // 只有当字段为空时才自动计算
+            if (!skipAutoFill) {
+                if (yuantongCakeDensityField && !yuantongCakeDensityField.value.trim()) {
+                    yuantongCakeDensityField.value = yuantongCakeDensity.toFixed(3);
+                }
+                if (changfuCakeDensityField && !changfuCakeDensityField.value.trim()) {
+                    const changfuCakeDensity = yuantongCakeDensity - 0.02;
+                    changfuCakeDensityField.value = changfuCakeDensity.toFixed(3);
+                }
+            }
+        }
+    }
+
+    // 初始化系数参数
+    loadCoefficients().then(() => {
+        // 获取当前物料类型
+        const materialType = document.getElementById('material_type')?.value;
+
+        // 如果是助熔煅烧品，使用渗透率系数管理中的最新值，覆盖历史数据
+        if (materialType === '助熔煅烧品') {
+            // 从后台参数管理读取值，覆盖历史数据
+            const coefficientField = document.getElementById('yuantong_permeability_coefficient');
+            const sampleWeightField = document.getElementById('yuantong_sample_weight');
+            const filterAreaField = document.getElementById('yuantong_filter_area');
+
+            if (coefficientField) coefficientField.value = coefficients.yuantong_permeability || '';
+            if (sampleWeightField) sampleWeightField.value = coefficients.yuantong_sample_weight || '';
+            if (filterAreaField) filterAreaField.value = coefficients.yuantong_filter_area || '';
+        }
+        // 如果是煅烧品，保持历史数据不变，使用固定值
+        else if (materialType === '煅烧品') {
+            // 使用固定值，但如果有历史数据则保留历史数据
+            const coefficientField = document.getElementById('yuantong_permeability_coefficient');
+            const sampleWeightField = document.getElementById('yuantong_sample_weight');
+            const filterAreaField = document.getElementById('yuantong_filter_area');
+
+            // 只有当字段为空时才设置默认值
+            if (coefficientField && !coefficientField.value) coefficientField.value = '6.4';
+            if (sampleWeightField && !sampleWeightField.value) sampleWeightField.value = '5';
+            if (filterAreaField && !filterAreaField.value) filterAreaField.value = '3.14';
+        }
+
+        // 设置字段可编辑性
+        updateFieldEditability();
+        // 在编辑模式下，跳过自动计算，尊重数据库中的值
+        calculateAllValues(true);
+    });
+
+    // 为物料类型添加变化监听器
+    const materialTypeSelect = document.getElementById('material_type');
+    if (materialTypeSelect) {
+        materialTypeSelect.addEventListener('change', function() {
+            updateCoefficientsByMaterialType();
+            updateFieldEditability();
+
+            // 根据切换到的物料类型决定是否自动填充
+            if (this.value === '煅烧品') {
+                // 切换到煅烧品：清空饼密度，但自动填充远通饼密度和长富饼密度
+                calculateForCalcinedSpecial();
+            } else if (this.value === '助熔煅烧品') {
+                // 切换到助熔煅烧品：清空远通饼密度和长富饼密度，但自动填充饼密度
+                calculateForFluxCalcinedSpecial();
+            } else {
+                // 其他情况，跳过自动填充
+                calculateAllValues(true);
+            }
+        });
+    }
+
+    // 为相关字段添加事件监听器
+    const calculationFields = ['yuantong_permeability_coefficient', 'yuantong_sample_weight', 'yuantong_filter_area', 'cake_thickness', 'water_viscosity', 'filter_time'];
+    calculationFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', calculateAllValues);
+            field.addEventListener('change', calculateAllValues);
+        }
+    });
+
+    // 获取CSRF Token的函数
+    function getCSRFToken() {
+        const name = 'csrftoken';
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // 表单提交处理
+    const editFormElement = document.getElementById('editForm');
+
+    if (!editFormElement) {
+        console.error('未找到editForm表单元素！');
+        return;
+    }
+
+    const fields = [
+        'date', 'time', 'material_type', 'yuantong_permeability_coefficient', 'yuantong_sample_weight', 'yuantong_filter_area',
+        'moisture_after_drying', 'alkali_content', 'flux', 'product_name',
+        'permeability', 'permeability_long', 'filter_time', 'water_viscosity', 'cake_thickness',
+        'wet_cake_density', 'yuantong_cake_density', 'changfu_cake_density', 'bulk_density',
+        'sieving_14m', 'sieving_30m', 'sieving_40m', 'sieving_80m', 'sieving_100m', 'sieving_150m',
+        'sieving_200m', 'sieving_325m', 'fe_ion', 'ca_ion', 'al_ion', 'brightness',
+        'swirl', 'odor', 'conductance', 'ph', 'oil_absorption', 'water_absorption',
+        'moisture', 'bags', 'packaging', 'tons', 'batch_number', 'remarks', 'shift'
+    ];
+
+    editFormElement.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const data = {};
+        fields.forEach(field => {
+            const el = document.getElementById(field);
+            if (el) {
+                data[field] = el.value; // 不跳过空字符串
+            }
+        });
+
+        // 验证必填字段 - 只检查真正必需的字段
+        const requiredFields = ['date', 'product_name', 'shift'];
+
+        const missingFields = requiredFields.filter(field => {
+            const element = document.getElementById(field);
+            return !element || !element.value.trim();
+        });
+
+        if (missingFields.length > 0) {
+            alert('请填写必填字段: ' + missingFields.join(', '));
+            return;
+        }
+
+        // 验证数据对象不为空
+        if (Object.keys(data).length === 0) {
+            alert('没有收集到有效数据，请检查表单');
+            return;
+        }
+
+        // 如果没有收集到数据，发送一个最小的测试数据
+        if (Object.keys(data).length === 0) {
+            data = {
+                date: document.getElementById('date')?.value || '2023-01-01',
+                product_name: document.getElementById('product_name')?.value || 'TEST',
+                shift: document.getElementById('shift')?.value || '1'
+            };
+        }
+
+        try {
+            const url = `/yuantong-report-edit/${reportId}/`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Referer': window.location.href
+                },
+                body: JSON.stringify(data),
+                credentials: 'same-origin'
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert('保存成功');
+                window.location.href = '{% url "yuantong_report_history" %}';
+            } else {
+                alert('保存失败: ' + (result.message || '未知错误'));
+            }
+        } catch (error) {
+            alert('保存失败，请稍后重试');
+        }
+    });
+
+    // flatpickr日期和时间控件初始化
+    if (typeof flatpickr !== 'undefined') {
+        flatpickr('#date', {
+            dateFormat: 'Y-m-d',
+            locale: 'zh'
+        });
+        flatpickr('#time', {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: 'H:i',
+            time_24hr: true,
+            locale: 'zh'
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,642 @@
+/* 移动端响应式适配样式 */
+
+/* 基础移动端设置 */
+@media (max-width: 768px) {
+    /* 全局移动端优化 */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+        font-size: 14px;
+        line-height: 1.5;
+        overflow-x: hidden;
+    }
+    
+    /* 应用容器移动端优化 */
+    .app-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* 头部移动端优化 */
+    .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 8px 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+    }
+    
+    .mobile-menu-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .mobile-menu-btn:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.05);
+    }
+    
+    .mobile-menu-btn .material-icons {
+        font-size: 20px;
+        color: #333;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .user-info .material-icons {
+        font-size: 18px;
+        color: #666;
+        flex-shrink: 0;
+    }
+    
+    .username {
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .department {
+        font-size: 12px;
+        color: #666;
+        display: none; /* 移动端隐藏部门信息 */
+    }
+    
+    .logout-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        color: #666;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .logout-btn:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.05);
+    }
+    
+    .logout-btn .material-icons {
+        font-size: 18px;
+    }
+    
+    .logout-text {
+        display: none;
+    }
+    
+    /* 主容器移动端优化 */
+    .main-container {
+        display: flex;
+        flex: 1;
+        margin-top: 56px; /* 为固定头部留出空间 */
+        position: relative;
+    }
+    
+    /* 侧边栏移动端优化 */
+    .side-menu {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 280px;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        z-index: 1001;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .side-menu.expanded {
+        left: 0;
+    }
+    
+    /* 移动端遮罩层 */
+    .mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* 主内容区域移动端优化 */
+    .main-content {
+        flex: 1;
+        padding: 12px;
+        background: #f5f7fa;
+        min-height: calc(100vh - 56px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* 页面容器移动端优化 */
+    .page-container {
+        padding: 0;
+        max-width: 100%;
+    }
+    
+    /* 页面头部移动端优化 */
+    .page-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+    
+    .page-title {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .welcome-text {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1976d2;
+        margin: 0;
+        line-height: 1.3;
+    }
+    
+    /* 操作按钮移动端优化 */
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        min-height: 44px;
+        box-sizing: border-box;
+        white-space: nowrap;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.9);
+        color: #1976d2;
+        border: 1px solid rgba(25, 118, 210, 0.2);
+    }
+    
+    .btn-secondary:hover, .btn-secondary:active {
+        background: rgba(255, 255, 255, 1);
+        transform: translateY(-1px);
+    }
+    
+    .btn .material-icons {
+        font-size: 16px;
+        margin-right: 6px;
+    }
+    
+    /* 表单容器移动端优化 */
+    .form-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        margin-bottom: 16px;
+    }
+    
+    /* 表单组件移动端优化 */
+    .form-group {
+        margin-bottom: 16px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 14px;
+        border: 2px solid #e3f2fd;
+        border-radius: 10px;
+        font-size: 16px; /* 防止iOS缩放 */
+        background: rgba(255, 255, 255, 0.9);
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+        -webkit-appearance: none;
+        min-height: 44px; /* 触摸友好 */
+    }
+    
+    .form-control:focus {
+        border-color: #2196f3;
+        background: white;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    }
+    
+    /* 下拉选择器移动端优化 */
+    select.form-control {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232196f3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px;
+        padding-right: 36px;
+        cursor: pointer;
+    }
+    
+    /* 文本区域移动端优化 */
+    textarea.form-control {
+        min-height: 80px;
+        resize: vertical;
+        font-family: inherit;
+        line-height: 1.4;
+    }
+    
+    /* 提交按钮移动端优化 */
+    .submit-btn {
+        width: 100%;
+        margin-top: 20px;
+        padding: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+        min-height: 48px;
+    }
+    
+    .submit-btn:hover, .submit-btn:active {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+    }
+    
+    .submit-btn:disabled {
+        opacity: 0.6;
+        transform: none;
+        cursor: not-allowed;
+    }
+    
+    /* 消息提示移动端优化 */
+    .message {
+        position: fixed;
+        top: 70px;
+        left: 12px;
+        right: 12px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: slideInDown 0.3s ease-out;
+    }
+    
+    @keyframes slideInDown {
+        from {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    /* 侧边栏菜单移动端优化 */
+    .menu-container {
+        padding: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .menu-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        background: rgba(25, 118, 210, 0.05);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .menu-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1976d2;
+        margin: 0;
+    }
+    
+    .menu-close-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .menu-close-btn:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.05);
+    }
+    
+    .menu-close-btn .material-icons {
+        font-size: 16px;
+        color: #666;
+    }
+    
+    .menu-nav {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .menu-group {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .menu-header {
+        display: flex;
+        align-items: center;
+        padding: 14px 16px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        color: #333;
+    }
+    
+    .menu-header:hover {
+        background-color: rgba(25, 118, 210, 0.05);
+    }
+    
+    .menu-header .material-icons {
+        margin-right: 12px;
+        font-size: 18px;
+        color: #666;
+    }
+    
+    .menu-title {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .menu-arrow {
+        font-size: 12px;
+        color: #999;
+        transition: transform 0.2s;
+    }
+    
+    .menu-group.active .menu-arrow {
+        transform: rotate(90deg);
+    }
+    
+    .submenu {
+        max-height: none;
+        overflow: visible;
+        transition: max-height 0.3s ease;
+    }
+    
+    .submenu-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px 12px 48px;
+        color: #666;
+        text-decoration: none;
+        font-size: 13px;
+        transition: background-color 0.2s;
+        min-height: 44px;
+    }
+    
+    .submenu-item:hover {
+        background-color: rgba(25, 118, 210, 0.05);
+        color: #333;
+    }
+    
+    .submenu-item .material-icons {
+        margin-right: 8px;
+        font-size: 16px;
+    }
+    
+    .submenu-item.active {
+        background-color: rgba(25, 118, 210, 0.1);
+        color: #1976d2;
+    }
+    
+    /* 模态框移动端优化 */
+    .modal-dialog {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+    }
+    
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    .modal-header {
+        padding: 16px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .modal-body {
+        padding: 16px;
+    }
+    
+    .modal-footer {
+        padding: 16px;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    /* 表格移动端优化 */
+    .data-table {
+        font-size: 12px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 8px 6px;
+    }
+    
+    /* 统计卡片移动端优化 */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .stat-card {
+        padding: 16px;
+    }
+    
+    /* 特殊小屏幕优化 */
+    @media (max-width: 480px) {
+        .action-buttons {
+            grid-template-columns: 1fr;
+        }
+        
+        .page-header {
+            padding: 12px;
+        }
+        
+        .form-container {
+            padding: 12px;
+        }
+        
+        .welcome-text {
+            font-size: 16px;
+        }
+        
+        .btn {
+            font-size: 13px;
+            padding: 10px 14px;
+        }
+    }
+    
+    /* 超小屏幕优化 */
+    @media (max-width: 360px) {
+        .header {
+            padding: 6px 8px;
+        }
+        
+        .mobile-menu-btn,
+        .logout-btn {
+            width: 36px;
+            height: 36px;
+        }
+        
+        .username {
+            font-size: 13px;
+        }
+        
+        .main-content {
+            padding: 8px;
+        }
+        
+        .page-header,
+        .form-container {
+            padding: 10px;
+        }
+    }
+}
+
+/* 横屏模式优化 */
+@media (max-width: 768px) and (orientation: landscape) {
+    .header {
+        height: 48px;
+    }
+    
+    .main-container {
+        margin-top: 48px;
+    }
+    
+    .side-menu {
+        width: 320px;
+    }
+    
+    .main-content {
+        min-height: calc(100vh - 48px);
+    }
+}
+
+/* 高分辨率屏幕优化 */
+@media (max-width: 768px) and (-webkit-min-device-pixel-ratio: 2) {
+    .form-control {
+        border-width: 1px;
+    }
+    
+    .btn {
+        border-width: 1px;
+    }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+    .btn:hover {
+        transform: none;
+    }
+    
+    .form-control:focus {
+        transform: none;
+    }
+    
+    .mobile-menu-btn:hover,
+    .logout-btn:hover {
+        transform: none;
+    }
+}

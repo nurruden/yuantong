@@ -1,0 +1,174 @@
+/* 图标重复显示修复样式 */
+
+/* 1. 禁用所有备用图标系统 */
+.material-icons::before,
+.material-icons::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* 2. 确保只显示Material Icons字体 */
+.material-icons {
+    font-family: 'Material Icons', sans-serif !important;
+    font-weight: normal !important;
+    font-style: normal !important;
+    font-size: 24px !important;
+    line-height: 1 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    display: inline-block !important;
+    white-space: nowrap !important;
+    word-wrap: normal !important;
+    direction: ltr !important;
+    -webkit-font-feature-settings: 'liga' !important;
+    -webkit-font-smoothing: antialiased !important;
+    font-feature-settings: 'liga' !important;
+    vertical-align: middle !important;
+    color: #4fc3f7 !important;
+    margin-right: 4px !important;
+    position: static !important;
+}
+
+/* 3. 移除所有可能导致重复的样式 */
+.material-icons[data-icon] {
+    /* 确保data-icon属性不影响显示 */
+    font-size: 24px !important;
+    color: #4fc3f7 !important;
+}
+
+/* 4. 特定场景的图标样式 */
+.mobile-menu-btn .material-icons {
+    font-size: 20px !important;
+    color: #333 !important;
+    margin: 0 !important;
+}
+
+.user-info .material-icons {
+    font-size: 18px !important;
+    color: #666 !important;
+    margin: 0 !important;
+}
+
+.logout-btn .material-icons {
+    font-size: 18px !important;
+    color: #666 !important;
+    margin: 0 !important;
+}
+
+/* 5. 按钮中的图标 */
+.btn .material-icons {
+    font-size: 16px !important;
+    margin-right: 0.25rem !important;
+}
+
+.btn-sm .material-icons {
+    font-size: 14px !important;
+    margin-right: 0.125rem !important;
+}
+
+/* 6. 菜单中的图标 */
+.menu-header .material-icons {
+    font-size: 20px !important;
+    color: #666 !important;
+    margin-right: 12px !important;
+}
+
+.submenu-item .material-icons {
+    font-size: 16px !important;
+    margin-right: 8px !important;
+}
+
+/* 7. 移动端优化 */
+@media (max-width: 768px) {
+    .material-icons {
+        font-size: 20px !important;
+    }
+    
+    .mobile-menu-btn .material-icons {
+        font-size: 20px !important;
+        color: #333 !important;
+    }
+    
+    .user-info .material-icons {
+        font-size: 18px !important;
+        color: #666 !important;
+    }
+}
+
+/* 8. 强制移除所有备用图标 */
+.material-icons[data-icon="menu"]::before,
+.material-icons[data-icon="person"]::before,
+.material-icons[data-icon="logout"]::before,
+.material-icons[data-icon="close"]::before,
+.material-icons[data-icon="save"]::before,
+.material-icons[data-icon="edit"]::before,
+.material-icons[data-icon="delete"]::before,
+.material-icons[data-icon="add"]::before,
+.material-icons[data-icon="search"]::before,
+.material-icons[data-icon="chevron_right"]::before,
+.material-icons[data-icon="star"]::before {
+    display: none !important;
+    content: none !important;
+}
+
+/* 9. 确保图标容器正确对齐 */
+.header-left,
+.user-info,
+.logout-btn,
+.mobile-menu-btn,
+.btn,
+.menu-header,
+.submenu-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+/* 10. 移除任何transform属性 */
+.material-icons {
+    transform: none !important;
+}
+
+/* 11. 确保图标文本内容正确显示 */
+.material-icons {
+    /* 确保图标文本内容可见 */
+    font-size: 24px !important;
+    color: #4fc3f7 !important;
+}
+
+/* 12. 特定图标的大小调整 */
+.material-icons[data-icon="menu"] {
+    font-size: 20px !important;
+}
+
+.material-icons[data-icon="person"] {
+    font-size: 18px !important;
+}
+
+.material-icons[data-icon="logout"] {
+    font-size: 18px !important;
+}
+
+.material-icons[data-icon="close"] {
+    font-size: 18px !important;
+}
+
+/* 13. 移除任何可能导致重复的JavaScript样式 */
+.material-icons[style*="font-size: 0"] {
+    font-size: 24px !important;
+}
+
+/* 14. 确保图标在flex容器中正确对齐 */
+.flex-container .material-icons {
+    flex-shrink: 0 !important;
+}
+
+/* 15. 移除任何伪元素 */
+.material-icons::before,
+.material-icons::after {
+    display: none !important;
+    content: none !important;
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+}

@@ -1,0 +1,22 @@
+<div id="orgModal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle">新增库存组织</h3>
+        <form id="orgForm">
+            <div class="modal-body">
+                <input type="hidden" id="orgId">
+                <div class="form-group">
+                    <label for="orgName">组织名称:</label>
+                    <input type="text" id="orgName" required>
+                </div>
+                <div class="form-group">
+                    <label for="orgCode">组织编码:</label>
+                    <input type="text" id="orgCode" required>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeOrgModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>

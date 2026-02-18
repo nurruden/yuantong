@@ -1,0 +1,943 @@
+{% extends "layouts/main_layout.html" %}
+{% load static %}
+{% load permission_tags %}
+
+{% block title %}用户权限管理 - 简化版{% endblock %}
+
+{% block extra_css %}
+<style>
+    .permission-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        padding: 0;
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 30px 20px 20px 20px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .page-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+    
+    .page-subtitle {
+        color: #7f8c8d;
+        font-size: 16px;
+    }
+    
+    .user-card {
+        background: #fff;
+        border: 1px solid #e1e8ed;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .user-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .user-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 18px;
+        margin-right: 15px;
+    }
+    
+    .user-info h3 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 20px;
+    }
+    
+    .user-info p {
+        margin: 5px 0 0 0;
+        color: #7f8c8d;
+        font-size: 14px;
+    }
+    
+    .module-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .module-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .permission-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .permission-item {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .permission-item.enabled {
+        background: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+    
+    .permission-item.disabled {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+    
+    .permission-toggle {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+        margin-bottom: 10px;
+    }
+    
+    .permission-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .permission-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 30px;
+    }
+    
+    .permission-slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    .permission-toggle input:checked + .permission-slider {
+        background-color: #28a745;
+    }
+    
+    .permission-toggle input:checked + .permission-slider:before {
+        transform: translateX(30px);
+    }
+    
+    .permission-label {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+    
+    .permission-description {
+        font-size: 12px;
+        color: #6c757d;
+        line-height: 1.4;
+    }
+    
+    .save-button {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        margin-top: 15px;
+    }
+    
+    .save-button:hover {
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        transform: translateY(-1px);
+    }
+    
+    .save-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .status-message {
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-top: 10px;
+        font-size: 14px;
+        display: none;
+    }
+    
+    .status-message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .status-message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .quick-settings {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .quick-settings h3 {
+        margin: 0 0 15px 0;
+        color: #495057;
+        font-size: 16px;
+    }
+    
+    .quick-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+    
+    .quick-buttons .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .quick-buttons .btn-success {
+        background: #28a745;
+        color: white;
+    }
+    
+    .quick-buttons .btn-warning {
+        background: #ffc107;
+        color: #212529;
+    }
+    
+    .quick-buttons .btn-info {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .quick-buttons .btn:hover {
+        opacity: 0.8;
+        transform: translateY(-1px);
+    }
+    
+    .status-display {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 10px;
+        font-size: 14px;
+        min-height: 20px;
+    }
+    
+    /* 搜索区域样式 */
+    .search-container {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .search-form {
+        width: 100%;
+    }
+    
+    .search-row {
+        display: flex;
+        gap: 15px;
+        align-items: end;
+        flex-wrap: wrap;
+    }
+    
+    .search-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .search-group .form-label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #495057;
+        font-size: 14px;
+    }
+    
+    .search-group .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .search-group .form-control:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .search-group .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        margin-right: 10px;
+    }
+    
+    .search-group .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+    
+    .search-group .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .search-group .btn:hover {
+        opacity: 0.8;
+        transform: translateY(-1px);
+    }
+    
+    /* 用户卡片隐藏/显示样式 */
+    .user-card.hidden {
+        display: none;
+    }
+    
+    .user-card.visible {
+        display: block;
+    }
+    
+    /* 搜索结果统计 */
+    .search-results-info {
+        background: #e3f2fd;
+        border: 1px solid #bbdefb;
+        border-radius: 4px;
+        padding: 10px 15px;
+        margin-bottom: 15px;
+        font-size: 14px;
+        color: #1976d2;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="permission-container">
+    <div class="page-header">
+        <h1 class="page-title">用户权限管理 - 简化版</h1>
+        <p class="page-subtitle">管理所有QC报表的用户权限配置</p>
+        
+        <!-- 用户搜索区域 -->
+        <div class="search-container">
+            <div class="search-form">
+                <div class="search-row">
+                    <div class="search-group">
+                        <label class="form-label">搜索用户</label>
+                        <input type="text" id="userSearchInput" class="form-control" 
+                               placeholder="输入用户名、姓名或邮箱进行搜索" 
+                               value="{{ search_query }}">
+                    </div>
+                    <div class="search-group">
+                        <label class="form-label">用户状态</label>
+                        <select id="userStatusFilter" class="form-control">
+                            <option value="">全部用户</option>
+                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>启用用户</option>
+                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>禁用用户</option>
+                        </select>
+                    </div>
+                    <div class="search-group">
+                        <button class="btn btn-primary" onclick="searchUsers()">
+                            🔍 搜索
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearSearch()">
+                            🗑️ 清除
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 跨用户编辑快速设置 -->
+        <div class="quick-settings">
+            <h3>跨用户编辑快速设置</h3>
+            <div class="quick-buttons">
+                <button class="btn btn-success" onclick="enableCrossEdit()">
+                    ✅ 启用跨用户编辑
+                </button>
+                <button class="btn btn-warning" onclick="disableCrossEdit()">
+                    ❌ 禁用跨用户编辑
+                </button>
+                <button class="btn btn-info" onclick="checkCrossEditStatus()">
+                    🔍 检查状态
+                </button>
+            </div>
+            <div id="cross-edit-status" class="status-display"></div>
+        </div>
+    </div>
+    
+    <!-- 搜索结果信息 -->
+    <div id="search-results-info" class="search-results-info" style="display: none;">
+        <span id="search-results-text"></span>
+    </div>
+    
+    <!-- 用户统计信息 -->
+    <div class="search-results-info">
+        <strong>用户统计：</strong>
+        总共 {{ total_users }} 个用户
+        {% if search_query or status_filter %}
+        ，当前显示 {{ filtered_users_count }} 个用户
+        {% endif %}
+    </div>
+    
+    <div id="users-container" style="padding: 0 20px 20px 20px;">
+        {% for user in users %}
+        <div class="user-card" 
+             data-username="{{ user.username }}" 
+             data-first-name="{{ user.first_name|default:'' }}" 
+             data-last-name="{{ user.last_name|default:'' }}" 
+             data-email="{{ user.email|default:'' }}" 
+             data-is-active="{{ user.is_active }}">
+            <div class="user-header">
+                <div class="user-avatar">
+                    {{ user.username|first|upper }}
+                </div>
+                <div class="user-info">
+                    <h3>{{ user.username }}</h3>
+                    <p>{{ user.first_name }} {{ user.last_name }}</p>
+                    {% if user.email %}
+                    <p style="color: #6c757d; font-size: 12px;">{{ user.email }}</p>
+                    {% endif %}
+                    <p style="color: #6c757d; font-size: 12px;">
+                        状态: {% if user.is_active %}✅ 启用{% else %}❌ 禁用{% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            {% for module in modules %}
+            <div class="module-section">
+                <h4 class="module-title">{{ module.name }}</h4>
+                <div class="permission-grid">
+                    <div class="permission-item" id="view-{{ user.username }}-{{ module.code }}">
+                        <div class="permission-toggle">
+                            <input type="checkbox" id="view-check-{{ user.username }}-{{ module.code }}" 
+                                   {% if user_permissions|lookup:user.username|lookup:module.code|lookup:"view" %}checked{% endif %}>
+                            <span class="permission-slider"></span>
+                        </div>
+                        <div class="permission-label">查看权限</div>
+                        <div class="permission-description">可以查看{{ module.name }}数据</div>
+                    </div>
+                    
+                    <div class="permission-item" id="edit-{{ user.username }}-{{ module.code }}">
+                        <div class="permission-toggle">
+                            <input type="checkbox" id="edit-check-{{ user.username }}-{{ module.code }}"
+                                   {% if user_permissions|lookup:user.username|lookup:module.code|lookup:"edit" %}checked{% endif %}>
+                            <span class="permission-slider"></span>
+                        </div>
+                        <div class="permission-label">编辑权限</div>
+                        <div class="permission-description">可以创建和编辑自己的数据</div>
+                    </div>
+                    
+                    <div class="permission-item" id="edit-others-{{ user.username }}-{{ module.code }}">
+                        <div class="permission-toggle">
+                            <input type="checkbox" id="edit-others-check-{{ user.username }}-{{ module.code }}"
+                                   {% if user_permissions|lookup:user.username|lookup:module.code|has_edit_others_permission %}checked{% endif %}>
+                            <span class="permission-slider"></span>
+                        </div>
+                        <div class="permission-label">跨用户编辑</div>
+                        <div class="permission-description">可以编辑他人录入的数据</div>
+                    </div>
+                    
+                    <div class="permission-item" id="delete-{{ user.username }}-{{ module.code }}">
+                        <div class="permission-toggle">
+                            <input type="checkbox" id="delete-check-{{ user.username }}-{{ module.code }}"
+                                   {% if user_permissions|lookup:user.username|lookup:module.code|lookup:"delete" %}checked{% endif %}>
+                            <span class="permission-slider"></span>
+                        </div>
+                        <div class="permission-label">删除权限</div>
+                        <div class="permission-description">可以删除数据</div>
+                    </div>
+                    
+                    <div class="permission-item" id="manage-{{ user.username }}-{{ module.code }}">
+                        <div class="permission-toggle">
+                            <input type="checkbox" id="manage-check-{{ user.username }}-{{ module.code }}"
+                                   {% if user_permissions|lookup:user.username|lookup:module.code|lookup:"manage" %}checked{% endif %}>
+                            <span class="permission-slider"></span>
+                        </div>
+                        <div class="permission-label">管理权限</div>
+                        <div class="permission-description">拥有完整的管理权限</div>
+                    </div>
+                </div>
+                <button class="save-button" onclick="saveUserModulePermissions('{{ user.username }}', '{{ module.code }}')">
+                    保存{{ module.name }}权限
+                </button>
+                <div id="status-{{ user.username }}" class="status-message"></div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+// 权限类型定义
+const PERMISSION_TYPES = ['view', 'edit', 'edit-others', 'delete', 'manage'];
+
+// 获取CSRF Token
+function getCSRFToken() {
+    // 尝试从meta标签获取
+    const metaToken = document.querySelector('meta[name=csrf-token]');
+    if (metaToken) {
+        return metaToken.getAttribute('content');
+    }
+    
+    // 然后尝试从cookie获取
+    return getCookie('csrftoken');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// 保存用户模块权限
+async function saveUserModulePermissions(username, moduleCode) {
+    const statusDiv = document.getElementById(`status-${username}`);
+    const saveButton = document.querySelector(`[onclick="saveUserModulePermissions('${username}', '${moduleCode}')"]`);
+    
+    try {
+        saveButton.disabled = true;
+        saveButton.textContent = '保存中...';
+        statusDiv.style.display = 'none';
+        
+        // 收集权限数据
+        const permissions = {};
+        PERMISSION_TYPES.forEach(type => {
+            const checkbox = document.getElementById(`${type}-check-${username}-${moduleCode}`);
+            if (checkbox) {
+                permissions[type] = checkbox.checked;
+            } else {
+                console.error(`找不到复选框: ${type}-check-${username}-${moduleCode}`);
+                permissions[type] = false;
+            }
+        });
+        
+        // 发送请求
+        const csrfToken = getCSRFToken();
+        console.log('CSRF Token:', csrfToken);
+        console.log('Request data:', { username, moduleCode, permissions });
+        
+        const response = await fetch('/admin/api/update-user-permissions/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                username: username,
+                module_code: moduleCode,
+                permissions: permissions
+            })
+        });
+        
+        console.log('Response status:', response.status);
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            showStatus(statusDiv, 'success', data.message);
+            updatePermissionItems(username, moduleCode, permissions);
+        } else {
+            showStatus(statusDiv, 'error', data.message);
+        }
+        
+    } catch (error) {
+        showStatus(statusDiv, 'error', `保存失败：${error.message}`);
+    } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = `保存${moduleCode}权限`;
+    }
+}
+
+// 更新权限项显示状态
+function updatePermissionItems(username, moduleCode, permissions) {
+    PERMISSION_TYPES.forEach(type => {
+        const item = document.getElementById(`${type}-${username}-${moduleCode}`);
+        const checkbox = document.getElementById(`${type}-check-${username}-${moduleCode}`);
+        
+        if (item && checkbox) {
+            if (permissions[type]) {
+                item.classList.remove('disabled');
+                item.classList.add('enabled');
+            } else {
+                item.classList.remove('enabled');
+                item.classList.add('disabled');
+            }
+        } else {
+            console.error(`找不到权限项或复选框: ${type}-${username}-${moduleCode}`);
+        }
+    });
+}
+
+// 显示状态消息
+function showStatus(element, type, message) {
+    element.className = `status-message ${type}`;
+    element.textContent = message;
+    element.style.display = 'block';
+    
+    // 3秒后自动隐藏
+    setTimeout(() => {
+        element.style.display = 'none';
+    }, 3000);
+}
+
+// 跨用户编辑快速设置函数
+async function enableCrossEdit() {
+    const statusDiv = document.getElementById('cross-edit-status');
+    statusDiv.innerHTML = '正在启用跨用户编辑...';
+    
+    try {
+        const response = await fetch('/admin/api/update-user-permissions/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({
+                action: 'enable_cross_edit'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.status === 'success') {
+                statusDiv.innerHTML = '✅ 跨用户编辑已启用';
+                statusDiv.style.color = 'green';
+            } else {
+                statusDiv.innerHTML = `❌ 启用失败: ${data.message}`;
+                statusDiv.style.color = 'red';
+            }
+        } else {
+            statusDiv.innerHTML = `❌ 请求失败: ${response.status}`;
+            statusDiv.style.color = 'red';
+        }
+    } catch (error) {
+        statusDiv.innerHTML = `❌ 错误: ${error.message}`;
+        statusDiv.style.color = 'red';
+    }
+}
+
+async function disableCrossEdit() {
+    const statusDiv = document.getElementById('cross-edit-status');
+    statusDiv.innerHTML = '正在禁用跨用户编辑...';
+    
+    try {
+        const response = await fetch('/admin/api/update-user-permissions/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({
+                action: 'disable_cross_edit'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.status === 'success') {
+                statusDiv.innerHTML = '❌ 跨用户编辑已禁用';
+                statusDiv.style.color = 'orange';
+            } else {
+                statusDiv.innerHTML = `❌ 禁用失败: ${data.message}`;
+                statusDiv.style.color = 'red';
+            }
+        } else {
+            statusDiv.innerHTML = `❌ 请求失败: ${response.status}`;
+            statusDiv.style.color = 'red';
+        }
+    } catch (error) {
+        statusDiv.innerHTML = `❌ 错误: ${error.message}`;
+        statusDiv.style.color = 'red';
+    }
+}
+
+async function checkCrossEditStatus() {
+    const statusDiv = document.getElementById('cross-edit-status');
+    statusDiv.innerHTML = '正在检查状态...';
+    
+    try {
+        const response = await fetch('/admin/api/get-user-permissions/', {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.cross_edit_enabled) {
+                statusDiv.innerHTML = '✅ 跨用户编辑已启用';
+                statusDiv.style.color = 'green';
+            } else {
+                statusDiv.innerHTML = '❌ 跨用户编辑已禁用';
+                statusDiv.style.color = 'red';
+            }
+        } else {
+            statusDiv.innerHTML = `❌ 状态检查失败: ${response.status}`;
+            statusDiv.style.color = 'red';
+        }
+    } catch (error) {
+        statusDiv.innerHTML = `❌ 错误: ${error.message}`;
+        statusDiv.style.color = 'red';
+    }
+}
+
+// 搜索功能相关变量
+let allUsers = [];
+let filteredUsers = [];
+
+// 搜索用户功能
+function searchUsers() {
+    const searchInput = document.getElementById('userSearchInput');
+    const statusFilter = document.getElementById('userStatusFilter');
+    const searchResultsInfo = document.getElementById('search-results-info');
+    const searchResultsText = document.getElementById('search-results-text');
+    
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const statusValue = statusFilter.value;
+    
+    // 获取所有用户卡片
+    const userCards = document.querySelectorAll('.user-card');
+    let visibleCount = 0;
+    
+    userCards.forEach(card => {
+        const username = card.dataset.username.toLowerCase();
+        const firstName = (card.dataset.firstName || '').toLowerCase();
+        const lastName = (card.dataset.lastName || '').toLowerCase();
+        const email = (card.dataset.email || '').toLowerCase();
+        const isActive = card.dataset.isActive === 'True';
+        
+        let matchesSearch = true;
+        let matchesStatus = true;
+        
+        // 检查搜索条件
+        if (searchTerm) {
+            matchesSearch = username.includes(searchTerm) || 
+                           firstName.includes(searchTerm) || 
+                           lastName.includes(searchTerm) || 
+                           email.includes(searchTerm);
+        }
+        
+        // 检查状态过滤
+        if (statusValue) {
+            if (statusValue === 'active') {
+                matchesStatus = isActive;
+            } else if (statusValue === 'inactive') {
+                matchesStatus = !isActive;
+            }
+        }
+        
+        // 显示或隐藏用户卡片
+        if (matchesSearch && matchesStatus) {
+            card.classList.remove('hidden');
+            card.classList.add('visible');
+            visibleCount++;
+        } else {
+            card.classList.add('hidden');
+            card.classList.remove('visible');
+        }
+    });
+    
+    // 更新搜索结果信息
+    if (searchTerm || statusValue) {
+        let resultText = `找到 ${visibleCount} 个用户`;
+        if (searchTerm) {
+            resultText += ` (搜索: "${searchInput.value}")`;
+        }
+        if (statusValue) {
+            const statusText = statusValue === 'active' ? '启用' : '禁用';
+            resultText += ` (状态: ${statusText})`;
+        }
+        
+        searchResultsText.textContent = resultText;
+        searchResultsInfo.style.display = 'block';
+    } else {
+        searchResultsInfo.style.display = 'none';
+    }
+}
+
+// 清除搜索
+function clearSearch() {
+    const searchInput = document.getElementById('userSearchInput');
+    const statusFilter = document.getElementById('userStatusFilter');
+    const searchResultsInfo = document.getElementById('search-results-info');
+    
+    searchInput.value = '';
+    statusFilter.value = '';
+    
+    // 显示所有用户卡片
+    const userCards = document.querySelectorAll('.user-card');
+    userCards.forEach(card => {
+        card.classList.remove('hidden');
+        card.classList.add('visible');
+    });
+    
+    // 隐藏搜索结果信息
+    searchResultsInfo.style.display = 'none';
+}
+
+// 实时搜索功能（输入时自动搜索）
+function setupRealTimeSearch() {
+    const searchInput = document.getElementById('userSearchInput');
+    const statusFilter = document.getElementById('userStatusFilter');
+    
+    // 为搜索输入框添加实时搜索
+    searchInput.addEventListener('input', function() {
+        searchUsers();
+    });
+    
+    // 为状态过滤器添加实时搜索
+    statusFilter.addEventListener('change', function() {
+        searchUsers();
+    });
+    
+    // 添加回车键搜索
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchUsers();
+        }
+    });
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('简化版权限管理页面初始化完成');
+    
+    // 初始化搜索功能
+    setupRealTimeSearch();
+    
+    // 为所有权限项添加初始状态和事件监听
+    const users = document.querySelectorAll('[data-username]');
+    users.forEach(userCard => {
+        const username = userCard.dataset.username;
+        const moduleCodes = ['dongtai_qc_report', 'dayuan_qc_report', 'changfu_qc_report', 
+                           'yuantong_qc_report', 'yuantong2_qc_report', 'xinghui_qc_report', 'xinghui2_qc_report'];
+        
+        moduleCodes.forEach(moduleCode => {
+            PERMISSION_TYPES.forEach(type => {
+                const checkbox = document.getElementById(`${type}-check-${username}-${moduleCode}`);
+                const item = document.getElementById(`${type}-${username}-${moduleCode}`);
+                
+                if (checkbox && item) {
+                    // 设置初始状态
+                    if (checkbox.checked) {
+                        item.classList.add('enabled');
+                    } else {
+                        item.classList.add('disabled');
+                    }
+                    
+                    // 添加点击事件监听
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            item.classList.remove('disabled');
+                            item.classList.add('enabled');
+                        } else {
+                            item.classList.remove('enabled');
+                            item.classList.add('disabled');
+                        }
+                    });
+                    
+                    // 为整个权限项添加点击事件（点击任何地方都能切换）
+                    item.addEventListener('click', function(e) {
+                        if (e.target !== checkbox) {
+                            checkbox.checked = !checkbox.checked;
+                            checkbox.dispatchEvent(new Event('change'));
+                        }
+                    });
+                } else {
+                    console.error(`初始化时找不到权限项或复选框: ${type}-${username}-${moduleCode}`);
+                }
+            });
+        });
+    });
+    
+    // 初始化时检查跨用户编辑状态
+    checkCrossEditStatus();
+});
+</script>
+{% endblock %}

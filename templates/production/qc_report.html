@@ -1,0 +1,372 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="app-container">
+    <div class="header">
+        <div class="header-left">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <span class="material-icons" data-icon="menu">menu</span>
+            </button>
+            <div class="user-info">
+                <span class="material-icons" data-icon="person">person</span>
+                <span class="username">{{ user.first_name }}</span>
+                {% if user.last_name %}
+                    <span class="department">({{ user.last_name }})</span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="{% url 'logout' %}" class="logout-btn">
+            <span class="material-icons" data-icon="logout">logout</span>
+            <span class="logout-text">退出登录</span>
+        </a>
+    </div>
+    <div class="main-container">
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+        <div id="sideMenu" class="side-menu">
+            {% include 'shared/sidebar.html' %}
+        </div>
+        <div class="main-content" id="mainContentArea">
+            <div class="page-container">
+                <div class="page-title">
+                    <h1>QC报表管理</h1>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="window.location.href='{% url 'home' %}';">
+                            <span class="material-icons">home</span> 返回主页
+                        </button>
+                    </div>
+                </div>
+
+                <div class="report-cards">
+                    <a href="{% url 'dongtai_report' %}" class="report-card">
+                        <span class="material-icons">analytics</span>
+                        <h3>东泰报表</h3>
+                        <p>查看和管理东泰QC检测数据</p>
+                    </a>
+                    <a href="{% url 'dayuan_report' %}" class="report-card">
+                        <span class="material-icons">analytics</span>
+                        <h3>大塬报表</h3>
+                        <p>查看和管理大塬QC检测数据</p>
+                    </a>
+                    <a href="{% url 'xinghui_report' %}" class="report-card">
+                        <span class="material-icons">analytics</span>
+                        <h3>兴辉报表</h3>
+                        <p>查看和管理兴辉QC检测数据</p>
+                    </a>
+                    <a href="{% url 'changfu_report' %}" class="report-card">
+                        <span class="material-icons">analytics</span>
+                        <h3>长富报表</h3>
+                        <p>查看和管理长富QC检测数据</p>
+                    </a>
+                    <a href="{% url 'yuantong_report' %}" class="report-card">
+                        <span class="material-icons">analytics</span>
+                        <h3>远通报表</h3>
+                        <p>查看和管理远通QC检测数据</p>
+                    </a>
+                    <a href="{% url 'xinghui2_report' %}" class="report-card">
+                        <span class="material-icons">analytics</span>
+                        <h3>兴辉二线报表</h3>
+                        <p>查看和管理兴辉二线QC检测数据</p>
+                    </a>
+                    <a href="{% url 'yuantong2_report' %}" class="report-card">
+                        <span class="material-icons">analytics</span>
+                        <h3>远通二线报表</h3>
+                        <p>查看和管理远通二线QC检测数据</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block head_extra %}
+<link href="{% static 'libs/material-icons/material-icons.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/icon-alignment-fix.css' %}">
+<style>
+    .page-container {
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .page-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .page-title h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+    .report-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+        max-width: 800px;
+    }
+    .report-card {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+        text-decoration: none;
+        color: inherit;
+        text-align: center;
+    }
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    .report-card .material-icons {
+        font-size: 48px !important;
+        margin-bottom: 15px !important;
+        background: linear-gradient(135deg, #81d4fa, #a5d6a7) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        display: block !important;
+        width: 48px !important;
+        height: 48px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+    .report-card h3 {
+        margin: 0;
+        font-size: 20px;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    .report-card p {
+        margin: 0;
+        color: #666;
+        font-size: 14px;
+    }
+    .btn {
+        display: inline-block;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: background-color 0.3s;
+    }
+    .btn-secondary {
+        background: #e3f2fd;
+        color: #1976d2;
+        box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+    }
+    .btn-secondary:hover {
+        background: #b3e5fc;
+        color: #1565c0;
+    }
+    /* 图标样式已移至外部CSS文件 */
+
+    /* 移动端优化样式 */
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .mobile-menu-btn {
+        display: none !important;
+        background: none;
+        border: none;
+        padding: 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .mobile-menu-btn:hover {
+        background-color: #f0f2f5;
+    }
+
+    .mobile-menu-btn .material-icons {
+        font-size: 24px;
+        color: #666;
+        margin: 0;
+    }
+
+    /* 桌面端样式 */
+    @media (min-width: 769px) {
+        .mobile-menu-btn {
+            display: none !important;
+        }
+        
+        .side-menu {
+            position: static;
+            width: 250px;
+            height: calc(100vh - 64px);
+            background-color: #fff;
+            border-right: 1px solid #e0e0e0;
+        }
+        
+        .menu-close-btn {
+            display: none !important;
+        }
+        
+        .mobile-overlay {
+            display: none !important;
+        }
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+        .mobile-menu-btn {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+        
+        .mobile-menu-btn .material-icons {
+            color: #333 !important;
+            font-size: 20px !important;
+            margin: 0 !important;
+        }
+        
+        .header {
+            padding: 0.75rem 1rem;
+        }
+        
+        .user-info {
+            gap: 0.25rem;
+        }
+        
+        .user-info .material-icons {
+            font-size: 20px;
+        }
+        
+        .username {
+            font-size: 14px;
+        }
+        
+        .department {
+            font-size: 12px;
+        }
+        
+        .logout-text {
+            display: none;
+        }
+        
+        .logout-btn {
+            padding: 8px;
+            min-width: auto;
+        }
+        
+        .side-menu {
+            position: fixed;
+            left: -100%;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            z-index: 1001;
+            transition: left 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            background-color: #fff;
+            overflow-y: auto;
+        }
+        
+        .side-menu.expanded {
+            left: 0;
+        }
+        
+        .main-content {
+            margin-left: 0;
+            padding: 1rem;
+            height: calc(100vh - 60px);
+        }
+        
+        .page-container {
+            padding: 12px;
+        }
+        
+        .page-title {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+        }
+        
+        .report-cards {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        /* 在较大的移动设备上仍然保持两列 */
+        @media (min-width: 480px) and (max-width: 768px) {
+            .report-cards {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            .report-card {
+                padding: 15px;
+            }
+            
+            .report-card .material-icons {
+                font-size: 36px;
+            }
+            
+            .report-card h3 {
+                font-size: 16px;
+            }
+            
+            .report-card p {
+                font-size: 12px;
+            }
+        }
+        
+        .report-card {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/utils.js' %}"></script>
+<script>
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化图标替换
+    if (typeof initIconReplacement === 'function') {
+        initIconReplacement();
+    }
+    
+    // 移动端菜单功能
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sideMenu = document.getElementById('sideMenu');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+
+    if (mobileMenuBtn && sideMenu) {
+        mobileMenuBtn.addEventListener('click', function() {
+            sideMenu.classList.add('expanded');
+            if (mobileOverlay) {
+                mobileOverlay.style.display = 'block';
+            }
+        });
+
+        if (mobileOverlay) {
+            mobileOverlay.addEventListener('click', function() {
+                sideMenu.classList.remove('expanded');
+                mobileOverlay.style.display = 'none';
+            });
+        }
+    }
+});
+</script>
+{% endblock %} 

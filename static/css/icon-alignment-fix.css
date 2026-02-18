@@ -1,0 +1,194 @@
+/* 图标对齐修复样式 - 高优先级覆盖 */
+
+/* Material Icons 基础样式 - 使用更高优先级覆盖本地字体样式 */
+.material-icons,
+.btn .material-icons,
+.document-number .material-icons,
+.pagination-info .material-icons,
+.special-user-info .material-icons,
+.history-card-label .material-icons,
+.history-card-value .material-icons,
+.report-card .material-icons,
+.user-info .material-icons,
+.mobile-menu-btn .material-icons,
+.clear-btn .material-icons,
+.empty-state .material-icons {
+    font-family: 'Material Icons', sans-serif !important;
+    font-weight: normal !important;
+    font-style: normal !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    display: inline-block !important;
+    white-space: nowrap !important;
+    word-wrap: normal !important;
+    direction: ltr !important;
+    -webkit-font-feature-settings: 'liga' !important;
+    -webkit-font-smoothing: antialiased !important;
+    font-feature-settings: 'liga' !important;
+    vertical-align: middle !important;
+    margin-right: 4px !important;
+}
+
+/* 按钮中的图标对齐 */
+.btn .material-icons {
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+}
+
+/* 文档编号中的图标对齐 */
+.document-number .material-icons {
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+}
+
+/* 信息提示中的图标对齐 */
+.pagination-info .material-icons,
+.special-user-info .material-icons {
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+}
+
+/* 历史记录行中的图标对齐 */
+.history-card-label .material-icons,
+.history-card-value .material-icons {
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+}
+
+/* QC报表卡片中的图标对齐 */
+.report-card .material-icons {
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+    font-size: 48px !important;
+    width: 48px !important;
+    height: 48px !important;
+    display: block !important;
+    margin-bottom: 15px !important;
+}
+
+/* 用户信息中的图标对齐 */
+.user-info .material-icons {
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+}
+
+/* 移动菜单按钮中的图标对齐 */
+.mobile-menu-btn .material-icons {
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+}
+
+/* 清除按钮中的图标对齐 */
+.clear-btn .material-icons {
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+}
+
+/* 空状态中的图标对齐 */
+.empty-state .material-icons {
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    font-size: 48px !important;
+    width: 48px !important;
+    height: 48px !important;
+    margin-bottom: 16px !important;
+}
+
+/* 确保所有包含图标的元素都有正确的行高 */
+.btn,
+.document-number,
+.pagination-info,
+.special-user-info,
+.history-card-label,
+.history-card-value,
+.report-card,
+.user-info,
+.mobile-menu-btn,
+.clear-btn {
+    line-height: 1 !important;
+}
+
+/* 修复特定场景下的图标对齐 */
+.btn {
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+}
+
+.document-number,
+.pagination-info,
+.special-user-info,
+.history-card-label,
+.history-card-value,
+.user-info {
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.report-card {
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+/* 确保图标正确显示 */
+.material-icons {
+    /* 移除任何可能导致重复的伪元素 */
+}
+
+/* 系统设置图标特定修复 - 针对sitemap图标 */
+.submenu-item .material-icons[data-icon="sitemap"],
+.submenu-item .material-icons.sitemap-icon {
+    font-family: 'Material Icons', sans-serif !important;
+    font-weight: normal !important;
+    font-style: normal !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    word-wrap: normal !important;
+    direction: ltr !important;
+    -webkit-font-feature-settings: 'liga' !important;
+    -webkit-font-smoothing: antialiased !important;
+    font-feature-settings: 'liga' !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+    margin-right: 8px !important;
+    vertical-align: baseline !important;
+    position: relative !important;
+    flex-shrink: 0 !important;
+}
+
+/* 确保系统设置菜单项的对齐 */
+.submenu-item {
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+/* 移动端优化 */
+@media (max-width: 480px) {
+    .material-icons {
+        font-size: 18px !important;
+        width: 18px !important;
+        height: 18px !important;
+    }
+    
+    .report-card .material-icons {
+        font-size: 56px !important;
+        width: 56px !important;
+        height: 56px !important;
+    }
+    
+    .empty-state .material-icons {
+        font-size: 56px !important;
+        width: 56px !important;
+        height: 56px !important;
+    }
+} 

@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% block head_extra %}
+<style>
+    .page-container {
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .page-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .page-title h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+    .form-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #333;
+    }
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .form-control:focus {
+        border-color: #4CAF50;
+        outline: none;
+    }
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        background-size: 16px;
+        padding-right: 32px;
+    }
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+    .btn {
+        display: inline-block;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: background-color 0.3s;
+    }
+    .btn-primary {
+    background: linear-gradient(90deg, #81d4fa 0%, #a5d6a7 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+}
+.btn-primary:hover {
+    background: linear-gradient(90deg, #4fc3f7 0%, #66bb6a 100%);
+    color: #fff;
+}
+.btn-secondary {
+    background: #e3f2fd;
+    color: #1976d2;
+    box-shadow: 0 2px 8px rgba(129,212,250,0.08);
+}
+.btn-secondary:hover {
+    background: #b3e5fc;
+    color: #1565c0;
+}
+.material-icons {
+    vertical-align: middle;
+    color: #4fc3f7;
+    font-size: 20px;
+    margin-right: 4px;
+}
+.action-buttons .btn {
+    border: none;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+.submit-btn {
+    width: 100%;
+    margin-top: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-title">
+        <h1>编辑原土入库记录</h1>
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="window.location.href='{% url 'production_history' %}'">
+                <span class="material-icons">history</span> 历史记录
+            </button>
+            <button class="btn btn-secondary" onclick="window.location.href='{% url 'home' %}'">
+                <span class="material-icons">home</span> 返回主页
+            </button>
+        </div>
+    </div>
+    <div class="form-container">
+        <form id="editRawSoilForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="fnumber">单据编号</label>
+                <input type="text" id="fnumber" name="fnumber" class="form-control" value="{{ record.fnumber }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="bizDate">业务日期</label>
+                <input type="date" id="bizDate" name="bizDate" class="form-control" value="{{ record.bizDate|default_if_none:''|slice:':10' }}" required>
+            </div>
+            <div class="form-group">
+                <label>库存组织名称</label>
+                <input type="text" class="form-control" value="{{ record.storageOrgUnitName }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>成本中心名称</label>
+                <input type="text" class="form-control" value="{{ record.costCenterOrgUnitName }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="materialName">物料名称</label>
+                <select id="materialName" name="materialName" class="form-control" required>
+                    {% for m in materials %}
+                        <option value="{{ m.material_code }}" {% if m.material_name == record.materialName %}selected{% endif %}>{{ m.material_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>成本对象名称</label>
+                <input type="text" class="form-control" value="{{ record.costObjectName }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>仓库名称</label>
+                <input type="text" class="form-control" value="{{ record.warehouseName }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="rate">扣水率(%)</label>
+                {% if user.username == 'GaoBieKeLe' or user.username == 'JinShui' or user.username == 'geobiekele' or user.username == 'jinshui' %}
+                <input type="number" id="rate" name="rate" class="form-control" value="{{ record.rate }}" step="0.01" min="0" max="100">
+                <small class="form-text text-muted">特殊用户可编辑扣水率</small>
+                {% else %}
+                <input type="number" id="rate" name="rate" class="form-control" value="{{ record.rate }}" readonly>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="quantity">数量</label>
+                <input type="number" id="quantity" name="quantity" class="form-control" value="{{ record.quantity_adjusted }}" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Lot">批次</label>
+                <input type="text" id="Lot" name="Lot" class="form-control" value="{{ record.Lot }}">
+            </div>
+            <!-- 隐藏必需字段 -->
+            <input type="hidden" id="costCenterOrgUnit" value="{{ record.costCenterOrgUnit }}">
+            <input type="hidden" id="storageOrgUnit" value="{{ record.storageOrgUnit }}">
+            <input type="hidden" id="warehouseNumber" value="{{ record.ckno }}">
+            <input type="hidden" id="costObject" value="{{ record.costObject }}">
+        
+            <div class="form-group">
+                <label for="remark">备注</label>
+                <textarea id="remark" name="remark" class="form-control">{{ record.remark }}</textarea>
+            </div>
+            <script>
+            function updateRemark() {
+                var qty = parseFloat(document.getElementById('quantity').value) || 0;
+                var rate = parseFloat(document.getElementById('rate').value) || 0;
+                if (rate > 1) rate = rate / 100;
+                var realQty = (qty * (1 - rate)).toFixed(2);
+                document.getElementById('remark').value = `真实入库数量：${qty}*(1-${rate})=${realQty}`;
+            }
+            document.getElementById('quantity').addEventListener('input', updateRemark);
+            document.getElementById('rate').addEventListener('input', updateRemark);
+            window.addEventListener('DOMContentLoaded', updateRemark);
+            </script>
+            <button type="button" class="btn btn-primary submit-btn" onclick="submitEditForm()">保存修改</button>
+            <button type="button" class="btn btn-secondary submit-btn" onclick="window.location.href='{% url 'production_history' %}'">取消</button>
+        </form>
+        <script>
+        function submitEditForm() {
+            var fnumber = document.getElementById('fnumber').value;
+            var bizDate = document.getElementById('bizDate').value;
+            var materialNumber = document.getElementById('materialName').value;
+            var qty = document.getElementById('quantity').value;
+            var lot = document.getElementById('Lot').value;
+            var description = document.getElementById('remark').value;
+            var costCenterOrgUnit = document.getElementById('costCenterOrgUnit').value;
+            var storageOrgUnit = document.getElementById('storageOrgUnit').value;
+            var warehouseNumber = document.getElementById('warehouseNumber').value;
+            var costObject = document.getElementById('costObject').value;
+            var data = {
+                fnumber: fnumber,
+                bizDate: bizDate,
+                costCenterOrgUnit: costCenterOrgUnit,
+                storageOrgUnit: storageOrgUnit,
+                warehouseNumber: warehouseNumber,
+                costObject: costObject,
+                materialNumber: materialNumber,
+                quantity: qty,
+                lot: lot,
+                description: description,
+                entry: [
+                    {
+                        seq: 1,
+                        material: materialNumber,
+                        costObject: costObject,
+                        qty: qty,
+                        ckno: warehouseNumber,
+                        inckno: warehouseNumber,
+                        Lot: lot
+                    }
+                ]
+            };
+            console.log('[DEBUG] PUT data:', data);
+            fetch(`/production/raw-soil-storage/${fnumber}/edit/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(data)
+            }).then(async resp => {
+                let text = await resp.text();
+                let json;
+                try {
+                  json = JSON.parse(text);
+                } catch (e) {
+                  json = {success: false, message: '返回非JSON', raw: text};
+                }
+                console.log('[DEBUG] PUT response:', json);
+                return json;
+            })
+              .then(res => {
+                if(res.code === '0' || res.msg === '修改成功') {
+                    alert('保存成功');
+                    window.location.href = '{% url 'production_history' %}';
+                } else {
+                    alert((res.message || res.msg || '保存失败'));
+                }
+              }).catch(e => {
+                console.error('[DEBUG] PUT fetch error:', e);
+                alert('网络错误')
+              });
+        }
+        </script>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('editRawSoilForm').onsubmit = function(e) {
+    e.preventDefault();
+    var fnumber = document.getElementById('fnumber').value;
+    var quantity = document.getElementById('quantity').value;
+    var Lot = document.getElementById('Lot').value;
+    var remark = document.getElementById('remark').value;
+    fetch('/production/raw-soil-storage/' + encodeURIComponent(fnumber) + '/', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': (document.querySelector('[name=csrfmiddlewaretoken]')||{}).value
+        },
+        body: JSON.stringify({ quantity: quantity, Lot: Lot, remark: remark })
+    }).then(r => r.json()).then(function(data) {
+        if(data.success) {
+            alert('修改成功');
+            window.location.href = '{% url 'production_history' %}';
+        } else {
+            alert('修改失败：' + (data.message||'未知错误'));
+        }
+    }).catch(function() {
+        alert('网络错误，请重试');
+    });
+};
+</script>
+{% endblock %}

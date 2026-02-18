@@ -1,0 +1,252 @@
+{% load static %}
+<!-- 侧边栏 -->
+<!-- 调试信息 -->
+
+<!-- 调试样式 -->
+<style>
+    .side-menu {
+        width: 250px;
+        background: #fff;
+        border-right: 1px solid #e0e0e0;
+        overflow-y: auto;
+        flex-shrink: 0;
+        height: calc(100vh - 64px);
+        display: block;
+    }
+    
+    .menu-container {
+        padding: 0;
+    }
+    
+    .menu-nav {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .menu-group {
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .menu-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        color: #333;
+    }
+    
+    .menu-header:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .menu-header .material-icons {
+        margin-right: 12px;
+        font-size: 20px;
+        color: #666;
+    }
+    
+    .menu-title {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .menu-arrow {
+        font-size: 12px;
+        color: #999;
+        transition: transform 0.2s;
+    }
+    
+    .menu-group.active .menu-arrow {
+        transform: rotate(90deg);
+    }
+    
+    .submenu {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+    
+    .menu-group.active .submenu {
+        max-height: 500px;
+    }
+    
+    .submenu-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 16px 8px 48px;
+        color: #666;
+        text-decoration: none;
+        font-size: 13px;
+        transition: background-color 0.2s;
+    }
+    
+    .submenu-item:hover {
+        background-color: #f0f0f0;
+        color: #333;
+    }
+    
+    .submenu-item .material-icons {
+        margin-right: 8px;
+        font-size: 16px;
+    }
+    
+    .submenu-item.active {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+    
+    /* 移动端优化 */
+    @media (max-width: 768px) {
+        .side-menu {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: -100%;
+            height: 100vh;
+            z-index: 1001;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .side-menu.expanded {
+            left: 0;
+        }
+        
+        .menu-close-btn {
+            display: flex;
+        }
+    }
+    
+    /* 移动端遮罩层 */
+    .mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+</style>
+
+
+
+<div class="menu-container">
+    <div class="menu-header">
+        <h2>吉林远通</h2>
+        <button class="menu-close-btn" id="menuCloseBtn" style="display: none;">
+            <span class="material-icons" data-icon="close">close</span>
+        </button>
+    </div>
+
+    <nav class="menu-nav">
+        {% for group in menu_items %}
+            <div class="menu-group">
+                <div class="menu-header" onclick="toggleSubmenu(this)">
+                    <span class="material-icons">{{ group.icon }}</span>
+                    <span class="menu-title">{{ group.name }}</span>
+                    <span class="menu-arrow">▶</span>
+                </div>
+                <div class="submenu">
+                    {% for item in group.children %}
+                        <a href="{% if item.url %}{{ item.url }}{% elif item.name == '权限管理' %}{% url 'rbac_management' %}{% elif item.name == '用户管理' %}{% url 'user_management' %}{% elif item.name == '用户权限管理' %}{% url 'simple_user_permissions_page' %}{% elif item.name == '产品型号' %}{% url 'product_model' %}{% elif item.name == '包装物管理' %}{% url 'packaging' %}{% elif item.name == '参数配置' %}{% url 'parameter_config' %}{% elif item.name == '任务管理' %}{% url 'task_management' %}{% elif item.name == '原土入库' %}{% url 'raw_soil_storage' %}{% elif item.name == 'QC报表' %}{% url 'qc_report' %}{% elif item.name == '操作日志' %}{% url 'operation_log' %}{% else %}#{% endif %}" class="submenu-item">
+                            <span class="material-icons">{{ item.icon }}</span>
+                            <span>{{ item.name }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </nav>
+</div>
+
+<script>
+// 侧边栏交互功能
+function toggleSubmenu(element) {
+    const menuGroup = element.parentElement;
+    const isActive = menuGroup.classList.contains('active');
+    
+    // 关闭所有其他菜单组
+    document.querySelectorAll('.menu-group').forEach(group => {
+        if (group !== menuGroup) {
+            group.classList.remove('active');
+        }
+    });
+    
+    // 切换当前菜单组
+    if (isActive) {
+        menuGroup.classList.remove('active');
+    } else {
+        menuGroup.classList.add('active');
+    }
+}
+
+// 设置当前活动菜单项
+function setActiveMenuItem() {
+    const currentPath = window.location.pathname;
+    const menuItems = document.querySelectorAll('.submenu-item');
+    
+    menuItems.forEach(item => {
+        const href = item.getAttribute('href');
+        if (href && currentPath.includes(href.replace(/^\//, ''))) {
+            item.classList.add('active');
+            // 同时激活父菜单组
+            const menuGroup = item.closest('.menu-group');
+            if (menuGroup) {
+                menuGroup.classList.add('active');
+            }
+        }
+    });
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    setActiveMenuItem();
+    
+    // 移动端菜单控制
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sideMenu = document.getElementById('sideMenu');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+    const menuCloseBtn = document.getElementById('menuCloseBtn');
+    
+    if (mobileMenuBtn && sideMenu) {
+        mobileMenuBtn.addEventListener('click', function() {
+            sideMenu.classList.add('expanded');
+            if (mobileOverlay) {
+                mobileOverlay.classList.add('active');
+            }
+            document.body.style.overflow = 'hidden';
+        });
+    }
+    
+    if (menuCloseBtn) {
+        menuCloseBtn.addEventListener('click', function() {
+            sideMenu.classList.remove('expanded');
+            if (mobileOverlay) {
+                mobileOverlay.classList.remove('active');
+            }
+            document.body.style.overflow = '';
+        });
+    }
+    
+    if (mobileOverlay) {
+        mobileOverlay.addEventListener('click', function() {
+            sideMenu.classList.remove('expanded');
+            mobileOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+    }
+});
+</script>

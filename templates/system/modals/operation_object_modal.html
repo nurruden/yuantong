@@ -1,0 +1,42 @@
+<div id="operationObjectModal" class="modal">
+    <div class="modal-content">
+        <h3 id="operationObjectModalTitle">新增操作对象映射</h3>
+        <form id="operationObjectForm">
+            <div class="modal-body">
+                <input type="hidden" id="operationObjectId">
+                <div class="form-group">
+                    <label for="username">用户名:</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="inventoryOrgId">库存组织:</label>
+                    <select id="inventoryOrgId" required>
+                        <option value="">请选择库存组织</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="warehouseId">仓库名称:</label>
+                    <select id="warehouseId" required>
+                        <option value="">请选择仓库</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="costCenterId">成本中心:</label>
+                    <select id="costCenterId" required>
+                        <option value="">请选择成本中心</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="costObjectId">成本对象:</label>
+                    <select id="costObjectId" required>
+                        <option value="">请选择成本对象</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeOperationObjectModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>

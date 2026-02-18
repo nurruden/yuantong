@@ -1,0 +1,18 @@
+[Unit]
+Description=Celery Beat for Yuantong
+After=network.target
+
+[Service]
+Type=forking
+User=deploy
+Group=deploy
+EnvironmentFile=/var/www/yuantong/.env
+WorkingDirectory=/var/www/yuantong
+ExecStart=/var/www/yuantong/venv/bin/celery -A yuantong beat --loglevel=info --logfile=/var/www/yuantong/logs/celery_beat.log --pidfile=/var/www/yuantong/celery_beat.pid --detach --scheduler django_celery_beat.schedulers:DatabaseScheduler
+ExecStop=/bin/kill -s TERM $MAINPID
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

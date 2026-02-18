@@ -1,0 +1,69 @@
+/* 固定表头样式 */
+.sticky-table-container {
+    position: relative;
+    overflow: auto;
+    max-height: 70vh; /* 设置最大高度，可根据需要调整 */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.sticky-table-container table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* 确保表头完全覆盖数据行 */
+.sticky-table-container thead {
+    position: sticky;
+    top: 0;
+    z-index: 15;
+}
+
+.sticky-table-container thead th {
+    position: sticky;
+    top: 0;
+    background-color: #1976d2 !important;  /* 蓝色背景 */
+    color: #ffffff !important;  /* 白色文字 */
+    border-bottom: 2px solid #1565c0;
+    z-index: 15;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: 600;  /* 加粗字体 */
+}
+
+/* 表格行悬停效果 */
+.sticky-table-container tbody tr:hover {
+    background-color: #fafafa;
+}
+
+/* 确保表格内容不会与固定表头重叠 */
+.sticky-table-container tbody tr:first-child td {
+    border-top: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .sticky-table-container {
+        max-height: 60vh;
+        font-size: 14px;
+    }
+    
+    .sticky-table-container th,
+    .sticky-table-container td {
+        padding: 8px 4px;
+        font-size: 12px;
+    }
+}
+
+/* 确保表头在深色模式下也可见 */
+@media (prefers-color-scheme: dark) {
+    .sticky-table-container thead th {
+        background-color: #1565c0 !important;  /* 深蓝色背景 */
+        color: #ffffff !important;
+        border-bottom-color: #0d47a1;
+    }
+    
+    .sticky-table-container tbody tr:hover {
+        background-color: #6c757d;
+    }
+}
