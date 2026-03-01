@@ -191,14 +191,15 @@ EAS_API_PATH_DELETE = os.environ.get('EAS_API_PATH_DELETE', '/geteasdata/delManu
 EAS_API_PATH_GET = os.environ.get('EAS_API_PATH_GET', '/geteasdata/getManufactureRec')
 
 # WeChat Configuration - 仅从环境变量读取，不写默认值
+# WECHAT_CORP_SECRET 兼容 WECHAT_APP_SECRET（应用密钥，多数场景下可通用）
 WECHAT_CORP_ID = os.environ.get('WECHAT_CORP_ID', '')
-WECHAT_CORP_SECRET = os.environ.get('WECHAT_CORP_SECRET', '')
+WECHAT_CORP_SECRET = os.environ.get('WECHAT_CORP_SECRET', '') or os.environ.get('WECHAT_APP_SECRET', '')
 WECHAT_AGENT_ID = os.environ.get('WECHAT_AGENT_ID', '')
 REDIRECT_URI = os.environ.get('REDIRECT_URI')
 
 # 生产环境必须配置企业微信
 if not DEBUG and not all([WECHAT_CORP_ID, WECHAT_CORP_SECRET, WECHAT_AGENT_ID]):
-    raise ValueError("生产环境必须设置环境变量: WECHAT_CORP_ID, WECHAT_CORP_SECRET, WECHAT_AGENT_ID")
+    raise ValueError("生产环境必须设置环境变量: WECHAT_CORP_ID, WECHAT_CORP_SECRET(或WECHAT_APP_SECRET), WECHAT_AGENT_ID")
 
 # Redis配置 (用于缓存和会话存储)
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')

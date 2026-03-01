@@ -141,6 +141,7 @@ celerybeat.pid
 .env.*
 !.env.example
 .venv
+
 env/
 venv/
 ENV/
@@ -232,6 +233,10 @@ cookies.txt
 # Django collectstatic 生成的文件（应该通过 collectstatic 命令生成）
 staticfiles/
 !staticfiles/.gitkeep
+
+# Markdown 文档文件（不提交到 GitHub，但保留 README.md）
+*.md
+!README.md
 
 # 仅忽略项目根目录外的 local_settings，不忽略 yuantong/settings.py
 **/local_settings.py
