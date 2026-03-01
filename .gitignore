@@ -195,6 +195,7 @@ settings_production.py
 local_settings.py
 production_settings.py
 production_security_setup.sh
+deploy_production.sh
 
 # 数据库文件
 *.sqlite3
