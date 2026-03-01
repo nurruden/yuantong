@@ -58,8 +58,8 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 from .models import (
     InventoryOrg, MaterialMapping, WarehouseMapping, CostCenterMapping,
-    CostObjectMapping, WaterDeductionRate, OperationObject, DongtaiQCReport,
-    DayuanQCReport, XinghuiQCReport, ChangfuQCReport, YuantongQCReport, Yuantong2QCReport, Packaging, ProductModel, UserFavorite, Parameter, UserProfile,Xinghui2QCReport
+    CostObjectMapping, WaterDeductionRate, OperationObject, RawSoilStorage,
+    DongtaiQCReport, DayuanQCReport, XinghuiQCReport, ChangfuQCReport, YuantongQCReport, Yuantong2QCReport, Packaging, ProductModel, UserFavorite, Parameter, UserProfile, Xinghui2QCReport
 )
 from system.models import Department, Position, UserProfile as SystemUserProfile
 from system.models import Permission,Company
@@ -934,6 +934,108 @@ class PositionAPI(View):
 
 
 
+# ==================== 原土入库外部查询 API ====================
+def _is_private_ip(ip):
+    """判断是否为私网地址（10.x, 172.16-31.x, 192.168.x）或本地回环"""
+    if not ip:
+        return False
+    if ip in ('127.0.0.1', '::1', 'localhost'):
+        return True
+    try:
+        parts = [int(x) for x in ip.split('.')]
+        if len(parts) != 4:
+            return False
+        if parts[0] == 10:
+            return True
+        if parts[0] == 172 and 16 <= parts[1] <= 31:
+            return True
+        if parts[0] == 192 and parts[1] == 168:
+            return True
+        return False
+    except (ValueError, IndexError):
+        return False
+
+
+def _get_client_ip(request):
+    """获取客户端真实 IP（考虑代理）"""
+    xff = request.META.get('HTTP_X_FORWARDED_FOR')
+    if xff:
+        return xff.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', '')
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class RawSoilStorageQueryAPI(View):
+    """外部系统查询原土入库数据，仅允许私网地址访问。POST body: {biz_start, biz_end, storage_org_code}"""
+
+    def post(self, request):
+        client_ip = _get_client_ip(request)
+        if not _is_private_ip(client_ip):
+            logger = logging.getLogger(__name__)
+            logger.warning(f"原土入库查询API拒绝非私网访问: ip={client_ip}")
+            return JsonResponse({'success': False, 'message': '仅允许内部私网访问'}, status=403)
+
+        try:
+            data = json.loads(request.body) if request.body else {}
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': '无效的JSON格式'}, status=400)
+
+        biz_start = (data.get('biz_start') or '').strip()
+        biz_end = (data.get('biz_end') or '').strip()
+        storage_org_code = (data.get('storage_org_code') or '').strip()
+
+        from django.db.models import Sum
+
+        qs = RawSoilStorage.objects.all().order_by('-biz_date', '-created_at')
+
+        if biz_start:
+            try:
+                start_date = datetime.strptime(biz_start, '%Y-%m-%d').date()
+                qs = qs.filter(biz_date__gte=start_date)
+            except ValueError:
+                return JsonResponse({'success': False, 'message': 'biz_start 格式错误，应为 YYYY-MM-DD'}, status=400)
+        if biz_end:
+            try:
+                end_date = datetime.strptime(biz_end, '%Y-%m-%d').date()
+                qs = qs.filter(biz_date__lte=end_date)
+            except ValueError:
+                return JsonResponse({'success': False, 'message': 'biz_end 格式错误，应为 YYYY-MM-DD'}, status=400)
+        if storage_org_code:
+            qs = qs.filter(storage_org_code=storage_org_code)
+
+        records = list(qs.values(
+            'fnumber', 'biz_date', 'material_code', 'material_name',
+            'quantity', 'actual_quantity', 'lot', 'remark',
+            'cost_center_code', 'storage_org_code', 'warehouse_code', 'cost_object_code',
+            'rate', 'created_by', 'created_at', 'updated_at'
+        ))
+        for r in records:
+            r['biz_date'] = r['biz_date'].strftime('%Y-%m-%d') if r.get('biz_date') else None
+            r['created_at'] = r['created_at'].isoformat() if r.get('created_at') else None
+            r['updated_at'] = r['updated_at'].isoformat() if r.get('updated_at') else None
+            if r.get('quantity') is not None:
+                r['quantity'] = float(r['quantity'])
+            if r.get('actual_quantity') is not None:
+                r['actual_quantity'] = float(r['actual_quantity'])
+            if r.get('rate') is not None:
+                r['rate'] = float(r['rate'])
+
+        agg = qs.aggregate(
+            quantity_total=Sum('quantity'),
+            actual_quantity_total=Sum('actual_quantity')
+        )
+        quantity_total = float(agg['quantity_total'] or 0)
+        actual_quantity_total = float(agg['actual_quantity_total'] or 0)
+
+        return JsonResponse({
+            'success': True,
+            'data': records,
+            'quantity_total': quantity_total,
+            'actual_quantity_total': actual_quantity_total,
+            'count': len(records),
+        })
+
+
 # ==================== QC报表通用基类和工具函数 ====================
 # QC报表相关代码已移动到 home/views/qc_reports.py
 @method_decorator(login_required, name='dispatch')
@@ -960,7 +1062,18 @@ class RawSoilStorageView(View):
             resp = requests.post(url, json={'number': fnumber}, timeout=10)
             data = resp.json()
             msg = data.get('msg', '')
-            if data.get('code') == 0 or '删除成功' in msg:
+            code_val = data.get('code')
+            # 仅当 EAS 返回 code=0 时同步删除本地库
+            if code_val in (0, '0') or '删除成功' in msg:
+                if code_val in (0, '0'):
+                    try:
+                        deleted, _ = RawSoilStorage.objects.filter(fnumber=str(fnumber)).delete()
+                        if deleted:
+                            logger = logging.getLogger(__name__)
+                            logger.info(f"原土入库本地库已删除: fnumber={fnumber}")
+                    except Exception as db_err:
+                        logger = logging.getLogger(__name__)
+                        logger.error(f"原土入库本地库删除失败: {db_err}", exc_info=True)
                 return JsonResponse({'success': True, 'message': msg or '删除成功'})
             else:
                 return JsonResponse({'success': False, 'message': msg or '删除失败'})
@@ -1236,14 +1349,53 @@ class RawSoilStorageView(View):
                 result = response.json()
                 logger.info(f"EAS API返回JSON: {result}")
 
-                if result['code'] == 'null':
+                if result.get('code') == 'null':
                     return JsonResponse({
-                            'success': False,
-                            'message': f'提交失败: {str(result['msg'])}'
-            }, status=400)
+                        'success': False,
+                        'message': f"提交失败: {str(result.get('msg', ''))}"
+                    }, status=400)
+
+                # 仅当 EAS 返回 code=0 时落本地库，fnumber 取自返回 JSON 的 number
+                code_val = result.get('code')
+                if code_val in (0, '0'):
+                    fnumber = result.get('number')
+                else:
+                    fnumber = None
+
+                if fnumber:
+                    try:
+                        material_name = ''
+                        try:
+                            mat = MaterialMapping.objects.get(material_code=data.get('materialName'))
+                            material_name = mat.material_name
+                        except MaterialMapping.DoesNotExist:
+                            material_name = data.get('materialName', '')
+                        RawSoilStorage.objects.create(
+                            fnumber=str(fnumber),
+                            biz_date=data.get('bizDate'),
+                            material_code=data.get('materialName', ''),
+                            material_name=material_name,
+                            quantity=Decimal(str(quantity)),
+                            actual_quantity=Decimal(str(actual_quantity)),
+                            lot=data.get('lot', ''),
+                            remark=data.get('remark', ''),
+                            cost_center_code=operation_object.cost_center.cost_center_code,
+                            storage_org_code=operation_object.inventory_org.org_code,
+                            warehouse_code=operation_object.warehouse.warehouse_code,
+                            cost_object_code=operation_object.cost_object.cost_object_code,
+                            rate=operation_object.rate,
+                            created_by=request.user.username,
+                        )
+                        logger.info(f"原土入库已落本地库: fnumber={fnumber}")
+                    except Exception as db_err:
+                        logger.error(f"原土入库落本地库失败: {db_err}", exc_info=True)
+                else:
+                    logger.warning("EAS 返回 code!=0 或未包含 number 字段，未落本地库")
+
                 return JsonResponse(result)
-            except:
+            except Exception as parse_err:
                 # 如果不是JSON格式，返回文本内容
+                logger.warning(f"EAS 返回非JSON: {parse_err}")
                 return JsonResponse({
                     'success': True,
                     'message': '数据提交成功',
@@ -1381,7 +1533,7 @@ class RawSoilStorageView(View):
             # 组装body，字段映射
             # 真实入库数量 = 数量 * (1 - 扣水率)
             raw_qty = data.get("quantity")
-            actual_date = data.get("date")
+            actual_date = data.get("bizDate") or data.get("date")
             logger.info(f"Received PUT request for fnumber: {fnumber}, data: {data}")
             logger.debug(f"Raw quantity: {raw_qty}")
             logger.debug(f"Raw rate: {data.get('rate')}")
@@ -1479,6 +1631,38 @@ class RawSoilStorageView(View):
                 resp_json = response.json()
             except Exception:
                 resp_json = {"success": False, "message": "EAS返回非JSON格式", "raw": response.text}
+
+            # 仅当 EAS 返回 code=0 时同步更新本地库
+            code_val = resp_json.get('code')
+            if code_val in (0, '0'):
+                try:
+                    material_name = ''
+                    try:
+                        mat = MaterialMapping.objects.get(material_code=data.get('materialNumber', ''))
+                        material_name = mat.material_name
+                    except MaterialMapping.DoesNotExist:
+                        material_name = data.get('materialNumber', '')
+                    RawSoilStorage.objects.update_or_create(
+                        fnumber=str(fnumber),
+                        defaults={
+                            'biz_date': actual_date,
+                            'material_code': data.get('materialNumber', ''),
+                            'material_name': material_name,
+                            'quantity': Decimal(str(raw_qty)),
+                            'actual_quantity': Decimal(str(real_qty)),
+                            'lot': data.get('lot', ''),
+                            'remark': data.get('description', ''),
+                            'cost_center_code': data.get('costCenterOrgUnit', ''),
+                            'storage_org_code': data.get('storageOrgUnit', ''),
+                            'warehouse_code': data.get('warehouseNumber', ''),
+                            'cost_object_code': data.get('costObject', ''),
+                            'rate': Decimal(str(rate)) if rate is not None else Decimal('0'),
+                        }
+                    )
+                    logger.info(f"原土入库本地库已更新: fnumber={fnumber}")
+                except Exception as db_err:
+                    logger.error(f"原土入库本地库更新失败: {db_err}", exc_info=True)
+
             return JsonResponse(resp_json)
         except Exception as e:
             import logging

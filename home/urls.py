@@ -94,6 +94,7 @@ urlpatterns = [
     path('api/user-favorite/', views.UserFavoriteAPI.as_view(), name='user_favorite_api'),
     
     # 生产管理路由
+    path('api/raw-soil-storage/query/', views.RawSoilStorageQueryAPI.as_view(), name='raw_soil_storage_query_api'),
     path('production/raw-soil-storage/', views.RawSoilStorageView.as_view(), name='raw_soil_storage'),
     path('production/raw-soil-storage/<str:fnumber>/edit/', views.RawSoilStorageView.as_view(), name='raw_soil_storage_edit'),
     path('production/history/', views.ProductionHistoryView.as_view(), name='production_history'),

@@ -95,6 +95,37 @@ class OperationObject(models.Model):
     def __str__(self):
         return f"{self.user_id} - {self.inventory_org.org_name} - {self.warehouse.warehouse_name}"
 
+
+class RawSoilStorage(models.Model):
+    """原土入库本地记录，与EAS同步"""
+    fnumber = models.CharField('单据编号', max_length=100, unique=True, db_index=True)
+    biz_date = models.DateField('业务日期')
+    material_code = models.CharField('物料编码', max_length=50)
+    material_name = models.CharField('物料名称', max_length=100)
+    quantity = models.DecimalField('入库数量', max_digits=18, decimal_places=4, default=0)
+    actual_quantity = models.DecimalField('真实入库数量', max_digits=18, decimal_places=4, default=0,
+                                          help_text='入库数量*(1-扣水率)')
+    lot = models.CharField('批次号', max_length=100, blank=True, default='')
+    remark = models.TextField('备注', blank=True, default='')
+    cost_center_code = models.CharField('成本中心编码', max_length=50)
+    storage_org_code = models.CharField('库存组织编码', max_length=50)
+    warehouse_code = models.CharField('仓库编码', max_length=50)
+    cost_object_code = models.CharField('成本对象编码', max_length=50)
+    rate = models.DecimalField('扣水率', max_digits=5, decimal_places=2, default=0)
+    created_by = models.CharField('创建人', max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'raw_soil_storage'
+        ordering = ['-biz_date', '-created_at']
+        verbose_name = '原土入库记录'
+        verbose_name_plural = '原土入库记录'
+
+    def __str__(self):
+        return f"{self.fnumber} - {self.material_name} - {self.biz_date}"
+
+
 class QCReport(models.Model):
     """QC报表基础模型"""
     date = models.DateField('检测日期')

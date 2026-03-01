@@ -32,7 +32,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', '') or 'dev-insecure-change-me'
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 # 从环境变量获取允许的主机列表
-ALLOWED_HOSTS_STR = os.environ.get('ALLOWED_HOSTS', 'jilinyuantong.top,www.jilinyuantong.top,localhost,127.0.0.1,123.249.75.132,testserver')
+ALLOWED_HOSTS_STR = os.environ.get('ALLOWED_HOSTS', 'jilinyuantong.top,www.jilinyuantong.top,localhost,127.0.0.1,123.249.75.132,10.0.2.2,testserver')
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(',') if host.strip()]
 
 # 生产环境安全配置
